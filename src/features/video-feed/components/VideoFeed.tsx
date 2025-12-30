@@ -55,8 +55,7 @@ function FeedVideoCard({
         background: '#000',
         borderRadius: 16,
         overflow: 'hidden',
-        height: '72vh',
-        minHeight: 520,
+        height: '100%',
         scrollSnapAlign: 'start',
       }}
     >
@@ -121,8 +120,8 @@ export function VideoFeed() {
   const feed = useAppSelector(selectVideoFeed);
   const auth = useAppSelector(selectAuth);
 
-  const [showOriginal, setShowOriginal] = useState(true);
-  const [showTranslation, setShowTranslation] = useState(true);
+  const [showOriginal] = useState(true);
+  const [showTranslation] = useState(true);
   const [contentMap, setContentMap] = useState<Record<string, ContentState>>({});
 
   useEffect(() => {
@@ -156,25 +155,14 @@ export function VideoFeed() {
   );
 
   const statusBadge = auth.profile ? 'Аккаунт' : 'Гость';
+  const navOffset = 72; // approximate navbar height
 
   return (
-    <div className="section" style={{ paddingBottom: 18 }}>
-      <div className="section-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontWeight: 700, fontSize: 18 }}>Видео-лента</span>
-          <span className="badge">{statusBadge}</span>
-        </div>
+    <div style={{ height: `calc(100vh - ${navOffset}px)`, padding: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 2px 8px' }}>
+        <span className="badge">{statusBadge}</span>
         <Button variant="ghost" onClick={() => dispatch(loadFeed({ reset: true }))}>
           Обновить
-        </Button>
-      </div>
-
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        <Button variant={showOriginal ? 'primary' : 'ghost'} onClick={() => setShowOriginal((v) => !v)}>
-          Английские субтитры {showOriginal ? 'вкл' : 'выкл'}
-        </Button>
-        <Button variant={showTranslation ? 'primary' : 'ghost'} onClick={() => setShowTranslation((v) => !v)}>
-          Русские субтитры {showTranslation ? 'вкл' : 'выкл'}
         </Button>
       </div>
 
@@ -189,9 +177,9 @@ export function VideoFeed() {
         style={{
           display: 'grid',
           gap: 18,
-          maxHeight: '78vh',
-          overflowY: 'auto',
-          paddingRight: 6,
+          height: `calc(100vh - ${navOffset}px - 36px)`,
+          overflowY: 'scroll',
+          paddingRight: 0,
           scrollSnapType: 'y mandatory',
         }}
       >
