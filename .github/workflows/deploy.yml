@@ -27,16 +27,15 @@ jobs:
           VITE_TELEGRAM_BOT_NAME: ${{ secrets.VITE_TELEGRAM_BOT_NAME }}
         run: npm run build
 
-      - name: Deploy via rsync
-        uses: burnett01/rsync-deployments@6.0.0
+      - name: Copy build via SCP (password auth)
+        uses: appleboy/scp-action@v0.1.7
         with:
-          switches: -avzr --delete
-          path: dist/
-          remote_path: ${{ secrets.REMOTE_PATH }}
-          remote_host: ${{ secrets.SSH_HOST }}
-          remote_user: ${{ secrets.SSH_USER }}
-          remote_key: ${{ secrets.SSH_KEY }}
-          remote_port: ${{ secrets.SSH_PORT }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "dist/*"
+          target: ${{ secrets.REMOTE_PATH }}
 
       - name: Reload nginx (optional)
         if: ${{ success() }}
@@ -44,7 +43,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           script: |
             sudo nginx -t && sudo systemctl reload nginx
