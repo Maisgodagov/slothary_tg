@@ -48,10 +48,12 @@ function FeedVideoCard({
 }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [_, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const [tapIndicator, setTapIndicator] = useState<'play' | 'pause' | null>(null);
+  const tapTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     onLoadContent();
@@ -101,7 +103,7 @@ function FeedVideoCard({
       style={{
         position: 'relative',
         background: '#000',
-        borderRadius: 12,
+        borderRadius: 0,
         overflow: 'hidden',
         height: cardHeight,
         maxHeight,
@@ -121,10 +123,16 @@ function FeedVideoCard({
           if (el.paused) {
             el.play();
             setIsPlaying(true);
+            setTapIndicator('play');
           } else {
             el.pause();
             setIsPlaying(false);
+            setTapIndicator('pause');
           }
+          if (tapTimeoutRef.current) {
+            window.clearTimeout(tapTimeoutRef.current);
+          }
+          tapTimeoutRef.current = window.setTimeout(() => setTapIndicator(null), el.paused ? 0 : 500);
         }}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
@@ -138,10 +146,33 @@ function FeedVideoCard({
         }}
       />
 
-      <div style={{ position: 'absolute', top: 12, right: 12 }}>
+      <div style={{ position: 'absolute', right: 12, top: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Button
+          variant="ghost"
+          style={{ minWidth: 64, height: 48, padding: '10px 12px', borderRadius: 16, backdropFilter: 'blur(6px)' }}
+          onClick={() => {
+            setIsMuted((v) => {
+              const el = videoRef.current;
+              if (el) el.muted = !v;
+              return !v;
+            });
+          }}
+        >
+          {isMuted ? '🔇' : '🔊'}
+        </Button>
+      </div>
+
+      <div
+        style={{
+          position: 'absolute',
+          right: 12,
+          top: '50%',
+          transform: 'translateY(-50%)',
+        }}
+      >
         <Button
           variant={item.isLiked ? 'primary' : 'ghost'}
-          style={{ minWidth: 90, backdropFilter: 'blur(6px)' }}
+          style={{ minWidth: 72, height: 64, padding: '12px 14px', borderRadius: 18, backdropFilter: 'blur(6px)', fontSize: 20 }}
           onClick={() => onLike(item.id)}
         >
           ❤️ {content?.likesCount ?? item.likesCount}
@@ -162,8 +193,8 @@ function FeedVideoCard({
           left: 0,
           right: 0,
           bottom: 0,
-          padding: '12px 14px 14px',
-          background: 'linear-gradient(0deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.05) 100%)',
+          padding: '14px 16px 20px',
+          background: 'linear-gradient(0deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.08) 100%)',
           color: '#fff',
           display: 'grid',
           gap: 6,
@@ -173,11 +204,34 @@ function FeedVideoCard({
           <div style={{ display: 'grid', gap: 4, marginBottom: 4 }}>
             {contentState.loading && <div style={{ color: '#cfd3e0', fontSize: 12 }}>Загружаем субтитры…</div>}
             {enSub && (
-              <div style={{ fontWeight: 700, fontSize: 16, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{enSub}</div>
+              <div
+                style={{
+                  fontWeight: 800,
+                  fontSize: 24,
+                  textShadow: '0 2px 10px rgba(0,0,0,0.95)',
+                  background: 'rgba(0,0,0,0.6)',
+                  padding: '8px 10px',
+                  borderRadius: 10,
+                  display: 'inline-block',
+                  width: 'fit-content',
+                }}
+              >
+                {enSub}
+              </div>
             )}
             {ruSub && (
               <div
-                style={{ fontWeight: 600, fontSize: 14, color: '#d8e4ff', textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}
+                style={{
+                  fontWeight: 700,
+                  fontSize: 22,
+                  color: '#d8e4ff',
+                  textShadow: '0 2px 10px rgba(0,0,0,0.9)',
+                  background: 'rgba(0,0,0,0.55)',
+                  padding: '8px 10px',
+                  borderRadius: 10,
+                  display: 'inline-block',
+                  width: 'fit-content',
+                }}
               >
                 {ruSub}
               </div>
@@ -186,26 +240,8 @@ function FeedVideoCard({
         )}
 
         {/* Custom controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Button
-            variant="ghost"
-            style={{ minWidth: 48, padding: '8px 10px', backdropFilter: 'blur(6px)' }}
-            onClick={() => {
-              const el = videoRef.current;
-              if (!el) return;
-              if (el.paused) {
-                el.play();
-                setIsPlaying(true);
-              } else {
-                el.pause();
-                setIsPlaying(false);
-              }
-            }}
-          >
-            {isPlaying ? '⏸' : '▶️'}
-          </Button>
-
-          <div style={{ flex: 1, display: 'grid', gap: 4 }}>
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div style={{ flex: 1, display: 'grid' }}>
             <input
               type="range"
               min={0}
@@ -221,39 +257,21 @@ function FeedVideoCard({
               }}
               style={{ width: '100%' }}
             />
-            <div style={{ fontSize: 12, color: '#d6d9e6', display: 'flex', justifyContent: 'space-between' }}>
-              <span>
-                {Math.floor(currentTime / 60)
-                  .toString()
-                  .padStart(2, '0')}
-                :
-                {Math.floor(currentTime % 60)
-                  .toString()
-                  .padStart(2, '0')}
-              </span>
-              <span>
-                {Math.floor((duration || 0) / 60)
-                  .toString()
-                  .padStart(2, '0')}
-                :
-                {Math.floor((duration || 0) % 60)
-                  .toString()
-                  .padStart(2, '0')}
-              </span>
-            </div>
           </div>
-
-          <Button
-            variant="ghost"
-            style={{ minWidth: 48, padding: '8px 10px', backdropFilter: 'blur(6px)' }}
-            onClick={() => setIsMuted((v) => {
-              const el = videoRef.current;
-              if (el) el.muted = !v;
-              return !v;
-            })}
-          >
-            {isMuted ? '🔇' : '🔊'}
-          </Button>
+          {tapIndicator && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                fontSize: 72,
+                textShadow: '0 2px 16px rgba(0,0,0,0.9)',
+              }}
+            >
+              {tapIndicator === 'play' ? '▶️' : '⏸'}
+            </div>
+          )}
         </div>
       </div>
     </div>
