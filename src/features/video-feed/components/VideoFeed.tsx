@@ -53,9 +53,10 @@ function FeedVideoCard({
       style={{
         position: 'relative',
         background: '#000',
-        borderRadius: 16,
+        borderRadius: 12,
         overflow: 'hidden',
         height: '100%',
+        width: '100%',
         scrollSnapAlign: 'start',
       }}
     >
@@ -65,7 +66,12 @@ function FeedVideoCard({
         playsInline
         muted
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          aspectRatio: '9 / 16',
+        }}
       />
 
       <div style={{ position: 'absolute', top: 12, right: 12 }}>
@@ -154,18 +160,10 @@ export function VideoFeed() {
     [dispatch],
   );
 
-  const statusBadge = auth.profile ? 'Аккаунт' : 'Гость';
-  const navOffset = 72; // approximate navbar height
+  const navOffset = 64; // navbar height approximation
 
   return (
     <div style={{ height: `calc(100vh - ${navOffset}px)`, padding: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 2px 8px' }}>
-        <span className="badge">{statusBadge}</span>
-        <Button variant="ghost" onClick={() => dispatch(loadFeed({ reset: true }))}>
-          Обновить
-        </Button>
-      </div>
-
       {feed.status === 'loading' && <Loader />}
       {feed.error && (
         <div style={{ color: 'var(--tg-danger)', marginBottom: 8, fontWeight: 600 }}>
@@ -176,10 +174,10 @@ export function VideoFeed() {
       <div
         style={{
           display: 'grid',
-          gap: 18,
-          height: `calc(100vh - ${navOffset}px - 36px)`,
-          overflowY: 'scroll',
-          paddingRight: 0,
+          gap: 12,
+          height: `calc(100vh - ${navOffset}px)`,
+          overflowY: 'auto',
+          padding: 0,
           scrollSnapType: 'y mandatory',
         }}
       >
