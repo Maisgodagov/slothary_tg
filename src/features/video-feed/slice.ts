@@ -8,6 +8,7 @@ interface VideoFeedState {
   status: 'idle' | 'loading' | 'refreshing' | 'failed';
   cursor: string | null;
   hasMore: boolean;
+  fetchedCursors: (string | null)[];
   error?: string;
 }
 
@@ -16,17 +17,40 @@ const initialState: VideoFeedState = {
   status: 'idle',
   cursor: null,
   hasMore: true,
+  fetchedCursors: [],
+};
+
+let cachedGuestId: string | null = null;
+const getGuestId = () => {
+  if (cachedGuestId) return cachedGuestId;
+  try {
+    const fromStorage = localStorage.getItem('guestUserId');
+    if (fromStorage) {
+      cachedGuestId = fromStorage;
+      return cachedGuestId;
+    }
+    const newId = crypto.randomUUID();
+    localStorage.setItem('guestUserId', newId);
+    cachedGuestId = newId;
+    return cachedGuestId;
+  } catch {
+    cachedGuestId = `guest-${Math.random().toString(36).slice(2, 10)}`;
+    return cachedGuestId;
+  }
 };
 
 export const loadFeed = createAsyncThunk<VideoFeedResponse, { reset?: boolean } | undefined, { state: RootState }>(
   'videoFeed/load',
   async (options, { getState, rejectWithValue }) => {
     const { auth, videoFeed } = getState();
+    const userId = auth.profile?.id ?? getGuestId();
     try {
-      return await videoFeedApi.getFeed(auth.profile?.id, {
+      return await videoFeedApi.getFeed(userId, {
         cursor: options?.reset ? null : videoFeed.cursor,
-        limit: 12,
+        limit: 20,
         role: auth.profile?.role ?? null,
+        moderationFilter: 'all',
+        showAdultContent: true,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Не удалось загрузить ленту';
@@ -73,13 +97,18 @@ const videoFeedSlice = createSlice({
           state.items = [];
           state.cursor = null;
           state.hasMore = true;
+          state.fetchedCursors = [];
         }
       })
       .addCase(loadFeed.fulfilled, (state, action: PayloadAction<VideoFeedResponse>) => {
         state.status = 'idle';
-        state.items = [...state.items, ...action.payload.items];
+        const existingIds = new Set(state.items.map((i) => i.id));
+        const newItems = action.payload.items.filter((i) => !existingIds.has(i.id));
+        state.items = [...state.items, ...newItems];
         state.cursor = action.payload.nextCursor;
-        state.hasMore = action.payload.hasMore;
+        state.fetchedCursors = [...state.fetchedCursors, action.payload.nextCursor ?? null];
+        const noMore = !action.payload.nextCursor || newItems.length === 0;
+        state.hasMore = action.payload.hasMore && !noMore;
       })
       .addCase(loadFeed.rejected, (state, action) => {
         state.status = 'failed';

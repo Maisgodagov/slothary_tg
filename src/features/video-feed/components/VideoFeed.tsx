@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { Button } from '../../../shared/ui/Button';
 import { Loader } from '../../../shared/ui/Loader';
@@ -30,6 +30,10 @@ function FeedVideoCard({
   onLike,
   showOriginal,
   showTranslation,
+  cardHeight,
+  maxHeight,
+  isActive,
+  onVisibleChange,
 }: {
   item: VideoFeedItem;
   contentState: ContentState;
@@ -37,12 +41,55 @@ function FeedVideoCard({
   onLike: (id: string) => void;
   showOriginal: boolean;
   showTranslation: boolean;
+  cardHeight: string;
+  maxHeight: string;
+  isActive: boolean;
+  onVisibleChange: (id: string, ratio: number) => void;
 }) {
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     onLoadContent();
   }, [onLoadContent]);
+
+  // Track visibility to decide active playback
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => onVisibleChange(item.id, entry.intersectionRatio));
+      },
+      { threshold: [0.5, 0.75, 0.9] },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [item.id, onVisibleChange]);
+
+  // Play/pause depending on active state
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    if (isActive) {
+      el.play().catch(() => null);
+      setIsPlaying(true);
+    } else {
+      el.pause();
+      setIsPlaying(false);
+    }
+  }, [isActive]);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (el) {
+      el.muted = isMuted;
+    }
+  }, [isMuted]);
 
   const content = contentState.data;
   const enSub = showOriginal ? findChunkText(content?.transcription?.chunks, currentTime) : '';
@@ -50,22 +97,39 @@ function FeedVideoCard({
 
   return (
     <div
+      ref={cardRef}
       style={{
         position: 'relative',
         background: '#000',
         borderRadius: 12,
         overflow: 'hidden',
-        height: '100%',
+        height: cardHeight,
+        maxHeight,
         width: '100%',
         scrollSnapAlign: 'start',
       }}
     >
       <video
+        ref={videoRef}
         src={item.videoUrl}
-        controls
         playsInline
-        muted
+        autoPlay={false}
+        muted={isMuted}
+        onClick={() => {
+          const el = videoRef.current;
+          if (!el) return;
+          if (el.paused) {
+            el.play();
+            setIsPlaying(true);
+          } else {
+            el.pause();
+            setIsPlaying(false);
+          }
+        }}
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         style={{
           width: '100%',
           height: '100%',
@@ -92,31 +156,106 @@ function FeedVideoCard({
         ))}
       </div>
 
-      {(enSub || ruSub || contentState.loading) && (
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: 0,
-            padding: '16px 18px 24px',
-            background: 'linear-gradient(0deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 100%)',
-            color: '#fff',
-            display: 'grid',
-            gap: 6,
-          }}
-        >
-          {contentState.loading && <div style={{ color: '#cfd3e0', fontSize: 12 }}>Загружаем субтитры…</div>}
-          {enSub && (
-            <div style={{ fontWeight: 700, fontSize: 16, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{enSub}</div>
-          )}
-          {ruSub && (
-            <div style={{ fontWeight: 600, fontSize: 14, color: '#d8e4ff', textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}>
-              {ruSub}
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          padding: '12px 14px 14px',
+          background: 'linear-gradient(0deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.05) 100%)',
+          color: '#fff',
+          display: 'grid',
+          gap: 6,
+        }}
+      >
+        {(enSub || ruSub || contentState.loading) && (
+          <div style={{ display: 'grid', gap: 4, marginBottom: 4 }}>
+            {contentState.loading && <div style={{ color: '#cfd3e0', fontSize: 12 }}>Загружаем субтитры…</div>}
+            {enSub && (
+              <div style={{ fontWeight: 700, fontSize: 16, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{enSub}</div>
+            )}
+            {ruSub && (
+              <div
+                style={{ fontWeight: 600, fontSize: 14, color: '#d8e4ff', textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}
+              >
+                {ruSub}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Custom controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Button
+            variant="ghost"
+            style={{ minWidth: 48, padding: '8px 10px', backdropFilter: 'blur(6px)' }}
+            onClick={() => {
+              const el = videoRef.current;
+              if (!el) return;
+              if (el.paused) {
+                el.play();
+                setIsPlaying(true);
+              } else {
+                el.pause();
+                setIsPlaying(false);
+              }
+            }}
+          >
+            {isPlaying ? '⏸' : '▶️'}
+          </Button>
+
+          <div style={{ flex: 1, display: 'grid', gap: 4 }}>
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              step={0.1}
+              value={currentTime}
+              onChange={(e) => {
+                const el = videoRef.current;
+                if (!el) return;
+                const next = Number(e.target.value);
+                el.currentTime = next;
+                setCurrentTime(next);
+              }}
+              style={{ width: '100%' }}
+            />
+            <div style={{ fontSize: 12, color: '#d6d9e6', display: 'flex', justifyContent: 'space-between' }}>
+              <span>
+                {Math.floor(currentTime / 60)
+                  .toString()
+                  .padStart(2, '0')}
+                :
+                {Math.floor(currentTime % 60)
+                  .toString()
+                  .padStart(2, '0')}
+              </span>
+              <span>
+                {Math.floor((duration || 0) / 60)
+                  .toString()
+                  .padStart(2, '0')}
+                :
+                {Math.floor((duration || 0) % 60)
+                  .toString()
+                  .padStart(2, '0')}
+              </span>
             </div>
-          )}
+          </div>
+
+          <Button
+            variant="ghost"
+            style={{ minWidth: 48, padding: '8px 10px', backdropFilter: 'blur(6px)' }}
+            onClick={() => setIsMuted((v) => {
+              const el = videoRef.current;
+              if (el) el.muted = !v;
+              return !v;
+            })}
+          >
+            {isMuted ? '🔇' : '🔊'}
+          </Button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -129,10 +268,18 @@ export function VideoFeed() {
   const [showOriginal] = useState(true);
   const [showTranslation] = useState(true);
   const [contentMap, setContentMap] = useState<Record<string, ContentState>>({});
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (feed.items.length === 0) {
       dispatch(loadFeed({ reset: true }));
+    }
+  }, [feed.items.length, dispatch]);
+
+  useEffect(() => {
+    if (activeId === null && feed.items.length > 0) {
+      setActiveId(feed.items[0].id);
     }
   }, [feed.items.length, dispatch]);
 
@@ -161,6 +308,31 @@ export function VideoFeed() {
   );
 
   const navOffset = 64; // navbar height approximation
+  const cardHeight = `calc(100vh - ${navOffset}px - 2px)`;
+  const maxHeight = cardHeight;
+  const handleVisibleChange = useCallback((id: string, ratio: number) => {
+    if (ratio >= 0.65) {
+      setActiveId(id);
+    }
+  }, []);
+  const isLoadingMore = feed.status === 'refreshing';
+
+  useEffect(() => {
+    if (!sentinelRef.current || !feed.hasMore) return;
+    const el = sentinelRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !isLoadingMore) {
+            dispatch(loadFeed({ reset: false }));
+          }
+        });
+      },
+      { root: null, threshold: 0.1 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [dispatch, feed.hasMore, isLoadingMore]);
 
   return (
     <div style={{ height: `calc(100vh - ${navOffset}px)`, padding: 0 }}>
@@ -174,7 +346,7 @@ export function VideoFeed() {
       <div
         style={{
           display: 'grid',
-          gap: 12,
+          gap: 0,
           height: `calc(100vh - ${navOffset}px)`,
           overflowY: 'auto',
           padding: 0,
@@ -190,20 +362,22 @@ export function VideoFeed() {
             onLike={toggleLikeHandler}
             showOriginal={showOriginal}
             showTranslation={showTranslation}
+            cardHeight={cardHeight}
+            maxHeight={maxHeight}
+            isActive={activeId === item.id}
+            onVisibleChange={handleVisibleChange}
           />
         ))}
+        {feed.hasMore && (
+          <div ref={sentinelRef} style={{ height: 12, width: '100%' }}>
+            {isLoadingMore && <Loader />}
+          </div>
+        )}
       </div>
 
       {feed.hasMore && (
-        <div style={{ marginTop: 12 }}>
-          <Button
-            variant="ghost"
-            loading={feed.status === 'refreshing'}
-            onClick={() => dispatch(loadFeed({ reset: false }))}
-            style={{ width: '100%' }}
-          >
-            Загрузить ещё
-          </Button>
+        <div style={{ marginTop: 8, textAlign: 'center', color: 'var(--tg-subtle)', fontSize: 12 }}>
+          Прокручивайте вниз, лента подгружается автоматически
         </div>
       )}
     </div>
