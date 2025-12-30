@@ -20,6 +20,11 @@ export const videoFeedApi = {
       headers: buildHeaders(userId, options.role),
     });
   },
+  getContent(userId: string | null | undefined, contentId: string, role?: string | null) {
+    return apiFetch<import('./types').VideoContent>(`video-learning/${contentId}`, {
+      headers: buildHeaders(userId ?? undefined, role),
+    });
+  },
   updateLike(userId: string, contentId: string, like: boolean, role?: string | null) {
     return apiFetch<{ likesCount: number; isLiked: boolean }>(`video-learning/${contentId}/like`, {
       method: 'POST',
