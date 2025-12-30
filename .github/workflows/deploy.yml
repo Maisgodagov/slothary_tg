@@ -27,6 +27,16 @@ jobs:
           VITE_TELEGRAM_BOT_NAME: ${{ secrets.VITE_TELEGRAM_BOT_NAME }}
         run: npm run build
 
+      - name: Ensure target directory exists
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            mkdir -p ${{ secrets.REMOTE_PATH }}
+
       - name: Copy build via SCP (password auth)
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -36,6 +46,17 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           source: "dist/*"
           target: ${{ secrets.REMOTE_PATH }}
+
+      - name: List deployed files
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            ls -la ${{ secrets.REMOTE_PATH }}
+            stat ${{ secrets.REMOTE_PATH }}/index.html || true
 
       - name: Reload nginx (optional)
         if: ${{ success() }}
