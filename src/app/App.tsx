@@ -1,8 +1,9 @@
+import { useEffect, useRef } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-import { TelegramProvider } from './providers/TelegramProvider';
+import { TelegramProvider, useTelegram } from './providers/TelegramProvider';
 import { store, persistor } from './store';
 import HomePage from '../pages/HomePage';
 import DictionaryPage from '../pages/DictionaryPage';
@@ -11,6 +12,23 @@ import AdminPage from '../pages/AdminPage';
 import { Loader } from '../shared/ui/Loader';
 import { NavBar } from '../shared/ui/NavBar';
 import '../shared/styles/global.css';
+import { useAppDispatch, useAppSelector } from './hooks';
+import { selectAuth, telegramAuth } from '../features/auth/slice';
+
+function AutoTelegramAuth() {
+  const { initData } = useTelegram();
+  const auth = useAppSelector(selectAuth);
+  const dispatch = useAppDispatch();
+  const attempted = useRef(false);
+
+  useEffect(() => {
+    if (!initData || auth.profile || attempted.current) return;
+    attempted.current = true;
+    dispatch(telegramAuth(initData));
+  }, [auth.profile, dispatch, initData]);
+
+  return null;
+}
 
 function App() {
   return (
@@ -18,6 +36,7 @@ function App() {
       <Provider store={store}>
         <PersistGate loading={<Loader />} persistor={persistor}>
           <HashRouter>
+            <AutoTelegramAuth />
             <div className="page">
               <Routes>
                 <Route path="/" element={<HomePage />} />
