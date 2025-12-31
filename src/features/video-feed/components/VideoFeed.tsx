@@ -288,12 +288,23 @@ export function VideoFeed() {
   const [contentMap, setContentMap] = useState<Record<string, ContentState>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const lastUserId = useRef<string | null>(null);
 
   useEffect(() => {
     if (feed.items.length === 0) {
       dispatch(loadFeed({ reset: true }));
     }
   }, [feed.items.length, dispatch]);
+
+  // If пользователь сменился (гость -> телега), перезагружаем ленту заново
+  useEffect(() => {
+    const currentUserId = auth.profile?.id ?? null;
+    if (lastUserId.current === currentUserId) return;
+    lastUserId.current = currentUserId;
+    setContentMap({});
+    setActiveId(null);
+    dispatch(loadFeed({ reset: true }));
+  }, [auth.profile?.id, dispatch]);
 
   useEffect(() => {
     if (activeId === null && feed.items.length > 0) {
