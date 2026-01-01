@@ -11,10 +11,16 @@
   --tg-success: #5bd691;
   --tg-danger: #ff5f6d;
   --tg-warning: #ffc857;
+  /* Base safe-area from browser; can be overridden from TelegramProvider */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
+  /* Aliases for Telegram-safe values, set in JS */
+  --tg-safe-area-inset-top: var(--safe-top);
+  --tg-safe-area-inset-right: var(--safe-right);
+  --tg-safe-area-inset-bottom: var(--safe-bottom);
+  --tg-safe-area-inset-left: var(--safe-left);
   --nav-height: 68px;
 }
 

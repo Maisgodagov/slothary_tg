@@ -1,0 +1,2 @@
+export { VideoFeed } from './VideoFeed';
+

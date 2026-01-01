@@ -54,14 +54,16 @@ function updateSafeAreaFromViewport() {
   const webApp = (window as any).Telegram?.WebApp;
   const vh = webApp?.viewportHeight || 0;
   const vsh = webApp?.viewportStableHeight || 0;
+  const isExpanded = webApp?.isExpanded ?? false;
 
   // Difference between innerHeight and reported viewport gives us overlays (headers/nav)
   const topFromVH = vh > 0 ? Math.max(0, innerH - vh) : 0;
   const bottomFromStable = vsh > 0 ? Math.max(0, innerH - vsh) : 0;
 
   // Fallback padding to avoid overlap with status/nav bars
-  const fallbackTop = 32 + 30;
-  const fallbackBottom = 32 + 30;
+  // If Telegram reports isExpanded, we trust it more and keep fallback minimal.
+  const fallbackTop = isExpanded ? 16 : 48;
+  const fallbackBottom = isExpanded ? 16 : 48;
 
   const top = Math.max(topVV, topFromVH, fallbackTop);
   const bottom = Math.max(bottomVV, bottomFromStable, fallbackBottom);
@@ -72,6 +74,11 @@ function updateSafeAreaFromViewport() {
   root.style.setProperty('--safe-right', `${right}px`);
   root.style.setProperty('--safe-bottom', `${bottom}px`);
   root.style.setProperty('--safe-left', `${left}px`);
+  // Also expose Telegram-style aliases so CSS can use either.
+  root.style.setProperty('--tg-safe-area-inset-top', `${top}px`);
+  root.style.setProperty('--tg-safe-area-inset-right', `${right}px`);
+  root.style.setProperty('--tg-safe-area-inset-bottom', `${bottom}px`);
+  root.style.setProperty('--tg-safe-area-inset-left', `${left}px`);
 }
 
 export function TelegramProvider({ children }: { children: ReactNode }) {
