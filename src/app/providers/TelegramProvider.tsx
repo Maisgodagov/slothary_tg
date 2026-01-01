@@ -38,6 +38,21 @@ function applyTelegramTheme(theme: Theme) {
   }
 }
 
+function updateSafeAreaFromViewport() {
+  if (typeof window === 'undefined') return;
+  const root = document.documentElement;
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const top = Math.max(0, vv.offsetTop);
+  const left = Math.max(0, vv.offsetLeft);
+  const right = Math.max(0, window.innerWidth - (vv.width + vv.offsetLeft));
+  const bottom = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+  root.style.setProperty('--safe-top', `${top}px`);
+  root.style.setProperty('--safe-right', `${right}px`);
+  root.style.setProperty('--safe-bottom', `${bottom}px`);
+  root.style.setProperty('--safe-left', `${left}px`);
+}
+
 export function TelegramProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(WebApp?.colorScheme ?? 'dark');
 
@@ -67,6 +82,21 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => applyTelegramTheme(theme), [theme]);
+
+  useEffect(() => {
+    updateSafeAreaFromViewport();
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const listener = () => updateSafeAreaFromViewport();
+    vv.addEventListener('resize', listener);
+    vv.addEventListener('scroll', listener);
+    window.addEventListener('orientationchange', listener);
+    return () => {
+      vv.removeEventListener('resize', listener);
+      vv.removeEventListener('scroll', listener);
+      window.removeEventListener('orientationchange', listener);
+    };
+  }, []);
 
   const value = useMemo<TelegramContextValue>(
     () => ({

@@ -360,7 +360,7 @@ export function VideoFeed() {
   );
 
   const navOffset = 64; // navbar height approximation
-  const cardHeight = `calc(100vh - ${navOffset}px - 2px)`;
+  const cardHeight = `calc(100vh - var(--safe-bottom) - ${navOffset}px - 2px)`;
   const maxHeight = cardHeight;
   const handleVisibleChange = useCallback((id: string, ratio: number) => {
     if (ratio >= 0.65) {
@@ -390,7 +390,7 @@ export function VideoFeed() {
   const activeIndex = useMemo(() => items.findIndex((i) => i.id === activeId), [activeId, items]);
 
   return (
-    <div style={{ height: `calc(100vh - ${navOffset}px)`, padding: 0 }}>
+    <div style={{ height: `calc(100vh - var(--safe-bottom) - ${navOffset}px)`, padding: 0 }}>
       {feed.status === 'loading' && <Loader />}
       {feed.error && (
         <div style={{ color: 'var(--tg-danger)', marginBottom: 8, fontWeight: 600 }}>
@@ -402,7 +402,7 @@ export function VideoFeed() {
         style={{
           display: 'grid',
           gap: 0,
-          height: `calc(100vh - ${navOffset}px)`,
+          height: `calc(100vh - var(--safe-bottom) - ${navOffset}px)`,
           overflowY: 'auto',
           padding: 0,
           scrollSnapType: 'y mandatory',
