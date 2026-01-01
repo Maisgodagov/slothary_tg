@@ -189,7 +189,7 @@ export const SeekTimes = styled.div`
 
 export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   width: 100%;
-  height: ${({ $thin }) => ($thin ? "6px" : "10px")};
+  height: ${({ $thin }) => ($thin ? "4px" : "10px")};
   appearance: none;
   background: #ffffff33;
   border-radius: 999px;
@@ -200,13 +200,13 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   pointer-events: auto;
 
   &::-webkit-slider-runnable-track {
-    height: ${({ $thin }) => ($thin ? "6px" : "10px")};
+    height: ${({ $thin }) => ($thin ? "4px" : "10px")};
     border-radius: 999px;
     background: transparent;
   }
 
   &::-moz-range-track {
-    height: ${({ $thin }) => ($thin ? "6px" : "10px")};
+    height: ${({ $thin }) => ($thin ? "4px" : "10px")};
     border-radius: 999px;
     background: transparent;
   }
@@ -221,7 +221,7 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
     border: ${({ $showThumb }) => ($showThumb ? "3px solid #2ea3ff" : "none")};
     box-shadow: ${({ $showThumb }) =>
       $showThumb ? "0 2px 10px rgba(0, 0, 0, 0.35)" : "none"};
-    margin-top: ${({ $thin }) => ($thin ? "-9px" : "-6px")};
+    margin-top: ${({ $thin }) => ($thin ? "-11px" : "-6px")};
     transition: width 0.1s ease, height 0.1s ease, margin-top 0.1s ease;
   }
 

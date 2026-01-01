@@ -25,6 +25,10 @@ export function VideoCard({
     null
   );
   const [isSeeking, setIsSeeking] = useState(false);
+  const lastTapRef = useRef<number>(0);
+  const playTimeoutRef = useRef<number | null>(null);
+  const heartTimeoutRef = useRef<number | null>(null);
+  const [heartIndicator, setHeartIndicator] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -70,6 +74,14 @@ export function VideoCard({
       el.muted = isMuted;
     }
   }, [isMuted]);
+
+  useEffect(() => {
+    return () => {
+      if (playTimeoutRef.current) window.clearTimeout(playTimeoutRef.current);
+      if (tapTimeoutRef.current) window.clearTimeout(tapTimeoutRef.current);
+      if (heartTimeoutRef.current) window.clearTimeout(heartTimeoutRef.current);
+    };
+  }, []);
 
   const content = contentState.data;
   const enSub = showOriginal
@@ -118,6 +130,32 @@ export function VideoCard({
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
+  const handleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 320) {
+      if (playTimeoutRef.current) {
+        window.clearTimeout(playTimeoutRef.current);
+        playTimeoutRef.current = null;
+      }
+      onLike(item.id);
+      lastTapRef.current = 0;
+      setHeartIndicator(true);
+      if (heartTimeoutRef.current) {
+        window.clearTimeout(heartTimeoutRef.current);
+      }
+      heartTimeoutRef.current = window.setTimeout(() => setHeartIndicator(false), 550);
+      return;
+    }
+    lastTapRef.current = now;
+    if (playTimeoutRef.current) {
+      window.clearTimeout(playTimeoutRef.current);
+    }
+    playTimeoutRef.current = window.setTimeout(() => {
+      handleTogglePlay();
+      playTimeoutRef.current = null;
+    }, 300);
+  };
+
   const subtitlesVisible = enSub || ruSub || contentState.loading;
   const likesCount = item.likesCount ?? content?.likesCount ?? 0;
 
@@ -145,7 +183,7 @@ export function VideoCard({
         muted={isMuted}
         preload={shouldLoad ? "metadata" : "none"}
         loop
-        onClick={handleTogglePlay}
+        onClick={handleTap}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
         onEnded={() => {
@@ -166,6 +204,14 @@ export function VideoCard({
               size={64}
               color="#fff"
             />
+          </S.TapIndicator>
+        </S.TapOverlay>
+      )}
+
+      {heartIndicator && (
+        <S.TapOverlay>
+          <S.TapIndicator>
+            <Icon name="like" size={72} color="#ff5f6d" />
           </S.TapIndicator>
         </S.TapOverlay>
       )}
