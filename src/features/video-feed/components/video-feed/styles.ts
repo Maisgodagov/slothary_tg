@@ -163,11 +163,11 @@ export const SeekContainer = styled.div`
   position: absolute;
   left: 8px;
   right: 8px;
-  bottom: calc(var(--safe-bottom) + 6px);
+  bottom: calc(var(--safe-bottom) + 2px);
   display: flex;
   flex-direction: column;
   gap: 6px;
-  z-index: 6;
+  z-index: 15;
 `;
 
 export const SeekTimes = styled.div`
@@ -206,19 +206,19 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
 
   &::-webkit-slider-thumb {
     appearance: none;
-    width: ${({ $showThumb }) => ($showThumb ? "16px" : "0px")};
-    height: ${({ $showThumb }) => ($showThumb ? "16px" : "0px")};
+    width: ${({ $showThumb }) => ($showThumb ? "20px" : "0px")};
+    height: ${({ $showThumb }) => ($showThumb ? "20px" : "0px")};
     border-radius: 50%;
     background: #ffffff;
     border: 3px solid #9a5fd9;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-    margin-top: ${({ $thin }) => ($thin ? "-6px" : "-4px")};
+    margin-top: ${({ $thin }) => ($thin ? "-8px" : "-6px")};
     transition: width 0.1s ease, height 0.1s ease, margin-top 0.1s ease;
   }
 
   &::-moz-range-thumb {
-    width: ${({ $showThumb }) => ($showThumb ? "16px" : "0px")};
-    height: ${({ $showThumb }) => ($showThumb ? "16px" : "0px")};
+    width: ${({ $showThumb }) => ($showThumb ? "20px" : "0px")};
+    height: ${({ $showThumb }) => ($showThumb ? "20px" : "0px")};
     border-radius: 50%;
     background: #ffffff;
     border: 3px solid #9a5fd9;
