@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { Button } from '../../../shared/ui/Button';
 import { Loader } from '../../../shared/ui/Loader';
@@ -34,6 +34,7 @@ function FeedVideoCard({
   maxHeight,
   isActive,
   onVisibleChange,
+  shouldLoad,
 }: {
   item: VideoFeedItem;
   contentState: ContentState;
@@ -45,6 +46,7 @@ function FeedVideoCard({
   maxHeight: string;
   isActive: boolean;
   onVisibleChange: (id: string, ratio: number) => void;
+  shouldLoad: boolean;
 }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -56,8 +58,10 @@ function FeedVideoCard({
   const tapTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    onLoadContent();
-  }, [onLoadContent]);
+    if (shouldLoad) {
+      onLoadContent();
+    }
+  }, [onLoadContent, shouldLoad]);
 
   // Track visibility to decide active playback
   useEffect(() => {
@@ -113,10 +117,11 @@ function FeedVideoCard({
     >
       <video
         ref={videoRef}
-        src={item.videoUrl}
+        src={shouldLoad ? item.videoUrl : undefined}
         playsInline
         autoPlay={false}
         muted={isMuted}
+        preload={shouldLoad ? 'metadata' : 'none'}
         onClick={() => {
           const el = videoRef.current;
           if (!el) return;
@@ -363,6 +368,9 @@ export function VideoFeed() {
     return () => observer.disconnect();
   }, [dispatch, feed.hasMore, isLoadingMore]);
 
+  const items = feed.items;
+  const activeIndex = useMemo(() => items.findIndex((i) => i.id === activeId), [activeId, items]);
+
   return (
     <div style={{ height: `calc(100vh - ${navOffset}px)`, padding: 0 }}>
       {feed.status === 'loading' && <Loader />}
@@ -382,21 +390,27 @@ export function VideoFeed() {
           scrollSnapType: 'y mandatory',
         }}
       >
-        {feed.items.map((item) => (
-          <FeedVideoCard
-            key={item.id}
-            item={item}
-            contentState={contentMap[item.id] ?? {}}
-            onLoadContent={() => loadContent(item.id)}
-            onLike={toggleLikeHandler}
-            showOriginal={showOriginal}
-            showTranslation={showTranslation}
-            cardHeight={cardHeight}
-            maxHeight={maxHeight}
-            isActive={activeId === item.id}
-            onVisibleChange={handleVisibleChange}
-          />
-        ))}
+        {items.map((item, index) => {
+          const isActive = activeId ? activeId === item.id : index === 0;
+          const isNext = index === (activeIndex >= 0 ? activeIndex + 1 : 1);
+          const shouldLoad = isActive || isNext;
+          return (
+            <FeedVideoCard
+              key={item.id}
+              item={item}
+              contentState={contentMap[item.id] ?? {}}
+              onLoadContent={() => loadContent(item.id)}
+              onLike={toggleLikeHandler}
+              showOriginal={showOriginal}
+              showTranslation={showTranslation}
+              cardHeight={cardHeight}
+              maxHeight={maxHeight}
+              isActive={isActive}
+              onVisibleChange={handleVisibleChange}
+              shouldLoad={shouldLoad}
+            />
+          );
+        })}
         {feed.hasMore && (
           <div ref={sentinelRef} style={{ height: 12, width: '100%' }}>
             {isLoadingMore && <Loader />}
