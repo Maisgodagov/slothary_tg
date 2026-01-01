@@ -47,8 +47,7 @@ button {
   width: 100vw;
   margin: 0 auto;
   padding: 0;
-  padding-top: var(--safe-top);
-  padding-bottom: calc(var(--safe-bottom) + var(--nav-height));
+  padding-bottom: var(--nav-height);
 }
 
 .section {
