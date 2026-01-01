@@ -62,7 +62,7 @@ export const TopRightStack = styled.div`
   top: calc(50% + 78px);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 `;
 
 export const SettingsButton = styled.button`
@@ -145,6 +145,7 @@ export const SubtitleLine = styled.div<{ $secondary?: boolean }>`
   border-radius: 12px;
   display: inline-block;
   width: fit-content;
+  margin: 0 auto;
 `;
 
 export const SubtitleLoading = styled.div`
@@ -160,15 +161,19 @@ export const Controls = styled.div`
 `;
 
 export const SeekContainer = styled.div`
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--safe-bottom) - 16px);
+  margin: 0 auto;
+  max-width: 960px;
+  bottom: calc(var(--safe-bottom) + var(--nav-height) - 13px);
+  padding: 0 0px;
   border-radius: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  z-index: 15;
+  z-index: 120;
+  pointer-events: auto;
 `;
 
 export const SeekTimes = styled.div`
@@ -192,6 +197,7 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   padding: 0;
   margin: 0;
   outline: none;
+  pointer-events: auto;
 
   &::-webkit-slider-runnable-track {
     height: ${({ $thin }) => ($thin ? "6px" : "10px")};
@@ -212,7 +218,7 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
     border-radius: 50%;
     z-index: 5000;
     background: ${({ $showThumb }) => ($showThumb ? "#ffffff" : "transparent")};
-    border: ${({ $showThumb }) => ($showThumb ? "3px solid #9a5fd9" : "none")};
+    border: ${({ $showThumb }) => ($showThumb ? "3px solid #2ea3ff" : "none")};
     box-shadow: ${({ $showThumb }) =>
       $showThumb ? "0 2px 10px rgba(0, 0, 0, 0.35)" : "none"};
     margin-top: ${({ $thin }) => ($thin ? "-9px" : "-6px")};
@@ -226,7 +232,7 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
     z-index: 5000;
 
     background: ${({ $showThumb }) => ($showThumb ? "#ffffff" : "transparent")};
-    border: ${({ $showThumb }) => ($showThumb ? "3px solid #9a5fd9" : "none")};
+    border: ${({ $showThumb }) => ($showThumb ? "3px solid #2ea3ff" : "none")};
     box-shadow: ${({ $showThumb }) =>
       $showThumb ? "0 2px 10px rgba(0, 0, 0, 0.35)" : "none"};
     transition: width 0.1s ease, height 0.1s ease;
@@ -248,10 +254,10 @@ export const TapOverlay = styled.div`
 `;
 
 export const IconButton = styled.button`
-  min-width: 72px;
-  height: 64px;
-  padding: 10px 12px;
-  border-radius: 18px;
+  min-width: 76px;
+  height: 72px;
+  padding: 12px 14px;
+  border-radius: 20px;
   backdrop-filter: none;
   background: transparent;
   border: none;
@@ -263,10 +269,10 @@ export const IconButton = styled.button`
 `;
 
 export const LikeButton = styled.button`
-  min-width: 72px;
-  height: 80px;
-  padding: 6px 12px;
-  border-radius: 18px;
+  min-width: 78px;
+  height: 88px;
+  padding: 8px 14px;
+  border-radius: 20px;
   backdrop-filter: none;
   font-size: 18px;
   background: transparent;

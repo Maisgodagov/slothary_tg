@@ -186,7 +186,7 @@ export function VideoCard({
         >
           <Icon
             name={isMuted ? "volume-off" : "volume-on"}
-            size={26}
+            size={30}
             color="#fff"
           />
         </S.IconButton>
@@ -196,7 +196,7 @@ export function VideoCard({
         <S.LikeButton onClick={() => onLike(item.id)}>
           <Icon
             name={item.isLiked ? "like" : "like-outline"}
-            size={36}
+            size={42}
             color={item.isLiked ? "#ff5f6d" : "#fff"}
           />
           <span style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>
@@ -223,44 +223,51 @@ export function VideoCard({
         )}
       </S.Subtitles>
 
-      <S.SeekContainer>
-        {isSeeking && (
-          <S.SeekTimes>
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </S.SeekTimes>
-        )}
-        <S.Controls>
-          <S.Progress
-            type="range"
-            min={0}
-            max={duration || 0}
-            step={0.1}
-            value={currentTime}
-            onChange={(e) => {
-              setIsSeeking(true);
-              handleSeek(Number(e.target.value));
-            }}
-            onPointerDown={() => {
-              setIsSeeking(true);
-            }}
-            onPointerUp={() => {
-              setIsSeeking(false);
-            }}
-            onPointerMove={() => setIsSeeking(true)}
-            onPointerCancel={() => setIsSeeking(false)}
-            $thin
-            $showThumb={isSeeking}
-            style={{
-              background: duration
-                ? `linear-gradient(90deg, #9a5fd9 ${
-                    (currentTime / duration) * 100
-                  }%, #ffffff33 ${(currentTime / duration) * 100}%)`
-                : "#ffffff33",
-            }}
-          />
-        </S.Controls>
-      </S.SeekContainer>
+      {isActive && (
+        <S.SeekContainer>
+          {isSeeking && (
+            <S.SeekTimes>
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </S.SeekTimes>
+          )}
+          <S.Controls>
+            <S.Progress
+              type="range"
+              min={0}
+              max={duration || 0}
+              step={0.1}
+              value={currentTime}
+              onChange={(e) => {
+                setIsSeeking(true);
+                handleSeek(Number(e.target.value));
+              }}
+              onPointerDown={() => {
+                setIsSeeking(true);
+              }}
+              onPointerUp={() => setIsSeeking(false)}
+              onPointerMove={() => setIsSeeking(true)}
+              onPointerCancel={() => setIsSeeking(false)}
+              onPointerLeave={() => setIsSeeking(false)}
+              onPointerOut={() => setIsSeeking(false)}
+              onMouseDown={() => setIsSeeking(true)}
+              onMouseUp={() => setIsSeeking(false)}
+              onTouchStart={() => setIsSeeking(true)}
+              onTouchEnd={() => setIsSeeking(false)}
+              onBlur={() => setIsSeeking(false)}
+              $thin
+              $showThumb={isSeeking}
+              style={{
+                background: duration
+                  ? `linear-gradient(90deg, #2ea3ff ${
+                      (currentTime / duration) * 100
+                    }%, #ffffff33 ${(currentTime / duration) * 100}%)`
+                  : "#ffffff33",
+              }}
+            />
+          </S.Controls>
+        </S.SeekContainer>
+      )}
     </S.Card>
   );
 }
