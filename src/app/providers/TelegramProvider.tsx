@@ -42,11 +42,29 @@ function updateSafeAreaFromViewport() {
   if (typeof window === 'undefined') return;
   const root = document.documentElement;
   const vv = window.visualViewport;
-  if (!vv) return;
-  const top = Math.max(0, vv.offsetTop);
-  const left = Math.max(0, vv.offsetLeft);
-  const right = Math.max(0, window.innerWidth - (vv.width + vv.offsetLeft));
-  const bottom = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+  const innerW = window.innerWidth || 0;
+  const innerH = window.innerHeight || 0;
+
+  const topVV = vv ? Math.max(0, vv.offsetTop) : 0;
+  const leftVV = vv ? Math.max(0, vv.offsetLeft) : 0;
+  const rightVV = vv ? Math.max(0, innerW - (vv.width + vv.offsetLeft)) : 0;
+  const bottomVV = vv ? Math.max(0, innerH - (vv.height + vv.offsetTop)) : 0;
+
+  // Use Telegram viewport heights as additional signal (important in WebApp)
+  const vh = (window as any).Telegram?.WebApp?.viewportHeight || 0;
+  const vsh = (window as any).Telegram?.WebApp?.viewportStableHeight || 0;
+  const bottomTG = vh > 0 ? Math.max(0, innerH - vh) : 0;
+  const topTG = vsh > 0 ? Math.max(0, innerH - vsh - bottomTG) : 0;
+
+  // Fallback padding to avoid overlap with status/nav bars
+  const fallbackTop = 20;
+  const fallbackBottom = 24;
+
+  const top = Math.max(topVV, topTG, fallbackTop);
+  const bottom = Math.max(bottomVV, bottomTG, fallbackBottom);
+  const left = Math.max(leftVV, 0);
+  const right = Math.max(rightVV, 0);
+
   root.style.setProperty('--safe-top', `${top}px`);
   root.style.setProperty('--safe-right', `${right}px`);
   root.style.setProperty('--safe-bottom', `${bottom}px`);
