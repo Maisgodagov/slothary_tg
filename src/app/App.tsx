@@ -7,8 +7,7 @@ import { TelegramProvider, useTelegram } from './providers/TelegramProvider';
 import { store, persistor } from './store';
 import HomePage from '../pages/HomePage';
 import DictionaryPage from '../pages/DictionaryPage';
-import ProfilePage from '../pages/ProfilePage';
-import AdminPage from '../pages/AdminPage';
+import VideoPage from '../pages/VideoPage';
 import { Loader } from '../shared/ui/Loader';
 import { NavBar } from '../shared/ui/NavBar';
 import '../shared/styles/global.css';
@@ -40,9 +39,8 @@ function App() {
             <div className="page">
               <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/video" element={<VideoPage />} />
                 <Route path="/dictionary" element={<DictionaryPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/admin" element={<AdminPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
