@@ -16,6 +16,7 @@ export const FeedScroll = styled.div<{ $navOffset: number }>`
   overflow-y: auto;
   padding: 0;
   scroll-snap-type: y mandatory;
+  overscroll-behavior-y: contain;
 `;
 
 export const ErrorText = styled.div`
@@ -45,6 +46,7 @@ export const Card = styled.div<{ $cardHeight: string; $maxHeight: string }>`
   max-height: ${({ $maxHeight }) => $maxHeight};
   width: 100%;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
 `;
 
 export const Player = styled.video`
