@@ -151,7 +151,16 @@ function FeedVideoCard({
         }}
       />
 
-      <div style={{ position: 'absolute', right: 12, top: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div
+        style={{
+          position: 'absolute',
+          right: 'calc(12px + var(--safe-right))',
+          top: 'calc(12px + var(--safe-top))',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+        }}
+      >
         <Button
           variant="ghost"
           style={{ minWidth: 64, height: 48, padding: '10px 12px', borderRadius: 16, backdropFilter: 'blur(6px)' }}
@@ -170,7 +179,7 @@ function FeedVideoCard({
       <div
         style={{
           position: 'absolute',
-          right: 12,
+          right: 'calc(12px + var(--safe-right))',
           top: '50%',
           transform: 'translateY(-50%)',
         }}
@@ -184,7 +193,16 @@ function FeedVideoCard({
         </Button>
       </div>
 
-      <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: 'calc(12px + var(--safe-top))',
+          left: 'calc(12px + var(--safe-left))',
+          display: 'flex',
+          gap: 6,
+          flexWrap: 'wrap',
+        }}
+      >
         {item.analysis.topics.slice(0, 2).map((topic) => (
           <span key={topic} className="badge">
             {topic}
@@ -198,7 +216,7 @@ function FeedVideoCard({
           left: 0,
           right: 0,
           bottom: 0,
-          padding: '14px 16px 20px',
+          padding: '14px 16px calc(20px + var(--safe-bottom))',
           background: 'linear-gradient(0deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.08) 100%)',
           color: '#fff',
           display: 'grid',
