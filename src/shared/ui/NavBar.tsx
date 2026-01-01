@@ -21,14 +21,19 @@ export function NavBar() {
   const items = [
     { to: "/", label: "Главная", icon: "home", iconActive: "home-filled" },
     { to: "/video", label: "Видео", icon: "video", iconActive: "video-filled" },
-    { to: "/dictionary", label: "Словарь", icon: "dictionary", iconActive: "dictionary-filled" },
+    {
+      to: "/dictionary",
+      label: "Словарь",
+      icon: "dictionary",
+      iconActive: "dictionary-filled",
+    },
   ] as const;
 
   return (
     <nav
       style={{
         position: "fixed",
-        bottom: "var(--safe-bottom)",
+        bottom: "calc(var(--safe-bottom) - 16px)",
         left: 0,
         right: 0,
         margin: "0 auto",

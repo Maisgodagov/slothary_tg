@@ -220,7 +220,7 @@ export function VideoCard({
           position: "absolute",
           left: 8,
           right: 8,
-          bottom: `calc(var(--safe-bottom) - 4px)`,
+          bottom: `calc(var(--safe-bottom) - 14px)`,
         }}
       >
         <S.Controls>

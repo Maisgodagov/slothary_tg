@@ -10,7 +10,7 @@ import { VideoCard } from "./VideoCard";
 import * as S from "./styles";
 import { Icon } from "../../../../shared/ui/Icon";
 
-const NAV_OFFSET = 62;
+const NAV_OFFSET = 43;
 
 export function VideoFeed() {
   const dispatch = useAppDispatch();

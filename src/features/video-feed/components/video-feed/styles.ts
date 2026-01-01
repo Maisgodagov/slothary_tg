@@ -62,7 +62,7 @@ export const TopRightStack = styled.div`
   top: calc(50% + 78px);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 `;
 
 export const SettingsButton = styled.button`
@@ -162,7 +162,8 @@ export const Controls = styled.div`
 export const Progress = styled.input<{ $thin?: boolean }>`
   width: 100%;
   height: ${({ $thin }) => ($thin ? "4px" : "10px")};
-  accent-color: #9a5fd9;
+  accent-color: #2607c2ff;
+  z-index: 556;
 `;
 
 export const TapIndicator = styled.div`
