@@ -184,8 +184,8 @@ export const IconButton = styled.button`
   height: 64px;
   padding: 10px 12px;
   border-radius: 18px;
-  backdrop-filter: blur(6px);
-  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: none;
+  background: transparent;
   border: none;
   color: #fff;
   display: inline-flex;
@@ -199,9 +199,9 @@ export const LikeButton = styled.button`
   height: 80px;
   padding: 6px 12px;
   border-radius: 18px;
-  backdrop-filter: blur(6px);
+  backdrop-filter: none;
   font-size: 18px;
-  background: rgba(0, 0, 0, 0.65);
+  background: transparent;
   border: none;
   color: #fff;
   display: inline-flex;
