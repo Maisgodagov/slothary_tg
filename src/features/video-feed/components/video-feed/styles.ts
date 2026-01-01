@@ -66,13 +66,13 @@ export const TopRightStack = styled.div`
 
 export const SettingsButton = styled.button`
   position: absolute;
-  right: calc(12px + var(--safe-right));
-  top: calc(8px + var(--safe-top));
+  right: calc(8px + var(--safe-right));
+  top: calc(var(--safe-top));
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   border-radius: 14px;
   border: none;
   background: rgba(0, 0, 0, 0.75);
@@ -95,7 +95,16 @@ export const TagsRow = styled.div`
   left: calc(12px + var(--safe-left));
   display: flex;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  max-width: 85%;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-right: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 export const Badge = styled.span`

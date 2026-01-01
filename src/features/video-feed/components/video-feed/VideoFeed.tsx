@@ -190,11 +190,11 @@ function Section({
   onSelect: (val: string[] | null) => void;
 }) {
   return (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, marginBottom: 10, color: "var(--tg-subtle)" }}>
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, marginBottom: 12, color: "var(--tg-subtle)" }}>
         {title.toUpperCase()}
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
         {options.map((opt) => {
           const isActive =
             (opt.value === null && selected === null) ||
@@ -204,8 +204,8 @@ function Section({
               key={opt.label}
               onClick={() => onSelect(opt.value)}
               style={{
-                padding: "8px 12px",
-                borderRadius: 12,
+                padding: "10px 14px",
+                borderRadius: 14,
                 border: isActive ? "1px solid var(--tg-accent-strong)" : "1px solid var(--tg-border)",
                 background: isActive ? "rgba(109, 211, 255, 0.18)" : "rgba(255,255,255,0.05)",
                 color: isActive ? "var(--tg-text)" : "var(--tg-subtle)",
@@ -229,7 +229,8 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "10px 2px",
+        padding: "12px 2px",
+        marginBottom: 8,
       }}
     >
       <div style={{ fontWeight: 700 }}>{label}</div>
@@ -283,7 +284,7 @@ function SettingsModal({
         display: "flex",
         justifyContent: "center",
         alignItems: "flex-end",
-        padding: "0 12px calc(12px + var(--safe-bottom))",
+        padding: "0 14px calc(18px + var(--safe-bottom))",
       }}
       onClick={onClose}
     >
@@ -295,12 +296,12 @@ function SettingsModal({
           background: "#0f111a",
           borderRadius: 16,
           border: "1px solid var(--tg-border)",
-          padding: "16px 16px 20px",
+          padding: "22px 20px 26px",
           color: "var(--tg-text)",
           boxShadow: "0 -8px 30px rgba(0,0,0,0.35)",
         }}
       >
-        <div style={{ width: 44, height: 4, background: "var(--tg-border)", borderRadius: 4, margin: "0 auto 14px" }} />
+        <div style={{ width: 44, height: 4, background: "var(--tg-border)", borderRadius: 4, margin: "0 auto 20px" }} />
 
         <Section
           title="Уровень языка"
