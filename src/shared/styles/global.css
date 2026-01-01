@@ -37,6 +37,7 @@ body {
   color: var(--tg-text);
   min-height: 100vh;
   overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
@@ -46,6 +47,7 @@ a {
 
 button {
   font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .page {
