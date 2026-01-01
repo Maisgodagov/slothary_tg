@@ -9,7 +9,7 @@ import type { ContentState } from "./types";
 import { VideoCard } from "./VideoCard";
 import * as S from "./styles";
 
-const NAV_OFFSET = 62;
+const NAV_OFFSET = 68;
 
 export function VideoFeed() {
   const dispatch = useAppDispatch();
@@ -68,7 +68,7 @@ export function VideoFeed() {
         }));
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : "пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ";
+          error instanceof Error ? error.message : "Не удалось загрузить видео";
         setContentMap((prev) => ({
           ...prev,
           [videoId]: {
@@ -158,7 +158,7 @@ export function VideoFeed() {
       </S.FeedScroll>
 
       {feed.hasMore && (
-        <S.HelperText>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</S.HelperText>
+        <S.HelperText>Прокручивайте вниз, лента подгружается автоматически</S.HelperText>
       )}
     </S.FeedContainer>
   );
