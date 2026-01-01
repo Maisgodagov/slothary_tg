@@ -60,8 +60,8 @@ function updateSafeAreaFromViewport() {
   const bottomFromStable = vsh > 0 ? Math.max(0, innerH - vsh) : 0;
 
   // Fallback padding to avoid overlap with status/nav bars
-  const fallbackTop = 32;
-  const fallbackBottom = 32;
+  const fallbackTop = 32 + 30;
+  const fallbackBottom = 32 + 30;
 
   const top = Math.max(topVV, topFromVH, fallbackTop);
   const bottom = Math.max(bottomVV, bottomFromStable, fallbackBottom);
