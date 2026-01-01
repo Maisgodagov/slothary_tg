@@ -2,14 +2,18 @@ import styled from "styled-components";
 import { Button } from "../../../../shared/ui/Button";
 
 export const FeedContainer = styled.div<{ $navOffset: number }>`
-  height: calc(100vh - var(--safe-bottom) - ${({ $navOffset }) => $navOffset}px);
+  height: calc(
+    100vh - var(--safe-bottom) - ${({ $navOffset }) => $navOffset}px
+  );
   padding: 0;
 `;
 
 export const FeedScroll = styled.div<{ $navOffset: number }>`
   display: grid;
   gap: 0;
-  height: calc(100vh - var(--safe-bottom) - ${({ $navOffset }) => $navOffset}px);
+  height: calc(
+    100vh - var(--safe-bottom) - ${({ $navOffset }) => $navOffset}px
+  );
   overflow-y: auto;
   padding: 0;
   scroll-snap-type: y mandatory;
@@ -54,10 +58,28 @@ export const Player = styled.video`
 export const TopRightStack = styled.div`
   position: absolute;
   right: calc(12px + var(--safe-right));
-  top: calc(12px + var(--safe-top));
+  top: calc(50% + 78px);
   display: flex;
   flex-direction: column;
   gap: 10px;
+`;
+
+export const SettingsButton = styled.button`
+  position: absolute;
+  right: calc(12px + var(--safe-right));
+  top: calc(8px + var(--safe-top));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  border: none;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  outline: none;
 `;
 
 export const LikeWrapper = styled.div`
@@ -69,7 +91,7 @@ export const LikeWrapper = styled.div`
 
 export const TagsRow = styled.div`
   position: absolute;
-  top: calc(6px + var(--safe-top));
+  top: calc(var(--safe-top) + 0px);
   left: calc(12px + var(--safe-left));
   display: flex;
   gap: 6px;
@@ -80,13 +102,12 @@ export const Badge = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  background: rgba(109, 211, 255, 0.14);
-  border: 1px solid rgba(109, 211, 255, 0.4);
-  color: var(--tg-accent);
-  backdrop-filter: blur(4px);
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  font-weight: 700;
 `;
 
 export const Subtitles = styled.div`
@@ -95,7 +116,11 @@ export const Subtitles = styled.div`
   right: 0;
   bottom: 0;
   padding: 14px 16px calc(20px + var(--safe-bottom));
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.08) 100%);
+  background: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
   color: #fff;
   display: grid;
   gap: 6px;

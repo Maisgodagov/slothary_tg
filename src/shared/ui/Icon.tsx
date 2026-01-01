@@ -11,6 +11,7 @@ import {
   IoPlay,
   IoPause,
   IoPlayCircleOutline,
+  IoEllipsisVertical,
 } from "react-icons/io5";
 
 type IconName =
@@ -24,7 +25,8 @@ type IconName =
   | "volume-off"
   | "play"
   | "pause"
-  | "video";
+  | "video"
+  | "more";
 
 const ICON_MAP: Record<IconName, React.ComponentType<{ size?: number; color?: string; style?: CSSProperties }>> = {
   home: IoHomeOutline,
@@ -38,6 +40,7 @@ const ICON_MAP: Record<IconName, React.ComponentType<{ size?: number; color?: st
   play: IoPlay,
   pause: IoPause,
   video: IoPlayCircleOutline,
+  more: IoEllipsisVertical,
 };
 
 interface IconProps {

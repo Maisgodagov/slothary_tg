@@ -16,6 +16,7 @@ export function VideoCard({
   isActive,
   onVisibleChange,
   shouldLoad,
+  onOpenSettings,
 }: VideoCardProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -100,6 +101,20 @@ export function VideoCard({
 
   const subtitlesVisible = enSub || ruSub || contentState.loading;
 
+  const tags: string[] = [];
+  if (item.analysis?.cefrLevel) tags.push(item.analysis.cefrLevel);
+  if (item.analysis?.speechSpeed) {
+    const speed =
+      item.analysis.speechSpeed === "slow"
+        ? "Медленная речь"
+        : item.analysis.speechSpeed === "fast"
+        ? "Быстрая речь"
+        : "Обычная скорость речи";
+    tags.push(speed);
+  }
+  if (item.author) tags.push(item.author);
+  if (item.isAdultContent) tags.push("18+");
+
   return (
     <S.Card ref={cardRef} $cardHeight={cardHeight} $maxHeight={maxHeight}>
       <S.Player
@@ -113,6 +128,10 @@ export function VideoCard({
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
       />
+
+      <S.SettingsButton onClick={onOpenSettings}>
+        <Icon name="more" size={20} />
+      </S.SettingsButton>
 
       <S.TopRightStack>
         <S.IconButton
@@ -136,8 +155,8 @@ export function VideoCard({
       </S.LikeWrapper>
 
       <S.TagsRow>
-        {item.analysis.topics.slice(0, 2).map((topic) => (
-          <S.Badge key={topic}>{topic}</S.Badge>
+        {tags.map((tag) => (
+          <S.Badge key={tag}>{tag}</S.Badge>
         ))}
       </S.TagsRow>
 

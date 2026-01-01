@@ -1,36 +1,56 @@
-import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { videoFeedApi } from './api';
-import type { VideoFeedItem, VideoFeedResponse } from './types';
-import type { RootState } from '../../app/store';
+import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { videoFeedApi } from "./api";
+import type { VideoFeedItem, VideoFeedResponse } from "./types";
+import type { RootState } from "../../app/store";
+
+type SpeechSpeedFilter = "slow" | "normal" | "fast";
+
+interface FeedFilters {
+  cefrLevels: string[] | null;
+  speechSpeeds: SpeechSpeedFilter[] | null;
+  showAdultContent: boolean;
+  showEnglishSubtitles: boolean;
+  showRussianSubtitles: boolean;
+}
 
 interface VideoFeedState {
   items: VideoFeedItem[];
-  status: 'idle' | 'loading' | 'refreshing' | 'failed';
+  status: "idle" | "loading" | "refreshing" | "failed";
   cursor: string | null;
   hasMore: boolean;
   fetchedCursors: (string | null)[];
   error?: string;
+  filters: FeedFilters;
 }
+
+const initialFilters: FeedFilters = {
+  cefrLevels: null,
+  speechSpeeds: null,
+  showAdultContent: true,
+  showEnglishSubtitles: true,
+  showRussianSubtitles: true,
+};
 
 const initialState: VideoFeedState = {
   items: [],
-  status: 'idle',
+  status: "idle",
   cursor: null,
   hasMore: true,
   fetchedCursors: [],
+  filters: initialFilters,
 };
 
 let cachedGuestId: string | null = null;
 const getGuestId = () => {
   if (cachedGuestId) return cachedGuestId;
   try {
-    const fromStorage = localStorage.getItem('guestUserId');
+    const fromStorage = localStorage.getItem("guestUserId");
     if (fromStorage) {
       cachedGuestId = fromStorage;
       return cachedGuestId;
     }
     const newId = crypto.randomUUID();
-    localStorage.setItem('guestUserId', newId);
+    localStorage.setItem("guestUserId", newId);
     cachedGuestId = newId;
     return cachedGuestId;
   } catch {
@@ -40,20 +60,23 @@ const getGuestId = () => {
 };
 
 export const loadFeed = createAsyncThunk<VideoFeedResponse, { reset?: boolean } | undefined, { state: RootState }>(
-  'videoFeed/load',
+  "videoFeed/load",
   async (options, { getState, rejectWithValue }) => {
     const { auth, videoFeed } = getState();
     const userId = auth.profile?.id ?? getGuestId();
+    const { filters } = videoFeed;
     try {
       return await videoFeedApi.getFeed(userId, {
         cursor: options?.reset ? null : videoFeed.cursor,
         limit: 5,
         role: auth.profile?.role ?? null,
-        moderationFilter: 'all',
-        showAdultContent: true,
+        moderationFilter: "all",
+        showAdultContent: filters.showAdultContent,
+        cefrLevels: filters.cefrLevels ? filters.cefrLevels.join(",") : undefined,
+        speechSpeeds: filters.speechSpeeds ? filters.speechSpeeds.join(",") : undefined,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Не удалось загрузить ленту';
+      const message = error instanceof Error ? error.message : "Не удалось загрузить ленту";
       return rejectWithValue(message);
     }
   },
@@ -63,35 +86,43 @@ export const toggleLike = createAsyncThunk<
   { contentId: string; likesCount: number; isLiked: boolean },
   string,
   { state: RootState }
->('videoFeed/toggleLike', async (contentId, { getState, rejectWithValue }) => {
+>("videoFeed/toggleLike", async (contentId, { getState, rejectWithValue }) => {
   const state = getState();
   const { auth, videoFeed } = state;
   const target = videoFeed.items.find((item) => item.id === contentId);
   const nextLike = target ? !target.isLiked : true;
 
   if (!auth.profile?.id) {
-    return rejectWithValue('Нужно войти, чтобы ставить лайк');
+    return rejectWithValue("Нужно авторизоваться, чтобы ставить лайки");
   }
 
   try {
     const response = await videoFeedApi.updateLike(auth.profile.id, contentId, nextLike, auth.profile.role ?? null);
     return { contentId, ...response };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Не удалось обновить лайк';
+    const message = error instanceof Error ? error.message : "Не удалось обновить лайк";
     return rejectWithValue(message);
   }
 });
 
 const videoFeedSlice = createSlice({
-  name: 'videoFeed',
+  name: "videoFeed",
   initialState,
   reducers: {
     resetFeed: () => initialState,
+    setFilters: (state, action: PayloadAction<Partial<FeedFilters>>) => {
+      state.filters = { ...state.filters, ...action.payload };
+      state.items = [];
+      state.cursor = null;
+      state.hasMore = true;
+      state.fetchedCursors = [];
+      state.status = "idle";
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(loadFeed.pending, (state, action) => {
-        state.status = action.meta.arg?.reset ? 'loading' : 'refreshing';
+        state.status = action.meta.arg?.reset ? "loading" : "refreshing";
         state.error = undefined;
         if (action.meta.arg?.reset) {
           state.items = [];
@@ -101,7 +132,7 @@ const videoFeedSlice = createSlice({
         }
       })
       .addCase(loadFeed.fulfilled, (state, action: PayloadAction<VideoFeedResponse>) => {
-        state.status = 'idle';
+        state.status = "idle";
         const existingIds = new Set(state.items.map((i) => i.id));
         const newItems = action.payload.items.filter((i) => !existingIds.has(i.id));
         state.items = [...state.items, ...newItems];
@@ -111,8 +142,8 @@ const videoFeedSlice = createSlice({
         state.hasMore = action.payload.hasMore && !noMore;
       })
       .addCase(loadFeed.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = (action.payload as string) ?? 'Ошибка загрузки ленты';
+        state.status = "failed";
+        state.error = (action.payload as string) ?? "Не удалось загрузить ленту";
       })
       .addCase(toggleLike.fulfilled, (state, action) => {
         state.items = state.items.map((item) =>
@@ -127,7 +158,7 @@ const videoFeedSlice = createSlice({
   },
 });
 
-export const { resetFeed } = videoFeedSlice.actions;
+export const { resetFeed, setFilters } = videoFeedSlice.actions;
 export const selectVideoFeed = (state: RootState) => state.videoFeed;
 
 export default videoFeedSlice.reducer;
