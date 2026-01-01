@@ -238,6 +238,7 @@ export function VideoCard({
             step={0.1}
             value={currentTime}
             onChange={(e) => {
+              setIsSeeking(true);
               handleSeek(Number(e.target.value));
             }}
             onPointerDown={() => {
@@ -248,10 +249,6 @@ export function VideoCard({
             }}
             onPointerMove={() => setIsSeeking(true)}
             onPointerCancel={() => setIsSeeking(false)}
-            onBlur={() => setIsSeeking(false)}
-            onPointerLeave={() => setIsSeeking(false)}
-            onMouseUp={() => setIsSeeking(false)}
-            onTouchEnd={() => setIsSeeking(false)}
             $thin
             $showThumb={isSeeking}
             style={{
