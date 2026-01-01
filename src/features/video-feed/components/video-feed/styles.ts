@@ -159,11 +159,72 @@ export const Controls = styled.div`
   align-items: center;
 `;
 
-export const Progress = styled.input<{ $thin?: boolean }>`
+export const SeekContainer = styled.div`
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: calc(var(--safe-bottom) + 6px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 6;
+`;
+
+export const SeekTimes = styled.div`
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  padding: 0 4px;
+`;
+
+export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   width: 100%;
   height: ${({ $thin }) => ($thin ? "4px" : "10px")};
-  accent-color: #2607c2ff;
-  z-index: 556;
+  appearance: none;
+  background: #ffffff33;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  outline: none;
+
+  &::-webkit-slider-runnable-track {
+    height: ${({ $thin }) => ($thin ? "4px" : "10px")};
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  &::-moz-range-track {
+    height: ${({ $thin }) => ($thin ? "4px" : "10px")};
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: ${({ $showThumb }) => ($showThumb ? "16px" : "0px")};
+    height: ${({ $showThumb }) => ($showThumb ? "16px" : "0px")};
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid #9a5fd9;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    margin-top: ${({ $thin }) => ($thin ? "-6px" : "-4px")};
+    transition: width 0.1s ease, height 0.1s ease, margin-top 0.1s ease;
+  }
+
+  &::-moz-range-thumb {
+    width: ${({ $showThumb }) => ($showThumb ? "16px" : "0px")};
+    height: ${({ $showThumb }) => ($showThumb ? "16px" : "0px")};
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid #9a5fd9;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    transition: width 0.1s ease, height 0.1s ease;
+  }
 `;
 
 export const TapIndicator = styled.div`

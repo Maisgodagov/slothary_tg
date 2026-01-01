@@ -24,6 +24,7 @@ export function VideoCard({
   const [tapIndicator, setTapIndicator] = useState<"play" | "pause" | null>(
     null
   );
+  const [isSeeking, setIsSeeking] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -108,6 +109,13 @@ export function VideoCard({
     if (!el) return;
     el.currentTime = next;
     setCurrentTime(next);
+  };
+
+  const formatTime = (seconds: number) => {
+    const total = Math.max(0, Math.floor(seconds || 0));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
   const subtitlesVisible = enSub || ruSub || contentState.loading;
@@ -215,14 +223,13 @@ export function VideoCard({
         )}
       </S.Subtitles>
 
-      <div
-        style={{
-          position: "absolute",
-          left: 8,
-          right: 8,
-          bottom: `calc(var(--safe-bottom) - 14px)`,
-        }}
-      >
+      <S.SeekContainer>
+        {isSeeking && (
+          <S.SeekTimes>
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </S.SeekTimes>
+        )}
         <S.Controls>
           <S.Progress
             type="range"
@@ -231,10 +238,22 @@ export function VideoCard({
             step={0.1}
             value={currentTime}
             onChange={(e) => handleSeek(Number(e.target.value))}
+            onPointerDown={() => setIsSeeking(true)}
+            onPointerUp={() => setIsSeeking(false)}
+            onPointerCancel={() => setIsSeeking(false)}
+            onBlur={() => setIsSeeking(false)}
             $thin
+            $showThumb={isSeeking}
+            style={{
+              background: duration
+                ? `linear-gradient(90deg, #9a5fd9 ${
+                    (currentTime / duration) * 100
+                  }%, #ffffff33 ${(currentTime / duration) * 100}%)`
+                : "#ffffff33",
+            }}
           />
         </S.Controls>
-      </div>
+      </S.SeekContainer>
     </S.Card>
   );
 }
