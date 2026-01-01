@@ -161,9 +161,10 @@ export const Controls = styled.div`
 
 export const SeekContainer = styled.div`
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: calc(var(--safe-bottom) + 2px);
+  left: 0;
+  right: 0;
+  bottom: calc(var(--safe-bottom) - 16px);
+  border-radius: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -183,7 +184,7 @@ export const SeekTimes = styled.div`
 
 export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   width: 100%;
-  height: ${({ $thin }) => ($thin ? "4px" : "10px")};
+  height: ${({ $thin }) => ($thin ? "6px" : "10px")};
   appearance: none;
   background: #ffffff33;
   border-radius: 999px;
@@ -193,36 +194,41 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   outline: none;
 
   &::-webkit-slider-runnable-track {
-    height: ${({ $thin }) => ($thin ? "4px" : "10px")};
+    height: ${({ $thin }) => ($thin ? "6px" : "10px")};
     border-radius: 999px;
     background: transparent;
   }
 
   &::-moz-range-track {
-    height: ${({ $thin }) => ($thin ? "4px" : "10px")};
+    height: ${({ $thin }) => ($thin ? "6px" : "10px")};
     border-radius: 999px;
     background: transparent;
   }
 
   &::-webkit-slider-thumb {
     appearance: none;
-    width: ${({ $showThumb }) => ($showThumb ? "20px" : "0px")};
-    height: ${({ $showThumb }) => ($showThumb ? "20px" : "0px")};
+    width: ${({ $showThumb }) => ($showThumb ? "24px" : "0px")};
+    height: ${({ $showThumb }) => ($showThumb ? "24px" : "0px")};
     border-radius: 50%;
-    background: #ffffff;
-    border: 3px solid #9a5fd9;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-    margin-top: ${({ $thin }) => ($thin ? "-8px" : "-6px")};
+    z-index: 5000;
+    background: ${({ $showThumb }) => ($showThumb ? "#ffffff" : "transparent")};
+    border: ${({ $showThumb }) => ($showThumb ? "3px solid #9a5fd9" : "none")};
+    box-shadow: ${({ $showThumb }) =>
+      $showThumb ? "0 2px 10px rgba(0, 0, 0, 0.35)" : "none"};
+    margin-top: ${({ $thin }) => ($thin ? "-9px" : "-6px")};
     transition: width 0.1s ease, height 0.1s ease, margin-top 0.1s ease;
   }
 
   &::-moz-range-thumb {
-    width: ${({ $showThumb }) => ($showThumb ? "20px" : "0px")};
-    height: ${({ $showThumb }) => ($showThumb ? "20px" : "0px")};
+    width: ${({ $showThumb }) => ($showThumb ? "24px" : "0px")};
+    height: ${({ $showThumb }) => ($showThumb ? "24px" : "0px")};
     border-radius: 50%;
-    background: #ffffff;
-    border: 3px solid #9a5fd9;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    z-index: 5000;
+
+    background: ${({ $showThumb }) => ($showThumb ? "#ffffff" : "transparent")};
+    border: ${({ $showThumb }) => ($showThumb ? "3px solid #9a5fd9" : "none")};
+    box-shadow: ${({ $showThumb }) =>
+      $showThumb ? "0 2px 10px rgba(0, 0, 0, 0.35)" : "none"};
     transition: width 0.1s ease, height 0.1s ease;
   }
 `;

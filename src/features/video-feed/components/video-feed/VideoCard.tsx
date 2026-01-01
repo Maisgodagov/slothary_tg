@@ -25,7 +25,6 @@ export function VideoCard({
     null
   );
   const [isSeeking, setIsSeeking] = useState(false);
-  const seekTimeoutRef = useRef<number | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -238,22 +237,21 @@ export function VideoCard({
             max={duration || 0}
             step={0.1}
             value={currentTime}
-            onChange={(e) => handleSeek(Number(e.target.value))}
+            onChange={(e) => {
+              handleSeek(Number(e.target.value));
+            }}
             onPointerDown={() => {
               setIsSeeking(true);
-              if (seekTimeoutRef.current) {
-                window.clearTimeout(seekTimeoutRef.current);
-              }
             }}
             onPointerUp={() => {
-              if (seekTimeoutRef.current) {
-                window.clearTimeout(seekTimeoutRef.current);
-              }
-              seekTimeoutRef.current = window.setTimeout(() => {
-                setIsSeeking(false);
-              }, 120);
+              setIsSeeking(false);
             }}
+            onPointerMove={() => setIsSeeking(true)}
             onPointerCancel={() => setIsSeeking(false)}
+            onBlur={() => setIsSeeking(false)}
+            onPointerLeave={() => setIsSeeking(false)}
+            onMouseUp={() => setIsSeeking(false)}
+            onTouchEnd={() => setIsSeeking(false)}
             $thin
             $showThumb={isSeeking}
             style={{

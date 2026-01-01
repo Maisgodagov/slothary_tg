@@ -41,7 +41,7 @@ export function NavBar() {
         width: "100%",
         background: "rgba(23, 26, 39, 0.9)",
         border: "none",
-        borderRadius: 14,
+        borderRadius: 0,
         padding: 2,
         boxShadow: "0 6px 20px rgba(0,0,0,0.28)",
         backdropFilter: "blur(5px)",
