@@ -1,9 +1,11 @@
 import type { CSSProperties } from "react";
 import {
   IoBookOutline,
+  IoBook,
   IoHeart,
   IoHeartOutline,
   IoHomeOutline,
+  IoHome,
   IoPersonCircleOutline,
   IoSettingsOutline,
   IoVolumeHigh,
@@ -11,12 +13,16 @@ import {
   IoPlay,
   IoPause,
   IoPlayCircleOutline,
+  IoPlayCircle,
   IoEllipsisVertical,
+  IoClose,
 } from "react-icons/io5";
 
 type IconName =
   | "home"
+  | "home-filled"
   | "dictionary"
+  | "dictionary-filled"
   | "profile"
   | "admin"
   | "like"
@@ -26,11 +32,15 @@ type IconName =
   | "play"
   | "pause"
   | "video"
-  | "more";
+  | "video-filled"
+  | "more"
+  | "close";
 
 const ICON_MAP: Record<IconName, React.ComponentType<{ size?: number; color?: string; style?: CSSProperties }>> = {
   home: IoHomeOutline,
+  "home-filled": IoHome,
   dictionary: IoBookOutline,
+  "dictionary-filled": IoBook,
   profile: IoPersonCircleOutline,
   admin: IoSettingsOutline,
   like: IoHeart,
@@ -40,7 +50,9 @@ const ICON_MAP: Record<IconName, React.ComponentType<{ size?: number; color?: st
   play: IoPlay,
   pause: IoPause,
   video: IoPlayCircleOutline,
+  "video-filled": IoPlayCircle,
   more: IoEllipsisVertical,
+  close: IoClose,
 };
 
 interface IconProps {

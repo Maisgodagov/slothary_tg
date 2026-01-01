@@ -12,12 +12,18 @@ const linkStyle: CSSProperties = {
   color: "var(--tg-subtle)",
   fontSize: 12,
   fontWeight: 600,
-  padding: "8px 10px",
+  padding: "6px 8px",
   flex: 1,
   borderRadius: 12,
 };
 
 export function NavBar() {
+  const items = [
+    { to: "/", label: "Главная", icon: "home", iconActive: "home-filled" },
+    { to: "/video", label: "Видео", icon: "video", iconActive: "video-filled" },
+    { to: "/dictionary", label: "Словарь", icon: "dictionary", iconActive: "dictionary-filled" },
+  ] as const;
+
   return (
     <nav
       style={{
@@ -29,9 +35,9 @@ export function NavBar() {
         maxWidth: 960,
         width: "100%",
         background: "rgba(23, 26, 39, 0.9)",
-        border: "1px solid var(--tg-border)",
+        border: "none",
         borderRadius: 14,
-        padding: 4,
+        padding: 2,
         boxShadow: "0 6px 20px rgba(0,0,0,0.28)",
         backdropFilter: "blur(5px)",
         display: "grid",
@@ -39,39 +45,28 @@ export function NavBar() {
         zIndex: 10,
       }}
     >
-      <NavLink
-        to="/"
-        style={({ isActive }) => ({
-          ...linkStyle,
-          color: isActive ? "var(--tg-text)" : linkStyle.color,
-          background: isActive ? "rgba(109, 211, 255, 0.12)" : "transparent",
-        })}
-      >
-        <Icon name="home" size={22} />
-        Главная
-      </NavLink>
-      <NavLink
-        to="/video"
-        style={({ isActive }) => ({
-          ...linkStyle,
-          color: isActive ? "var(--tg-text)" : linkStyle.color,
-          background: isActive ? "rgba(109, 211, 255, 0.12)" : "transparent",
-        })}
-      >
-        <Icon name="video" size={22} />
-        Видео
-      </NavLink>
-      <NavLink
-        to="/dictionary"
-        style={({ isActive }) => ({
-          ...linkStyle,
-          color: isActive ? "var(--tg-text)" : linkStyle.color,
-          background: isActive ? "rgba(109, 211, 255, 0.12)" : "transparent",
-        })}
-      >
-        <Icon name="dictionary" size={22} />
-        Словарь
-      </NavLink>
+      {items.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          style={({ isActive }) => ({
+            ...linkStyle,
+            color: isActive ? "var(--tg-text)" : (linkStyle.color as string),
+            background: isActive ? "rgba(109, 211, 255, 0.12)" : "transparent",
+          })}
+        >
+          {({ isActive }) => (
+            <>
+              <Icon
+                name={(isActive ? item.iconActive : item.icon) as any}
+                size={22}
+                color={isActive ? "#fff" : (linkStyle.color as string)}
+              />
+              {item.label}
+            </>
+          )}
+        </NavLink>
+      ))}
     </nav>
   );
 }

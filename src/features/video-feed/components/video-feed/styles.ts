@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import { Button } from "../../../../shared/ui/Button";
 
 export const FeedContainer = styled.div<{ $navOffset: number }>`
   height: calc(
@@ -124,25 +123,24 @@ export const Subtitles = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 14px 16px calc(20px + var(--safe-bottom));
-  background: linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.78) 0%,
-    rgba(0, 0, 0, 0.08) 100%
-  );
+  padding: 12px 16px calc(18px + var(--safe-bottom));
   color: #fff;
   display: grid;
   gap: 6px;
+  align-items: center;
+  justify-items: center;
+  text-align: center;
 `;
 
 export const SubtitleLine = styled.div<{ $secondary?: boolean }>`
-  font-weight: ${({ $secondary }) => ($secondary ? 700 : 800)};
+  font-weight: ${({ $secondary }) => ($secondary ? 600 : 700)};
   font-size: ${({ $secondary }) => ($secondary ? "22px" : "24px")};
   color: ${({ $secondary }) => ($secondary ? "#d8e4ff" : "#fff")};
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
-  background: rgba(0, 0, 0, 0.6);
-  padding: 8px 10px;
-  border-radius: 10px;
+  background: ${({ $secondary }) =>
+    $secondary ? "rgba(0, 0, 0, 0.85)" : "rgba(0, 0, 0, 0.85)"};
+  padding: 8px 12px;
+  border-radius: 12px;
   display: inline-block;
   width: fit-content;
 `;
@@ -156,34 +154,58 @@ export const Controls = styled.div`
   display: grid;
   gap: 8px;
   position: relative;
+  align-items: center;
 `;
 
-export const Progress = styled.input`
+export const Progress = styled.input<{ $thin?: boolean }>`
   width: 100%;
+  height: ${({ $thin }) => ($thin ? "4px" : "10px")};
+  accent-color: #9a5fd9;
 `;
 
 export const TapIndicator = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   font-size: 72px;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.9);
 `;
 
-export const IconButton = styled(Button)`
-  min-width: 64px;
-  height: 48px;
-  padding: 10px 12px;
-  border-radius: 16px;
-  backdrop-filter: blur(6px);
+export const TapOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 `;
 
-export const LikeButton = styled(Button)`
+export const IconButton = styled.button`
   min-width: 72px;
   height: 64px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: 18px;
   backdrop-filter: blur(6px);
-  font-size: 20px;
+  background: rgba(0, 0, 0, 0.75);
+  border: none;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+`;
+
+export const LikeButton = styled.button`
+  min-width: 72px;
+  height: 80px;
+  padding: 6px 12px;
+  border-radius: 18px;
+  backdrop-filter: blur(6px);
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.65);
+  border: none;
+  color: #fff;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  cursor: pointer;
 `;

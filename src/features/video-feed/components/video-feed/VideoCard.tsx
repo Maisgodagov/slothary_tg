@@ -21,7 +21,9 @@ export function VideoCard({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [tapIndicator, setTapIndicator] = useState<"play" | "pause" | null>(null);
+  const [tapIndicator, setTapIndicator] = useState<"play" | "pause" | null>(
+    null
+  );
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -39,7 +41,9 @@ export function VideoCard({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => onVisibleChange(item.id, entry.intersectionRatio));
+        entries.forEach((entry) =>
+          onVisibleChange(item.id, entry.intersectionRatio)
+        );
       },
       { threshold: [0.5, 0.75, 0.9] }
     );
@@ -67,8 +71,12 @@ export function VideoCard({
   }, [isMuted]);
 
   const content = contentState.data;
-  const enSub = showOriginal ? findChunkText(content?.transcription?.chunks, currentTime) : "";
-  const ruSub = showTranslation ? findChunkText(content?.translation?.chunks, currentTime) : "";
+  const enSub = showOriginal
+    ? findChunkText(content?.transcription?.chunks, currentTime)
+    : "";
+  const ruSub = showTranslation
+    ? findChunkText(content?.translation?.chunks, currentTime)
+    : "";
 
   const handleTogglePlay = () => {
     const el = videoRef.current;
@@ -81,7 +89,10 @@ export function VideoCard({
       if (tapTimeoutRef.current) {
         window.clearTimeout(tapTimeoutRef.current);
       }
-      tapTimeoutRef.current = window.setTimeout(() => setTapIndicator(null), 500);
+      tapTimeoutRef.current = window.setTimeout(
+        () => setTapIndicator(null),
+        500
+      );
     } else {
       el.pause();
       setTapIndicator("pause");
@@ -100,6 +111,7 @@ export function VideoCard({
   };
 
   const subtitlesVisible = enSub || ruSub || contentState.loading;
+  const likesCount = item.likesCount ?? content?.likesCount ?? 0;
 
   const tags: string[] = [];
   if (item.analysis?.cefrLevel) tags.push(item.analysis.cefrLevel);
@@ -124,10 +136,31 @@ export function VideoCard({
         autoPlay={false}
         muted={isMuted}
         preload={shouldLoad ? "metadata" : "none"}
+        loop
         onClick={handleTogglePlay}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onEnded={() => {
+          const el = videoRef.current;
+          if (!el) return;
+          el.currentTime = 0;
+          if (isActive) {
+            el.play().catch(() => null);
+          }
+        }}
       />
+
+      {tapIndicator && (
+        <S.TapOverlay>
+          <S.TapIndicator>
+            <Icon
+              name={tapIndicator === "play" ? "play" : "pause"}
+              size={64}
+              color="#fff"
+            />
+          </S.TapIndicator>
+        </S.TapOverlay>
+      )}
 
       <S.SettingsButton onClick={onOpenSettings}>
         <Icon name="more" size={20} />
@@ -135,7 +168,6 @@ export function VideoCard({
 
       <S.TopRightStack>
         <S.IconButton
-          variant="ghost"
           onClick={() => {
             setIsMuted((v) => {
               const el = videoRef.current;
@@ -144,13 +176,24 @@ export function VideoCard({
             });
           }}
         >
-          <Icon name={isMuted ? "volume-off" : "volume-on"} size={22} />
+          <Icon
+            name={isMuted ? "volume-off" : "volume-on"}
+            size={26}
+            color="#fff"
+          />
         </S.IconButton>
       </S.TopRightStack>
 
       <S.LikeWrapper>
-        <S.LikeButton variant={item.isLiked ? "primary" : "ghost"} onClick={() => onLike(item.id)}>
-          <Icon name={item.isLiked ? "like" : "like-outline"} size={26} /> {content?.likesCount ?? item.likesCount}
+        <S.LikeButton onClick={() => onLike(item.id)}>
+          <Icon
+            name={item.isLiked ? "like" : "like-outline"}
+            size={36}
+            color={item.isLiked ? "#ff5f6d" : "#fff"}
+          />
+          <span style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>
+            {likesCount}
+          </span>
         </S.LikeButton>
       </S.LikeWrapper>
 
@@ -163,12 +206,23 @@ export function VideoCard({
       <S.Subtitles>
         {subtitlesVisible && (
           <div style={{ display: "grid", gap: 4, marginBottom: 4 }}>
-            {contentState.loading && <S.SubtitleLoading>Загружаем субтитры…</S.SubtitleLoading>}
+            {contentState.loading && (
+              <S.SubtitleLoading>Загружаем субтитры…</S.SubtitleLoading>
+            )}
             {enSub && <S.SubtitleLine>{enSub}</S.SubtitleLine>}
             {ruSub && <S.SubtitleLine $secondary>{ruSub}</S.SubtitleLine>}
           </div>
         )}
+      </S.Subtitles>
 
+      <div
+        style={{
+          position: "absolute",
+          left: 8,
+          right: 8,
+          bottom: `calc(var(--safe-bottom) - 4px)`,
+        }}
+      >
         <S.Controls>
           <S.Progress
             type="range"
@@ -177,14 +231,10 @@ export function VideoCard({
             step={0.1}
             value={currentTime}
             onChange={(e) => handleSeek(Number(e.target.value))}
+            $thin
           />
-          {tapIndicator && (
-            <S.TapIndicator>
-              <Icon name={tapIndicator === "play" ? "play" : "pause"} size={64} />
-            </S.TapIndicator>
-          )}
         </S.Controls>
-      </S.Subtitles>
+      </div>
     </S.Card>
   );
 }

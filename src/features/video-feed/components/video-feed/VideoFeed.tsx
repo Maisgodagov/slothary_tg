@@ -8,6 +8,7 @@ import type { VideoFeedItem } from "../../types";
 import type { ContentState } from "./types";
 import { VideoCard } from "./VideoCard";
 import * as S from "./styles";
+import { Icon } from "../../../../shared/ui/Icon";
 
 const NAV_OFFSET = 62;
 
@@ -19,7 +20,9 @@ export function VideoFeed() {
   const showOriginal = feed.filters.showEnglishSubtitles;
   const showTranslation = feed.filters.showRussianSubtitles;
 
-  const [contentMap, setContentMap] = useState<Record<string, ContentState>>({});
+  const [contentMap, setContentMap] = useState<Record<string, ContentState>>(
+    {}
+  );
   const [activeId, setActiveId] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const lastUserId = useRef<string | null>(null);
@@ -59,13 +62,18 @@ export function VideoFeed() {
       }));
 
       try {
-        const data = await videoFeedApi.getContent(auth.profile?.id ?? null, videoId, auth.profile?.role ?? null);
+        const data = await videoFeedApi.getContent(
+          auth.profile?.id ?? null,
+          videoId,
+          auth.profile?.role ?? null
+        );
         setContentMap((prev) => ({
           ...prev,
           [videoId]: { data, loading: false, error: undefined },
         }));
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Не удалось загрузить видео";
+        const message =
+          error instanceof Error ? error.message : "Не удалось загрузить видео";
         setContentMap((prev) => ({
           ...prev,
           [videoId]: {
@@ -115,7 +123,10 @@ export function VideoFeed() {
   }, [dispatch, feed.hasMore, isLoadingMore]);
 
   const items = feed.items;
-  const activeIndex = useMemo(() => items.findIndex((i: VideoFeedItem) => i.id === activeId), [activeId, items]);
+  const activeIndex = useMemo(
+    () => items.findIndex((i: VideoFeedItem) => i.id === activeId),
+    [activeId, items]
+  );
 
   return (
     <S.FeedContainer $navOffset={NAV_OFFSET}>
@@ -150,10 +161,18 @@ export function VideoFeed() {
           );
         })}
 
-        {feed.hasMore && <S.Sentinel ref={sentinelRef}>{isLoadingMore && <Loader />}</S.Sentinel>}
+        {feed.hasMore && (
+          <S.Sentinel ref={sentinelRef}>
+            {isLoadingMore && <Loader />}
+          </S.Sentinel>
+        )}
       </S.FeedScroll>
 
-      {feed.hasMore && <S.HelperText>Прокручивайте вниз, лента подгружается автоматически</S.HelperText>}
+      {feed.hasMore && (
+        <S.HelperText>
+          Прокручивайте вниз, лента подгружается автоматически
+        </S.HelperText>
+      )}
 
       {settingsOpen && (
         <SettingsModal
@@ -191,14 +210,25 @@ function Section({
 }) {
   return (
     <div style={{ marginBottom: 18 }}>
-      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, marginBottom: 12, color: "var(--tg-subtle)" }}>
+      <div
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          letterSpacing: 0.5,
+          marginBottom: 12,
+          color: "#6a6f7a",
+        }}
+      >
         {title.toUpperCase()}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
         {options.map((opt) => {
           const isActive =
             (opt.value === null && selected === null) ||
-            (opt.value !== null && selected !== null && opt.value.length === selected.length && opt.value.every((v, idx) => selected[idx] === v));
+            (opt.value !== null &&
+              selected !== null &&
+              opt.value.length === selected.length &&
+              opt.value.every((v, idx) => selected[idx] === v));
           return (
             <button
               key={opt.label}
@@ -206,9 +236,9 @@ function Section({
               style={{
                 padding: "10px 14px",
                 borderRadius: 14,
-                border: isActive ? "1px solid var(--tg-accent-strong)" : "1px solid var(--tg-border)",
-                background: isActive ? "rgba(109, 211, 255, 0.18)" : "rgba(255,255,255,0.05)",
-                color: isActive ? "var(--tg-text)" : "var(--tg-subtle)",
+                border: isActive ? "1px solid #0f7aa7" : "1px solid #d8dadd",
+                background: isActive ? "#dbeef5" : "#ededf0",
+                color: "#1a1d29",
                 fontWeight: 700,
                 cursor: "pointer",
               }}
@@ -222,7 +252,15 @@ function Section({
   );
 }
 
-function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <div
       style={{
@@ -234,13 +272,26 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
       }}
     >
       <div style={{ fontWeight: 700 }}>{label}</div>
-      <label style={{ position: "relative", display: "inline-block", width: 48, height: 26, cursor: "pointer" }}>
-        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
+      <label
+        style={{
+          position: "relative",
+          display: "inline-block",
+          width: 48,
+          height: 26,
+          cursor: "pointer",
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          style={{ opacity: 0, width: 0, height: 0 }}
+        />
         <span
           style={{
             position: "absolute",
             inset: 0,
-            background: checked ? "var(--tg-accent-strong)" : "rgba(255,255,255,0.15)",
+            background: checked ? "#0f7aa7" : "#d0d5dc",
             borderRadius: 26,
             transition: "0.2s",
           }}
@@ -254,7 +305,7 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
             height: 20,
             borderRadius: "50%",
             background: "#fff",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.35)",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
             transition: "0.2s",
           }}
         />
@@ -283,8 +334,8 @@ function SettingsModal({
         zIndex: 20,
         display: "flex",
         justifyContent: "center",
-        alignItems: "flex-end",
-        padding: "0 14px calc(18px + var(--safe-bottom))",
+        alignItems: "center",
+        padding: "0 14px",
       }}
       onClick={onClose}
     >
@@ -293,15 +344,42 @@ function SettingsModal({
         style={{
           width: "100%",
           maxWidth: 720,
-          background: "#0f111a",
-          borderRadius: 16,
-          border: "1px solid var(--tg-border)",
+          background: "#ffffff",
+          borderRadius: 20,
+          border: "1px solid #e6e8ef",
           padding: "22px 20px 26px",
-          color: "var(--tg-text)",
-          boxShadow: "0 -8px 30px rgba(0,0,0,0.35)",
+          color: "#1a1d29",
+          boxShadow: "0 -8px 30px rgba(0,0,0,0.25)",
+          position: "relative",
         }}
       >
-        <div style={{ width: 44, height: 4, background: "var(--tg-border)", borderRadius: 4, margin: "0 auto 20px" }} />
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            width: 32,
+            height: 32,
+            borderRadius: 12,
+            border: "none",
+            background: "#f5f6fa",
+            color: "#404658",
+            cursor: "pointer",
+          }}
+          aria-label="Закрыть"
+        >
+          <Icon name="close" size={20} />
+        </button>
+        <div
+          style={{
+            width: 44,
+            height: 4,
+            background: "#d9dce3",
+            borderRadius: 4,
+            margin: "0 auto 20px",
+          }}
+        />
 
         <Section
           title="Уровень языка"
@@ -312,7 +390,9 @@ function SettingsModal({
             { label: "Высокий — B2, C1", value: ["B2", "C1"] },
           ]}
           selected={filters.cefrLevels}
-          onSelect={(val) => onChangeFilters((p: any) => ({ ...p, cefrLevels: val }))}
+          onSelect={(val) =>
+            onChangeFilters((p: any) => ({ ...p, cefrLevels: val }))
+          }
         />
 
         <Section
@@ -324,36 +404,50 @@ function SettingsModal({
             { label: "Быстрая речь", value: ["fast"] },
           ]}
           selected={filters.speechSpeeds}
-          onSelect={(val) => onChangeFilters((p: any) => ({ ...p, speechSpeeds: val }))}
+          onSelect={(val) =>
+            onChangeFilters((p: any) => ({ ...p, speechSpeeds: val }))
+          }
         />
 
-        <div style={{ borderTop: "1px solid var(--tg-border)", margin: "16px 0", opacity: 0.7 }} />
+        <div
+          style={{
+            borderTop: "1px solid #e6e8ef",
+            margin: "18px 0",
+            opacity: 1,
+          }}
+        />
 
         <ToggleRow
           label="Английские субтитры"
           checked={filters.showEnglishSubtitles}
-          onChange={(v) => onChangeFilters((p: any) => ({ ...p, showEnglishSubtitles: v }))}
+          onChange={(v) =>
+            onChangeFilters((p: any) => ({ ...p, showEnglishSubtitles: v }))
+          }
         />
         <ToggleRow
           label="Русские субтитры"
           checked={filters.showRussianSubtitles}
-          onChange={(v) => onChangeFilters((p: any) => ({ ...p, showRussianSubtitles: v }))}
+          onChange={(v) =>
+            onChangeFilters((p: any) => ({ ...p, showRussianSubtitles: v }))
+          }
         />
         <ToggleRow
           label="Показывать 18+ видео"
           checked={filters.showAdultContent}
-          onChange={(v) => onChangeFilters((p: any) => ({ ...p, showAdultContent: v }))}
+          onChange={(v) =>
+            onChangeFilters((p: any) => ({ ...p, showAdultContent: v }))
+          }
         />
 
         <button
           onClick={onSave}
           style={{
             width: "100%",
-            marginTop: 16,
+            marginTop: 18,
             padding: "14px 12px",
             borderRadius: 12,
             border: "none",
-            background: "var(--tg-accent-strong)",
+            background: "#0f7aa7",
             color: "#fff",
             fontWeight: 700,
             fontSize: 16,
