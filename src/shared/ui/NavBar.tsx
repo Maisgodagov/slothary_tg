@@ -22,7 +22,7 @@ export function NavBar() {
     <nav
       style={{
         position: "fixed",
-        bottom: "calc(var(--safe-bottom) + 4px)",
+        bottom: "var(--safe-bottom)",
         left: 0,
         right: 0,
         margin: "0 auto",

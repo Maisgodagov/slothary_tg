@@ -69,7 +69,7 @@ export const LikeWrapper = styled.div`
 
 export const TagsRow = styled.div`
   position: absolute;
-  top: calc(12px + var(--safe-top));
+  top: calc(6px + var(--safe-top));
   left: calc(12px + var(--safe-left));
   display: flex;
   gap: 6px;
