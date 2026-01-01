@@ -59,8 +59,11 @@ function updateSafeAreaFromViewport() {
   const bottomFromTelegram = vsh && vh ? Math.max(0, vsh - vh) : 0;
   const topFromTelegram = Math.max(0, innerH - Math.max(vh, vsh));
 
-  const top = Math.max(topVV, topFromTelegram);
-  const bottom = Math.max(bottomVV, bottomFromTelegram);
+  const extraTop = 5;
+  const extraBottom = 20;
+
+  const top = Math.max(topVV, topFromTelegram) + extraTop;
+  const bottom = Math.max(bottomVV, bottomFromTelegram) + extraBottom;
   const left = leftVV;
   const right = rightVV;
 
