@@ -51,17 +51,20 @@ function updateSafeAreaFromViewport() {
   const bottomVV = vv ? Math.max(0, innerH - (vv.height + vv.offsetTop)) : 0;
 
   // Use Telegram viewport heights as additional signal (important in WebApp)
-  const vh = (window as any).Telegram?.WebApp?.viewportHeight || 0;
-  const vsh = (window as any).Telegram?.WebApp?.viewportStableHeight || 0;
-  const bottomTG = vh > 0 ? Math.max(0, innerH - vh) : 0;
-  const topTG = vsh > 0 ? Math.max(0, innerH - vsh - bottomTG) : 0;
+  const webApp = (window as any).Telegram?.WebApp;
+  const vh = webApp?.viewportHeight || 0;
+  const vsh = webApp?.viewportStableHeight || 0;
+
+  // Difference between innerHeight and reported viewport gives us overlays (headers/nav)
+  const topFromVH = vh > 0 ? Math.max(0, innerH - vh) : 0;
+  const bottomFromStable = vsh > 0 ? Math.max(0, innerH - vsh) : 0;
 
   // Fallback padding to avoid overlap with status/nav bars
-  const fallbackTop = 20;
-  const fallbackBottom = 24;
+  const fallbackTop = 32;
+  const fallbackBottom = 32;
 
-  const top = Math.max(topVV, topTG, fallbackTop);
-  const bottom = Math.max(bottomVV, bottomTG, fallbackBottom);
+  const top = Math.max(topVV, topFromVH, fallbackTop);
+  const bottom = Math.max(bottomVV, bottomFromStable, fallbackBottom);
   const left = Math.max(leftVV, 0);
   const right = Math.max(rightVV, 0);
 
