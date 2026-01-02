@@ -25,6 +25,7 @@ export function VideoCard({
     null
   );
   const [isSeeking, setIsSeeking] = useState(false);
+  const [showExercises, setShowExercises] = useState(false);
   const lastTapRef = useRef<number>(0);
   const playTimeoutRef = useRef<number | null>(null);
   const heartTimeoutRef = useRef<number | null>(null);
@@ -131,6 +132,10 @@ export function VideoCard({
   };
 
   const handleTap = () => {
+    if (showExercises) {
+      setShowExercises(false);
+      return;
+    }
     const now = Date.now();
     if (now - lastTapRef.current < 320) {
       if (playTimeoutRef.current) {
@@ -143,7 +148,10 @@ export function VideoCard({
       if (heartTimeoutRef.current) {
         window.clearTimeout(heartTimeoutRef.current);
       }
-      heartTimeoutRef.current = window.setTimeout(() => setHeartIndicator(false), 550);
+      heartTimeoutRef.current = window.setTimeout(
+        () => setHeartIndicator(false),
+        550
+      );
       return;
     }
     lastTapRef.current = now;
@@ -183,6 +191,7 @@ export function VideoCard({
         muted={isMuted}
         preload={shouldLoad ? "metadata" : "none"}
         loop
+        $shrink={showExercises}
         onClick={handleTap}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
@@ -216,60 +225,80 @@ export function VideoCard({
         </S.TapOverlay>
       )}
 
-      <S.SettingsButton onClick={onOpenSettings}>
-        <Icon name="more" size={20} />
-      </S.SettingsButton>
+      {!showExercises && (
+        <S.SettingsButton onClick={onOpenSettings}>
+          <Icon name="more" size={20} />
+        </S.SettingsButton>
+      )}
 
-      <S.TopRightStack>
+      {!showExercises && (
+      <S.TopRightStack $withSheet={showExercises}>
         <S.IconButton
           onClick={() => {
             setIsMuted((v) => {
               const el = videoRef.current;
-              if (el) el.muted = !v;
-              return !v;
-            });
-          }}
-        >
-          <Icon
-            name={isMuted ? "volume-off" : "volume-on"}
-            size={30}
-            color="#fff"
-          />
-        </S.IconButton>
-      </S.TopRightStack>
+                if (el) el.muted = !v;
+                return !v;
+              });
+            }}
+          >
+            <Icon
+              name={isMuted ? "volume-off" : "volume-on"}
+              size={30}
+              color="#fff"
+            />
+          </S.IconButton>
+        </S.TopRightStack>
+      )}
 
-      <S.LikeWrapper>
-        <S.LikeButton onClick={() => onLike(item.id)}>
-          <Icon
-            name={item.isLiked ? "like" : "like-outline"}
-            size={42}
-            color={item.isLiked ? "#ff5f6d" : "#fff"}
-          />
-          <span style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>
-            {likesCount}
-          </span>
-        </S.LikeButton>
-      </S.LikeWrapper>
+      {!showExercises && (
+        <S.LikeWrapper>
+          <S.LikeButton onClick={() => onLike(item.id)}>
+            <Icon
+              name={item.isLiked ? "like" : "like-outline"}
+              size={42}
+              color={item.isLiked ? "#ff5f6d" : "#fff"}
+            />
+            <span style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>
+              {likesCount}
+            </span>
+          </S.LikeButton>
+        </S.LikeWrapper>
+      )}
 
-      <S.TagsRow>
-        {tags.map((tag) => (
-          <S.Badge key={tag}>{tag}</S.Badge>
-        ))}
-      </S.TagsRow>
+      {!showExercises && (
+        <S.TagsRow>
+          {tags.map((tag) => (
+            <S.Badge key={tag}>{tag}</S.Badge>
+          ))}
+        </S.TagsRow>
+      )}
 
-      <S.Subtitles>
+      <S.ExerciseWrapper>
+        <S.ExerciseButton onClick={() => setShowExercises((v) => !v)}>
+          <Icon name="exercise" size={42} color="#fff" />
+        </S.ExerciseButton>
+      </S.ExerciseWrapper>
+
+      <S.Subtitles $withSheet={showExercises}>
         {subtitlesVisible && (
-          <div style={{ display: "grid", gap: 4, marginBottom: 4 }}>
+          <div style={{ display: "grid", gap: 3, marginBottom: 4 }}>
             {contentState.loading && (
-              <S.SubtitleLoading>Загружаем субтитры…</S.SubtitleLoading>
+              <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
             )}
-            {enSub && <S.SubtitleLine>{enSub}</S.SubtitleLine>}
-            {ruSub && <S.SubtitleLine $secondary>{ruSub}</S.SubtitleLine>}
+            {enSub && (
+              <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 24 }}>
+                {enSub}
+              </S.SubtitleLine>
+            )}
+            {!showExercises && ruSub && (
+              <S.SubtitleLine $secondary>{ruSub}</S.SubtitleLine>
+            )}
           </div>
         )}
       </S.Subtitles>
 
-      {isActive && (
+      {isActive && !showExercises && (
         <S.SeekContainer>
           {isSeeking && (
             <S.SeekTimes>
@@ -313,6 +342,16 @@ export function VideoCard({
             />
           </S.Controls>
         </S.SeekContainer>
+      )}
+
+      {isActive && (
+        <S.ExerciseSheet $open={showExercises}>
+          <S.ExerciseHandle />
+          <S.ExerciseTitle>Упражнения (заглушка)</S.ExerciseTitle>
+          <S.ExercisePlaceholder>
+            Здесь будет тренажёр слов и заданий, как в мобильном приложении.
+          </S.ExercisePlaceholder>
+        </S.ExerciseSheet>
       )}
     </S.Card>
   );

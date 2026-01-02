@@ -49,20 +49,32 @@ export const Card = styled.div<{ $cardHeight: string; $maxHeight: string }>`
   scroll-snap-stop: always;
 `;
 
-export const Player = styled.video`
-  width: 100%;
-  height: 100%;
+export const Player = styled.video<{ $shrink?: boolean }>`
+  display: block;
+  width: ${({ $shrink }) => ($shrink ? '80vw' : '100%')};
+  max-width: ${({ $shrink }) => ($shrink ? '480px' : '100%')};
+  height: ${({ $shrink }) => ($shrink ? '52vh' : '100%')};
+  max-height: ${({ $shrink }) => ($shrink ? '52vh' : '100%')};
   object-fit: cover;
   aspect-ratio: 9 / 16;
+  border-radius: ${({ $shrink }) => ($shrink ? '18px' : '0px')};
+  overflow: hidden;
+  transition: height 0.24s ease, max-height 0.24s ease, border-radius 0.24s ease,
+    transform 0.24s ease, width 0.24s ease, max-width 0.24s ease, margin 0.24s ease;
+  transform: ${({ $shrink }) => ($shrink ? 'translateY(0)' : 'translateY(0)')};
+  margin: ${({ $shrink }) => ($shrink ? '0 auto' : '0')};
 `;
 
-export const TopRightStack = styled.div`
+export const TopRightStack = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
   right: calc(12px + var(--safe-right));
-  top: calc(50% + 78px);
+  top: ${({ $withSheet }) =>
+    $withSheet ? '18%' : 'calc(50% + 170px)'};
   display: flex;
   flex-direction: column;
   gap: 2px;
+  transition: top 0.24s ease;
+  z-index: 140;
 `;
 
 export const SettingsButton = styled.button`
@@ -87,6 +99,13 @@ export const LikeWrapper = styled.div`
   position: absolute;
   right: calc(12px + var(--safe-right));
   top: 50%;
+  transform: translateY(-50%);
+`;
+
+export const ExerciseWrapper = styled.div`
+  position: absolute;
+  right: calc(12px + var(--safe-right));
+  top: calc(50% + 90px);
   transform: translateY(-50%);
 `;
 
@@ -120,11 +139,11 @@ export const Badge = styled.span`
   font-weight: 700;
 `;
 
-export const Subtitles = styled.div`
+export const Subtitles = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: ${({ $withSheet }) => ($withSheet ? '40vh' : '0')};
   padding: 12px 16px calc(18px + var(--safe-bottom));
   color: #fff;
   display: grid;
@@ -132,6 +151,7 @@ export const Subtitles = styled.div`
   align-items: center;
   justify-items: center;
   text-align: center;
+  pointer-events: none;
 `;
 
 export const SubtitleLine = styled.div<{ $secondary?: boolean }>`
@@ -266,6 +286,9 @@ export const IconButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  svg {
+    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
+  }
 `;
 
 export const LikeButton = styled.button`
@@ -284,4 +307,88 @@ export const LikeButton = styled.button`
   justify-content: center;
   gap: 1px;
   cursor: pointer;
+  svg {
+    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
+  }
+  span {
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
+  }
+`;
+
+export const ExerciseButton = styled.button`
+  min-width: 78px;
+  height: 78px;
+  padding: 10px 12px;
+  border-radius: 20px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  backdrop-filter: none;
+  box-shadow: none;
+  svg {
+    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
+  }
+  span {
+    font-weight: 700;
+    font-size: 12px;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
+  }
+`;
+
+export const ExerciseSheet = styled.div<{ $open: boolean }>`
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  max-width: 960px;
+  height: 48vh;
+  min-height: 320px;
+  background: linear-gradient(180deg, #121523 0%, #0d0f1a 100%);
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45);
+  z-index: 130;
+  padding: 16px 16px calc(12px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transform: translateY(${({ $open }) => ($open ? '0%' : '110%')});
+  opacity: ${({ $open }) => ($open ? 1 : 0)};
+  transition: transform 0.24s ease, opacity 0.24s ease;
+  pointer-events: ${({ $open }) => ($open ? 'auto' : 'none')};
+`;
+
+export const ExerciseHandle = styled.div`
+  width: 52px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 0 auto;
+`;
+
+export const ExerciseTitle = styled.div`
+  font-size: 18px;
+  font-weight: 800;
+  color: #f5f7ff;
+  text-align: center;
+`;
+
+export const ExercisePlaceholder = styled.div`
+  flex: 1;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  color: #cfd3e0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 16px;
+  font-weight: 600;
+  line-height: 1.4;
 `;
