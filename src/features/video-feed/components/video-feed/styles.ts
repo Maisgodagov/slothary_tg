@@ -51,25 +51,25 @@ export const Card = styled.div<{ $cardHeight: string; $maxHeight: string }>`
 
 export const Player = styled.video<{ $shrink?: boolean }>`
   display: block;
-  width: ${({ $shrink }) => ($shrink ? '80vw' : '100%')};
-  max-width: ${({ $shrink }) => ($shrink ? '480px' : '100%')};
-  height: ${({ $shrink }) => ($shrink ? '52vh' : '100%')};
-  max-height: ${({ $shrink }) => ($shrink ? '52vh' : '100%')};
+  width: ${({ $shrink }) => ($shrink ? "60vw" : "100%")};
+  max-width: ${({ $shrink }) => ($shrink ? "430px" : "100%")};
+  height: ${({ $shrink }) => ($shrink ? "48vh" : "100%")};
+  max-height: ${({ $shrink }) => ($shrink ? "48vh" : "100%")};
   object-fit: cover;
   aspect-ratio: 9 / 16;
-  border-radius: ${({ $shrink }) => ($shrink ? '18px' : '0px')};
+  border-radius: ${({ $shrink }) => ($shrink ? "18px" : "0px")};
   overflow: hidden;
   transition: height 0.24s ease, max-height 0.24s ease, border-radius 0.24s ease,
-    transform 0.24s ease, width 0.24s ease, max-width 0.24s ease, margin 0.24s ease;
-  transform: ${({ $shrink }) => ($shrink ? 'translateY(0)' : 'translateY(0)')};
-  margin: ${({ $shrink }) => ($shrink ? '0 auto' : '0')};
+    transform 0.24s ease, width 0.24s ease, max-width 0.24s ease,
+    margin 0.24s ease;
+  transform: ${({ $shrink }) => ($shrink ? "translateY(0)" : "translateY(0)")};
+  margin: ${({ $shrink }) => ($shrink ? "0 auto" : "0")};
 `;
 
 export const TopRightStack = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
   right: calc(12px + var(--safe-right));
-  top: ${({ $withSheet }) =>
-    $withSheet ? '18%' : 'calc(50% + 170px)'};
+  top: ${({ $withSheet }) => ($withSheet ? "18%" : "calc(50% + 170px)")};
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -143,7 +143,7 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
   left: 0;
   right: 0;
-  bottom: ${({ $withSheet }) => ($withSheet ? '40vh' : '0')};
+  bottom: ${({ $withSheet }) => ($withSheet ? "40vh" : "0")};
   padding: 12px 16px calc(18px + var(--safe-bottom));
   color: #fff;
   display: grid;
@@ -348,8 +348,8 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   bottom: 0;
   margin: 0 auto;
   max-width: 960px;
-  height: 48vh;
-  min-height: 320px;
+  height: 56vh;
+  min-height: 360px;
   background: linear-gradient(180deg, #121523 0%, #0d0f1a 100%);
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45);
@@ -358,10 +358,10 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 14px;
-  transform: translateY(${({ $open }) => ($open ? '0%' : '110%')});
+  transform: translateY(${({ $open }) => ($open ? "0%" : "110%")});
   opacity: ${({ $open }) => ($open ? 1 : 0)};
   transition: transform 0.24s ease, opacity 0.24s ease;
-  pointer-events: ${({ $open }) => ($open ? 'auto' : 'none')};
+  pointer-events: ${({ $open }) => ($open ? "auto" : "none")};
 `;
 
 export const ExerciseHandle = styled.div`
