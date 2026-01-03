@@ -53,7 +53,7 @@ export const Player = styled.video<{ $shrink?: boolean }>`
   display: block;
   width: ${({ $shrink }) => ($shrink ? "60vw" : "100%")};
   max-width: ${({ $shrink }) => ($shrink ? "430px" : "100%")};
-  height: ${({ $shrink }) => ($shrink ? "48vh" : "100%")};
+  height: ${({ $shrink }) => ($shrink ? "46vh" : "100%")};
   max-height: ${({ $shrink }) => ($shrink ? "48vh" : "100%")};
   object-fit: cover;
   aspect-ratio: 9 / 16;
@@ -68,11 +68,11 @@ export const Player = styled.video<{ $shrink?: boolean }>`
 
 export const TopRightStack = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
-  right: calc(12px + var(--safe-right));
-  top: ${({ $withSheet }) => ($withSheet ? "18%" : "calc(50% + 170px)")};
+  right: var(--safe-right);
+  top: ${({ $withSheet }) => ($withSheet ? "18%" : "calc(40% + 0px)")};
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   transition: top 0.24s ease;
   z-index: 140;
 `;
@@ -143,7 +143,7 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
   left: 0;
   right: 0;
-  bottom: ${({ $withSheet }) => ($withSheet ? "40vh" : "0")};
+  bottom: ${({ $withSheet }) => ($withSheet ? "45vh" : "0")};
   padding: 12px 16px calc(18px + var(--safe-bottom));
   color: #fff;
   display: grid;
@@ -155,8 +155,8 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
 `;
 
 export const SubtitleLine = styled.div<{ $secondary?: boolean }>`
-  font-weight: ${({ $secondary }) => ($secondary ? 600 : 700)};
-  font-size: ${({ $secondary }) => ($secondary ? "22px" : "24px")};
+  font-weight: ${({ $secondary }) => ($secondary ? 400 : 500)};
+  font-size: ${({ $secondary }) => ($secondary ? "18px" : "18px")};
   color: ${({ $secondary }) => ($secondary ? "#d8e4ff" : "#fff")};
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
   background: ${({ $secondary }) =>
@@ -348,10 +348,10 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 58px;
   margin: 0 auto;
   max-width: 960px;
-  height: 56vh;
+  height: 48vh;
   min-height: 360px;
   background: linear-gradient(180deg, #121523 0%, #0d0f1a 100%);
   border-radius: 18px 18px 0 0;

@@ -233,6 +233,19 @@ export function VideoCard({
 
       {!showExercises && (
         <S.TopRightStack $withSheet={showExercises}>
+          <S.LikeButton onClick={() => onLike(item.id)}>
+            <Icon
+              name={item.isLiked ? "like" : "like-outline"}
+              size={42}
+              color={item.isLiked ? "#ff5f6d" : "#fff"}
+            />
+            <span style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>
+              {likesCount}
+            </span>
+          </S.LikeButton>
+          <S.ExerciseButton onClick={() => setShowExercises((v) => !v)}>
+            <Icon name="exercise" size={42} color="#fff" />
+          </S.ExerciseButton>
           <S.IconButton
             onClick={() => {
               setIsMuted((v) => {
@@ -250,22 +263,6 @@ export function VideoCard({
           </S.IconButton>
         </S.TopRightStack>
       )}
-
-      {!showExercises && (
-        <S.LikeWrapper>
-          <S.LikeButton onClick={() => onLike(item.id)}>
-            <Icon
-              name={item.isLiked ? "like" : "like-outline"}
-              size={42}
-              color={item.isLiked ? "#ff5f6d" : "#fff"}
-            />
-            <span style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>
-              {likesCount}
-            </span>
-          </S.LikeButton>
-        </S.LikeWrapper>
-      )}
-
       {!showExercises && (
         <S.TagsRow>
           {tags.map((tag) => (
@@ -274,12 +271,6 @@ export function VideoCard({
         </S.TagsRow>
       )}
 
-      <S.ExerciseWrapper>
-        <S.ExerciseButton onClick={() => setShowExercises((v) => !v)}>
-          <Icon name="exercise" size={42} color="#fff" />
-        </S.ExerciseButton>
-      </S.ExerciseWrapper>
-
       <S.Subtitles $withSheet={showExercises}>
         {subtitlesVisible && (
           <div style={{ display: "grid", gap: 3, marginBottom: 4 }}>
@@ -287,7 +278,7 @@ export function VideoCard({
               <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
             )}
             {enSub && (
-              <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 24 }}>
+              <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 20 }}>
                 {enSub}
               </S.SubtitleLine>
             )}
