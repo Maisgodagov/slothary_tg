@@ -33,13 +33,13 @@ export function NavBar() {
     <nav
       style={{
         position: "fixed",
-        bottom: "calc(var(--safe-bottom) - 16px)",
+        bottom: "calc(var(--safe-bottom) - 20px)",
         left: 0,
         right: 0,
         margin: "0 auto",
         maxWidth: 960,
         width: "100%",
-        background: "rgba(23, 26, 39, 0.9)",
+        background: "rgba(230, 143, 62, 0.9)",
         border: "none",
         borderRadius: 0,
         padding: 2,
@@ -47,7 +47,7 @@ export function NavBar() {
         backdropFilter: "blur(5px)",
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",
-        zIndex: 10,
+        zIndex: 1000,
       }}
     >
       {items.map((item) => (
