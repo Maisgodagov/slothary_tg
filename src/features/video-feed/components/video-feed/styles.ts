@@ -72,7 +72,7 @@ export const TopRightStack = styled.div<{ $withSheet?: boolean }>`
   top: ${({ $withSheet }) => ($withSheet ? "18%" : "calc(40% + 0px)")};
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 16px;
   transition: top 0.24s ease;
   z-index: 140;
 `;
@@ -277,10 +277,6 @@ export const TapOverlay = styled.div`
 `;
 
 export const IconButton = styled.button`
-  min-width: 76px;
-  height: 72px;
-  padding: 12px 14px;
-  border-radius: 20px;
   backdrop-filter: none;
   background: transparent;
   border: none;
@@ -295,10 +291,6 @@ export const IconButton = styled.button`
 `;
 
 export const LikeButton = styled.button`
-  min-width: 78px;
-  height: 88px;
-  padding: 8px 14px;
-  border-radius: 20px;
   backdrop-filter: none;
   font-size: 18px;
   background: transparent;
@@ -308,7 +300,6 @@ export const LikeButton = styled.button`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
   cursor: pointer;
   svg {
     filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
@@ -319,10 +310,6 @@ export const LikeButton = styled.button`
 `;
 
 export const ExerciseButton = styled.button`
-  min-width: 78px;
-  height: 78px;
-  padding: 10px 12px;
-  border-radius: 20px;
   background: transparent;
   border: none;
   color: #fff;

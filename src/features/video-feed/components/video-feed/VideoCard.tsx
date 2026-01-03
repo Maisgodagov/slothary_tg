@@ -236,7 +236,7 @@ export function VideoCard({
           <S.LikeButton onClick={() => onLike(item.id)}>
             <Icon
               name={item.isLiked ? "like" : "like-outline"}
-              size={42}
+              size={32}
               color={item.isLiked ? "#ff5f6d" : "#fff"}
             />
             <span style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>
@@ -244,7 +244,7 @@ export function VideoCard({
             </span>
           </S.LikeButton>
           <S.ExerciseButton onClick={() => setShowExercises((v) => !v)}>
-            <Icon name="exercise" size={42} color="#fff" />
+            <Icon name="exercise" size={32} color="#fff" />
           </S.ExerciseButton>
           <S.IconButton
             onClick={() => {
@@ -257,7 +257,7 @@ export function VideoCard({
           >
             <Icon
               name={isMuted ? "volume-off" : "volume-on"}
-              size={30}
+              size={28}
               color="#fff"
             />
           </S.IconButton>
