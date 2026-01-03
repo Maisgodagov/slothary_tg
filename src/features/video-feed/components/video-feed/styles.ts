@@ -68,11 +68,11 @@ export const Player = styled.video<{ $shrink?: boolean }>`
 
 export const TopRightStack = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
-  right: var(--safe-right);
-  top: ${({ $withSheet }) => ($withSheet ? "18%" : "calc(40% + 0px)")};
+  right: calc(var(--safe-right) + 10px);
+  top: ${({ $withSheet }) => ($withSheet ? "18%" : "45%")};
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
   transition: top 0.24s ease;
   z-index: 140;
 `;
@@ -147,7 +147,7 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
   padding: 12px 16px calc(18px + var(--safe-bottom));
   color: #fff;
   display: grid;
-  gap: 6px;
+  gap: 10px;
   align-items: center;
   justify-items: center;
   text-align: center;
@@ -160,7 +160,7 @@ export const SubtitleLine = styled.div<{ $secondary?: boolean }>`
   color: ${({ $secondary }) => ($secondary ? "#d8e4ff" : "#fff")};
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
   background: ${({ $secondary }) =>
-    $secondary ? "rgba(0, 0, 0, 0.85)" : "rgba(0, 0, 0, 0.85)"};
+    $secondary ? "rgba(0, 0, 0, 0.95)" : "rgba(0, 0, 0, 0.95)"};
   padding: 8px 12px;
   border-radius: 12px;
   display: inline-block;
