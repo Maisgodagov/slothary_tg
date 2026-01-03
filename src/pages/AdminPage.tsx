@@ -4,7 +4,7 @@ import { Button } from '../shared/ui/Button';
 
 export default function AdminPage() {
   const auth = useAppSelector(selectAuth);
-  const canModerate = auth.profile?.role === 'ADMIN' || auth.profile?.role === 'MODERATOR';
+  const canModerate = auth.profile?.role === 'admin';
 
   return (
     <div className="section">

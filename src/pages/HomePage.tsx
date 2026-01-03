@@ -6,8 +6,7 @@ import { Button } from "../shared/ui/Button";
 export default function HomePage() {
   const auth = useAppSelector(selectAuth);
   const navigate = useNavigate();
-  const canModerate =
-    auth.profile?.role === "ADMIN" || auth.profile?.role === "MODERATOR";
+  const canModerate = auth.profile?.role === "admin";
 
   return (
     <div

@@ -26,7 +26,7 @@ const PAGE_SIZE = 20;
 export default function ModerationPage() {
   const auth = useAppSelector(selectAuth);
   const navigate = useNavigate();
-  const isAdmin = auth.profile?.role === 'ADMIN' || auth.profile?.role === 'MODERATOR';
+  const isAdmin = auth.profile?.role === 'admin';
 
   const [items, setItems] = useState<PrecomputedExercise[]>([]);
   const [loading, setLoading] = useState(false);

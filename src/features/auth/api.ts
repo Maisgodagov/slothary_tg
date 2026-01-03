@@ -1,6 +1,6 @@
 import { apiFetch } from '../../shared/api/client';
 
-export type UserRole = 'USER' | 'ADMIN' | 'MODERATOR';
+export type UserRole = 'student' | 'teacher' | 'admin';
 
 export interface LoginRequest {
   email: string;
