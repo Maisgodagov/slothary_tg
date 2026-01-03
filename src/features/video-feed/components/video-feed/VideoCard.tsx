@@ -533,41 +533,39 @@ export function VideoCard({
       {isActive && (
         <S.ExerciseSheet $open={showExercises}>
           <S.ExerciseHandle />
-          <S.ExerciseTitle>Упражнения</S.ExerciseTitle>
+          <S.ExerciseTitle>Переведи это слово</S.ExerciseTitle>
           {exercisesLoading && (
             <S.ExercisePlaceholder>Загружаем упражнения...</S.ExercisePlaceholder>
           )}
           {!exercisesLoading && currentExercise && (
             <S.ExerciseList>
               <S.ExerciseCard>
-                <S.ExercisePrompt>{currentExercise.prompt}</S.ExercisePrompt>
-                {currentExercise.direction === "en-ru" && (
-                  <S.ListenButton
-                    onClick={() => {
-                      const ts = findWordTimestamp(
-                        currentExercise.word || currentExercise.prompt,
-                        wordChunks
-                      );
-                      if (ts === null) return;
-                      const el = videoRef.current;
-                      if (!el) return;
-                      el.currentTime = ts;
-                      el.play().catch(() => null);
-                    }}
-                  >
-                    <Icon name="volume-on" size={18} />
-                    <span>Послушать в видео</span>
-                  </S.ListenButton>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <S.ExercisePrompt>{currentExercise.prompt}</S.ExercisePrompt>
+                  {currentExercise.direction === "en-ru" && (
+                    <S.ListenButton
+                      onClick={() => {
+                        const ts = findWordTimestamp(
+                          currentExercise.word || currentExercise.prompt,
+                          wordChunks
+                        );
+                        if (ts === null) return;
+                        const el = videoRef.current;
+                        if (!el) return;
+                        el.currentTime = ts;
+                        el.play().catch(() => null);
+                      }}
+                    >
+                      <Icon name="volume-on" size={18} />
+                    </S.ListenButton>
+                  )}
+                </div>
+                {currentExercise.direction === "en-ru" && currentExercise.partOfSpeech && (
+                  <div style={{ color: "#cfd3e0", fontSize: 12 }}>
+                    {currentExercise.partOfSpeech}
+                  </div>
                 )}
-                <S.ExerciseMeta>
-                  <span>
-                    {currentExercise.direction === "en-ru" ? "EN → RU" : "RU → EN"}
-                  </span>
-                  {currentExercise.translations?.length ? (
-                    <span>{currentExercise.translations.join(", ")}</span>
-                  ) : null}
-                </S.ExerciseMeta>
-                <S.ExerciseOptions>
+            <S.ExerciseOptions>
                   {currentExercise.options.map((opt, i) => {
                     const state =
                       selectedOption === null

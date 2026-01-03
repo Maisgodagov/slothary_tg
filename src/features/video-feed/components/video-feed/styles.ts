@@ -449,7 +449,7 @@ export const ExerciseCard = styled.div`
 export const ExercisePrompt = styled.div`
   font-weight: 800;
   color: #f5f7ff;
-  font-size: 16px;
+  font-size: 20px;
 `;
 
 export const ExerciseMeta = styled.div`
@@ -484,22 +484,23 @@ export const ExerciseOption = styled.button<{ $state?: "neutral" | "correct" | "
       : "rgba(255, 255, 255, 0.06)"};
   color: #f5f7ff;
   font-weight: 700;
+  font-size: 17px;
   text-align: left;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 `;
 
 export const ListenButton = styled.button`
-  align-self: flex-start;
+  align-self: center;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
   color: #f5f7ff;
-  font-weight: 700;
   cursor: pointer;
   svg {
     filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
