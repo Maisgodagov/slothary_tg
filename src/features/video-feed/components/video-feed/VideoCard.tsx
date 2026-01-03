@@ -116,30 +116,24 @@ export function VideoCard({
 
   const findChunkWithIndex = (
     chunks: { text: string; timestamp: [number, number] }[] | undefined,
-    carrySeconds = 0.6
+    graceSeconds = 1.5
   ) => {
     if (!chunks || !chunks.length) return { text: "", index: -1 };
-    // Active chunk
     const activeIdx = chunks.findIndex(
       (ch) => currentTime >= ch.timestamp[0] && currentTime < ch.timestamp[1]
     );
     if (activeIdx !== -1) return { text: chunks[activeIdx].text, index: activeIdx };
 
-    // If in a short pause, keep the previous chunk
-    const lastIdx = (() => {
-      let res = -1;
-      for (let i = 0; i < chunks.length; i++) {
-        if (currentTime >= chunks[i].timestamp[0]) res = i;
-        else break;
-      }
-      return res;
-    })();
-
+    // If in pause, keep previous chunk visible for a short grace period
+    let lastIdx = -1;
+    for (let i = 0; i < chunks.length; i++) {
+      if (currentTime >= chunks[i].timestamp[0]) lastIdx = i;
+      else break;
+    }
     if (lastIdx === -1) return { text: "", index: -1 };
+
     const last = chunks[lastIdx];
-    const nextStart = chunks[lastIdx + 1]?.timestamp?.[0] ?? Infinity;
-    const gap = nextStart - last.timestamp[1];
-    if (currentTime < nextStart && gap <= carrySeconds) {
+    if (currentTime <= last.timestamp[1] + graceSeconds) {
       return { text: last.text, index: lastIdx };
     }
 
