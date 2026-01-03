@@ -3,6 +3,7 @@ import { useAppSelector } from "../../../../app/hooks";
 import { selectAuth } from "../../../auth/slice";
 import { wordIdsFromSubtitles } from "../../../exercises/lib/wordIds";
 import { exercisesApi, type ExerciseItem } from "../../../exercises/api";
+import { moderationApi } from "../../moderationApi";
 import type { VideoCardProps } from "./types";
 import { findChunkText } from "./utils";
 import * as S from "./styles";
@@ -39,6 +40,9 @@ export function VideoCard({
   const playTimeoutRef = useRef<number | null>(null);
   const heartTimeoutRef = useRef<number | null>(null);
   const [heartIndicator, setHeartIndicator] = useState(false);
+  const [showModeration, setShowModeration] = useState(false);
+  const [savingModeration, setSavingModeration] = useState(false);
+  const [authors, setAuthors] = useState<string[]>([]);
   const auth = useAppSelector(selectAuth);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -196,6 +200,18 @@ export function VideoCard({
   const currentExercise =
     exercises && exerciseIndex < exercises.length ? exercises[exerciseIndex] : null;
   const exercisesCount = exercises?.length ?? 0;
+  const isAdmin = auth.profile?.role === "admin";
+  const contentAnalysis = content?.analysis ?? item.analysis;
+  const initialCefr = contentAnalysis?.cefrLevel ?? "A2";
+  const initialSpeech = contentAnalysis?.speechSpeed ?? "normal";
+  const initialAuthor = content?.author ?? item.author ?? "";
+  const initialAdult = content?.isAdultContent ?? item.isAdultContent ?? false;
+  const initialModerated = content?.isModerated ?? item.isModerated ?? false;
+  const [cefr, setCefr] = useState(initialCefr);
+  const [speech, setSpeech] = useState(initialSpeech);
+  const [author, setAuthor] = useState(initialAuthor);
+  const [isAdult, setIsAdult] = useState(initialAdult);
+  const [isModerated, setIsModerated] = useState(initialModerated);
 
   useEffect(() => {
     const loadExercises = async () => {
@@ -226,6 +242,27 @@ export function VideoCard({
     };
     loadExercises();
   }, [contentState.data, subtitlesSource, exercisesLoading, exercises, auth.profile?.id]);
+
+  useEffect(() => {
+    if (!showModeration || !isAdmin) return;
+    const loadAuthors = async () => {
+      try {
+        const list = await moderationApi.getAuthors(auth.profile?.id, auth.profile?.role);
+        setAuthors(list?.map((a) => a.username) ?? []);
+      } catch (err) {
+        console.error("Failed to load authors", err);
+      }
+    };
+    loadAuthors();
+  }, [showModeration, isAdmin, auth.profile?.id, auth.profile?.role]);
+
+  useEffect(() => {
+    setCefr(initialCefr);
+    setSpeech(initialSpeech);
+    setAuthor(initialAuthor);
+    setIsAdult(initialAdult);
+    setIsModerated(initialModerated);
+  }, [initialAdult, initialAuthor, initialCefr, initialModerated, initialSpeech]);
 
   const handleOptionSelect = async (option: string) => {
     if (!currentExercise) return;
@@ -320,6 +357,15 @@ export function VideoCard({
               <Icon name="exercise" size={34} color="#fff" />
               <span>{exercisesCount}</span>
             </S.ExerciseButton>
+          )}
+          {isAdmin && (
+            <S.ModerationButton
+              onClick={() => setShowModeration(true)}
+              $approved={isModerated}
+            >
+              <Icon name="admin" size={28} color={isModerated ? "#0c1021" : "#fff"} />
+              <span>{isModerated ? "Модерировано" : "Модерация"}</span>
+            </S.ModerationButton>
           )}
           <S.IconButton
             onClick={() => {
@@ -463,6 +509,256 @@ export function VideoCard({
           )}
         </S.ExerciseSheet>
       )}
+
+      {showModeration && isAdmin && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 12,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 520,
+              background: "#0f1428",
+              border: "1px solid var(--tg-border)",
+              borderRadius: 16,
+              padding: 16,
+              color: "var(--tg-text)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 12,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 800 }}>
+                  Модерация видео
+                </div>
+                <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
+                  ID: {item.id}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowModeration(false)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  color: "var(--tg-subtle)",
+                  cursor: "pointer",
+                  fontSize: 20,
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gap: 12 }}>
+              <label style={labelStyle}>
+                Уровень языка
+                <select
+                  value={cefr}
+                  onChange={(e) => setCefr(e.target.value as any)}
+                  style={inputStyle}
+                >
+                  {["A1", "A2", "B1", "B2", "C1", "C2"].map((lvl) => (
+                    <option key={lvl} value={lvl}>
+                      {lvl}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label style={labelStyle}>
+                Скорость речи
+                <select
+                  value={speech}
+                  onChange={(e) => setSpeech(e.target.value as any)}
+                  style={inputStyle}
+                >
+                  <option value="slow">Медленная речь</option>
+                  <option value="normal">Обычная скорость речи</option>
+                  <option value="fast">Быстрая речь</option>
+                </select>
+              </label>
+
+              <label style={labelStyle}>
+                Автор видео
+                <input
+                  list="author-list"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  style={inputStyle}
+                  placeholder="@author"
+                />
+                <datalist id="author-list">
+                  {authors.map((a) => (
+                    <option key={a} value={a} />
+                  ))}
+                </datalist>
+              </label>
+
+              <label style={{ ...labelStyle, flexDirection: "row", gap: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={isAdult}
+                  onChange={(e) => setIsAdult(e.target.checked)}
+                />
+                <span>18+ контент</span>
+              </label>
+
+              <label style={{ ...labelStyle, flexDirection: "row", gap: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={isModerated}
+                  onChange={(e) => setIsModerated(e.target.checked)}
+                />
+                <span>Видео прошло модерацию</span>
+              </label>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                marginTop: 16,
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                onClick={async () => {
+                  if (!auth.profile?.id) return;
+                  if (!window.confirm("Удалить это видео?")) return;
+                  try {
+                    setSavingModeration(true);
+                    await moderationApi.deleteVideo(item.id, auth.profile.id, auth.profile.role);
+                    setShowModeration(false);
+                  } catch (err) {
+                    console.error("Delete video failed", err);
+                    alert("Не удалось удалить видео");
+                  } finally {
+                    setSavingModeration(false);
+                  }
+                }}
+                style={{
+                  ...buttonStyle,
+                  background: "linear-gradient(135deg, #ff5f6d, #ff9966)",
+                  color: "#0c1021",
+                }}
+              >
+                Удалить
+              </button>
+              <div style={{ display: "flex", gap: 8, flex: 1, justifyContent: "flex-end" }}>
+                <button
+                  onClick={() => setShowModeration(false)}
+                  style={{
+                    ...buttonStyle,
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid var(--tg-border)",
+                    color: "#fff",
+                  }}
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!auth.profile?.id) return;
+                    try {
+                      setSavingModeration(true);
+                      const requests: Promise<unknown>[] = [];
+                      if (cefr !== initialCefr) {
+                        requests.push(
+                          moderationApi.updateCefrLevel(item.id, cefr, auth.profile.id, auth.profile.role)
+                        );
+                      }
+                      if (speech !== initialSpeech) {
+                        requests.push(
+                          moderationApi.updateSpeechSpeed(item.id, speech, auth.profile.id, auth.profile.role)
+                        );
+                      }
+                      if (author !== initialAuthor) {
+                        requests.push(
+                          moderationApi.updateAuthor(item.id, author, auth.profile.id, auth.profile.role)
+                        );
+                      }
+                      if (isAdult !== initialAdult) {
+                        requests.push(
+                          moderationApi.updateAdult(item.id, isAdult, auth.profile.id, auth.profile.role)
+                        );
+                      }
+                      if (isModerated !== initialModerated) {
+                        requests.push(
+                          moderationApi.updateModerationStatus(
+                            item.id,
+                            isModerated,
+                            auth.profile.id,
+                            auth.profile.role
+                          )
+                        );
+                      }
+                      await Promise.all(requests);
+                      setShowModeration(false);
+                    } catch (err) {
+                      console.error("Save moderation failed", err);
+                      alert("Не удалось сохранить модерацию");
+                    } finally {
+                      setSavingModeration(false);
+                    }
+                  }}
+                  style={{
+                    ...buttonStyle,
+                    background: "linear-gradient(135deg, #2ea3ff, #6dd3ff)",
+                    color: "#0c1021",
+                    minWidth: 120,
+                  }}
+                  disabled={savingModeration}
+                >
+                  {savingModeration ? "Сохраняем..." : "Сохранить"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </S.Card>
   );
 }
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  borderRadius: 12,
+  border: "1px solid var(--tg-border)",
+  background: "rgba(255,255,255,0.04)",
+  color: "var(--tg-text)",
+  padding: "10px 12px",
+  fontSize: 14,
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 6,
+  fontSize: 13,
+  fontWeight: 700,
+};
+
+const buttonStyle: React.CSSProperties = {
+  borderRadius: 12,
+  border: "none",
+  padding: "10px 14px",
+  fontWeight: 700,
+  cursor: "pointer",
+};

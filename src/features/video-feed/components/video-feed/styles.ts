@@ -343,6 +343,30 @@ export const ExerciseButton = styled.button`
   }
 `;
 
+export const ModerationButton = styled.button<{ $approved?: boolean }>`
+  background: ${({ $approved }) =>
+    $approved ? "linear-gradient(135deg, #3ec985, #28a46a)" : "rgba(255,255,255,0.12)"};
+  color: ${({ $approved }) => ($approved ? "#0c1021" : "#fff")};
+  border: ${({ $approved }) =>
+    $approved ? "1px solid rgba(62, 201, 133, 0.6)" : "1px solid rgba(255,255,255,0.35)"};
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 6px 10px;
+  svg {
+    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
+  }
+  span {
+    font-weight: 700;
+    font-size: 12px;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
+  }
+`;
+
 export const ExerciseSheet = styled.div<{ $open: boolean }>`
   position: fixed;
   left: 0;
