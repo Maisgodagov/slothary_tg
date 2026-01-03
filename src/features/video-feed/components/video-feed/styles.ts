@@ -176,7 +176,7 @@ export const SubtitleLoading = styled.div`
 export const EditSubtitleButton = styled.button`
   position: absolute;
   top: -10px;
-  right: calc(18px + var(--safe-right));
+  left: calc(18px + var(--safe-left));
   border: none;
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
@@ -187,6 +187,7 @@ export const EditSubtitleButton = styled.button`
   align-items: center;
   justify-content: center;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  z-index: 200;
 `;
 
 export const Controls = styled.div`

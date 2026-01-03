@@ -435,7 +435,8 @@ export function VideoCard({
           )}
           {isAdmin && enIndex >= 0 && ruIndex >= 0 && (
             <S.EditSubtitleButton
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setCurrentChunkIndex(enIndex);
                 setEnEdit(enSub || "");
                 setRuEdit(ruSub || "");
