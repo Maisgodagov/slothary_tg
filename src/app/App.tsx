@@ -13,20 +13,19 @@ import ProfilePage from '../pages/ProfilePage';
 import { Loader } from '../shared/ui/Loader';
 import { NavBar } from '../shared/ui/NavBar';
 import '../shared/styles/global.css';
-import { useAppDispatch, useAppSelector } from './hooks';
-import { selectAuth, telegramAuth } from '../features/auth/slice';
+import { useAppDispatch } from './hooks';
+import { telegramAuth } from '../features/auth/slice';
 
 function AutoTelegramAuth() {
   const { initData } = useTelegram();
-  const auth = useAppSelector(selectAuth);
   const dispatch = useAppDispatch();
   const attempted = useRef(false);
 
   useEffect(() => {
-    if (!initData || auth.profile || attempted.current) return;
+    if (!initData || attempted.current) return;
     attempted.current = true;
     dispatch(telegramAuth(initData));
-  }, [auth.profile, dispatch, initData]);
+  }, [dispatch, initData]);
 
   return null;
 }
