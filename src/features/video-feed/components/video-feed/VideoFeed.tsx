@@ -186,6 +186,7 @@ export function VideoFeed() {
             dispatch(setFilters(tempFilters));
             dispatch(loadFeed({ reset: true }));
           }}
+          isAdmin={auth.profile?.role === "admin"}
         />
       )}
     </S.FeedContainer>
@@ -319,11 +320,13 @@ function SettingsModal({
   onClose,
   onChangeFilters,
   onSave,
+  isAdmin,
 }: {
   filters: any;
   onClose: () => void;
   onChangeFilters: (updater: any) => void;
   onSave: () => void;
+  isAdmin: boolean;
 }) {
   return (
     <div
@@ -331,7 +334,7 @@ function SettingsModal({
         position: "fixed",
         inset: 0,
         background: "rgba(0,0,0,0.55)",
-        zIndex: 20,
+        zIndex: 9998,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -438,6 +441,26 @@ function SettingsModal({
             onChangeFilters((p: any) => ({ ...p, showAdultContent: v }))
           }
         />
+
+        {isAdmin && (
+          <Section
+            title="Модерация"
+            options={[
+              { label: "Все", value: null },
+              { label: "Промодерированные", value: ["moderated"] },
+              { label: "Не промодерированные", value: ["unmoderated"] },
+            ]}
+            selected={
+              filters.moderationFilter ? [filters.moderationFilter] : null
+            }
+            onSelect={(val) =>
+              onChangeFilters((p: any) => ({
+                ...p,
+                moderationFilter: val ? (val[0] as any) : null,
+              }))
+            }
+          />
+        )}
 
         <button
           onClick={onSave}
