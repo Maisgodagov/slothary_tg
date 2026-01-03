@@ -32,7 +32,8 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', 'SF Pro Display', 'Roboto', system-ui, -apple-system, sans-serif;
+  font-family: "Inter", "SF Pro Display", "Roboto", system-ui, -apple-system,
+    sans-serif;
   background: radial-gradient(circle at 20% 20%, #121629, #0b0e1c 45%), #0b0e1c;
   color: var(--tg-text);
   min-height: 100vh;
@@ -58,7 +59,7 @@ button {
   margin: 0 auto;
   padding: 0;
   padding-top: var(--tg-content-safe-area-inset-top);
-  padding-bottom: calc(var(--nav-height) + var(--tg-content-safe-area-inset-bottom));
+  padding-bottom: var(--tg-content-safe-area-inset-bottom);
 }
 
 .section {
