@@ -11,6 +11,7 @@ interface FeedFilters {
   showAdultContent: boolean;
   showEnglishSubtitles: boolean;
   showRussianSubtitles: boolean;
+  moderationFilter: "all" | "moderated" | "unmoderated" | null;
 }
 
 interface VideoFeedState {
@@ -29,6 +30,7 @@ const initialFilters: FeedFilters = {
   showAdultContent: true,
   showEnglishSubtitles: true,
   showRussianSubtitles: true,
+  moderationFilter: null,
 };
 
 const initialState: VideoFeedState = {
@@ -66,11 +68,13 @@ export const loadFeed = createAsyncThunk<VideoFeedResponse, { reset?: boolean } 
     const userId = auth.profile?.id ?? getGuestId();
     const { filters } = videoFeed;
     try {
+      const isAdmin = auth.profile?.role === "admin";
+      const moderationFilter = isAdmin ? filters.moderationFilter ?? "all" : undefined;
       return await videoFeedApi.getFeed(userId, {
         cursor: options?.reset ? null : videoFeed.cursor,
         limit: 5,
         role: auth.profile?.role ?? null,
-        moderationFilter: "all",
+        moderationFilter,
         showAdultContent: filters.showAdultContent,
         cefrLevels: filters.cefrLevels ? filters.cefrLevels.join(",") : undefined,
         speechSpeeds: filters.speechSpeeds ? filters.speechSpeeds.join(",") : undefined,
