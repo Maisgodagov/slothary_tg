@@ -53,6 +53,7 @@ export function VideoCard({
   const [localTranslation, setLocalTranslation] = useState(
     content?.translation?.chunks ?? []
   );
+  const wordChunks = content?.transcription?.wordChunks ?? [];
   const auth = useAppSelector(selectAuth);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -324,6 +325,18 @@ export function VideoCard({
     contentState.loading || (exercisesLoading && (!exercises || exercises.length === 0));
   const showExerciseButton = !showSpinner && exercisesCount > 0;
 
+  const findWordTimestamp = (
+    word: string,
+    chunks: { text: string; timestamp: [number, number] }[]
+  ) => {
+    if (!word) return null;
+    const lower = word.toLowerCase();
+    for (const ch of chunks) {
+      if (ch.text.toLowerCase() === lower) return ch.timestamp[0];
+    }
+    return null;
+  };
+
   return (
     <S.Card ref={cardRef} $cardHeight={cardHeight} $maxHeight={maxHeight}>
       <S.Player
@@ -528,6 +541,24 @@ export function VideoCard({
             <S.ExerciseList>
               <S.ExerciseCard>
                 <S.ExercisePrompt>{currentExercise.prompt}</S.ExercisePrompt>
+                {currentExercise.direction === "en-ru" && (
+                  <S.ListenButton
+                    onClick={() => {
+                      const ts = findWordTimestamp(
+                        currentExercise.word || currentExercise.prompt,
+                        wordChunks
+                      );
+                      if (ts === null) return;
+                      const el = videoRef.current;
+                      if (!el) return;
+                      el.currentTime = ts;
+                      el.play().catch(() => null);
+                    }}
+                  >
+                    <Icon name="volume-on" size={18} />
+                    <span>Послушать в видео</span>
+                  </S.ListenButton>
+                )}
                 <S.ExerciseMeta>
                   <span>
                     {currentExercise.direction === "en-ru" ? "EN → RU" : "RU → EN"}

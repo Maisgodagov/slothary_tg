@@ -488,3 +488,20 @@ export const ExerciseOption = styled.button<{ $state?: "neutral" | "correct" | "
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 `;
+
+export const ListenButton = styled.button`
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f5f7ff;
+  font-weight: 700;
+  cursor: pointer;
+  svg {
+    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
+  }
+`;
