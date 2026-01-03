@@ -5,7 +5,6 @@ import { wordIdsFromSubtitles } from "../../../exercises/lib/wordIds";
 import { exercisesApi, type ExerciseItem } from "../../../exercises/api";
 import { moderationApi } from "../../moderationApi";
 import type { VideoCardProps } from "./types";
-import { findChunkText } from "./utils";
 import * as S from "./styles";
 import { Icon } from "../../../../shared/ui/Icon";
 import { Loader } from "../../../../shared/ui/Loader";
@@ -24,6 +23,7 @@ export function VideoCard({
   shouldLoad,
   onOpenSettings,
 }: VideoCardProps) {
+  const content = contentState.data;
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -43,12 +43,27 @@ export function VideoCard({
   const [showModeration, setShowModeration] = useState(false);
   const [savingModeration, setSavingModeration] = useState(false);
   const [authors, setAuthors] = useState<string[]>([]);
+  const [subtitleModal, setSubtitleModal] = useState(false);
+  const [enEdit, setEnEdit] = useState("");
+  const [ruEdit, setRuEdit] = useState("");
+  const [currentChunkIndex, setCurrentChunkIndex] = useState<number | null>(null);
+  const [localTranscription, setLocalTranscription] = useState(
+    content?.transcription?.chunks ?? []
+  );
+  const [localTranslation, setLocalTranslation] = useState(
+    content?.translation?.chunks ?? []
+  );
   const auth = useAppSelector(selectAuth);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const tapTimeoutRef = useRef<number | null>(null);
   const exercisesRequested = useRef(false);
+
+  useEffect(() => {
+    setLocalTranscription(content?.transcription?.chunks ?? []);
+    setLocalTranslation(content?.translation?.chunks ?? []);
+  }, [content?.transcription?.chunks, content?.translation?.chunks]);
 
   useEffect(() => {
     if (shouldLoad) {
@@ -99,13 +114,23 @@ export function VideoCard({
     };
   }, []);
 
-  const content = contentState.data;
-  const enSub = showOriginal
-    ? findChunkText(content?.transcription?.chunks, currentTime)
-    : "";
-  const ruSub = showTranslation
-    ? findChunkText(content?.translation?.chunks, currentTime)
-    : "";
+  const findChunkWithIndex = (
+    chunks: { text: string; timestamp: [number, number] }[] | undefined
+  ) => {
+    if (!chunks) return { text: "", index: -1 };
+    const idx = chunks.findIndex(
+      (ch) => currentTime >= ch.timestamp[0] && currentTime < ch.timestamp[1]
+    );
+    if (idx === -1) return { text: "", index: -1 };
+    return { text: chunks[idx].text, index: idx };
+  };
+
+  const { text: enSub, index: enIndex } = showOriginal
+    ? findChunkWithIndex(localTranscription)
+    : { text: "", index: -1 };
+  const { text: ruSub, index: ruIndex } = showTranslation
+    ? findChunkWithIndex(localTranslation)
+    : { text: "", index: -1 };
 
   const handleTogglePlay = () => {
     const el = videoRef.current;
@@ -196,7 +221,7 @@ export function VideoCard({
   if (item.author) tags.push(item.author);
   if (item.isAdultContent) tags.push("18+");
 
-  const subtitlesSource = content?.transcription?.chunks ?? [];
+  const subtitlesSource = localTranscription;
   const currentExercise =
     exercises && exerciseIndex < exercises.length ? exercises[exerciseIndex] : null;
   const exercisesCount = exercises?.length ?? 0;
@@ -407,6 +432,18 @@ export function VideoCard({
                 <S.SubtitleLine $secondary>{ruSub}</S.SubtitleLine>
               )}
             </div>
+          )}
+          {isAdmin && enIndex >= 0 && ruIndex >= 0 && (
+            <S.EditSubtitleButton
+              onClick={() => {
+                setCurrentChunkIndex(enIndex);
+                setEnEdit(enSub || "");
+                setRuEdit(ruSub || "");
+                setSubtitleModal(true);
+              }}
+            >
+              <Icon name="edit" size={18} color="#fff" />
+            </S.EditSubtitleButton>
           )}
         </S.Subtitles>
       )}
@@ -732,6 +769,158 @@ export function VideoCard({
           </div>
         </div>
       )}
+
+      {subtitleModal && isAdmin && currentChunkIndex !== null && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 12,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 520,
+              background: "#0f1428",
+              border: "1px solid var(--tg-border)",
+              borderRadius: 16,
+              padding: 16,
+              color: "var(--tg-text)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 12,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 800 }}>Редактировать субтитры</div>
+                <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
+                  Таймкод:{" "}
+                  {localTranscription[currentChunkIndex]
+                    ? `${localTranscription[currentChunkIndex].timestamp[0].toFixed(
+                        2
+                      )} - ${localTranscription[currentChunkIndex].timestamp[1].toFixed(2)}`
+                    : ""}
+                </div>
+              </div>
+              <button
+                onClick={() => setSubtitleModal(false)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  color: "var(--tg-subtle)",
+                  cursor: "pointer",
+                  fontSize: 20,
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gap: 12 }}>
+              <label style={labelStyle}>
+                Английские субтитры
+                <textarea
+                  style={textareaStyle}
+                  rows={3}
+                  value={enEdit}
+                  onChange={(e) => setEnEdit(e.target.value)}
+                />
+              </label>
+
+              <label style={labelStyle}>
+                Русские субтитры
+                <textarea
+                  style={textareaStyle}
+                  rows={3}
+                  value={ruEdit}
+                  onChange={(e) => setRuEdit(e.target.value)}
+                />
+              </label>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                marginTop: 16,
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                onClick={() => setSubtitleModal(false)}
+                style={{
+                  ...buttonStyle,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid var(--tg-border)",
+                  color: "#fff",
+                }}
+              >
+                Отмена
+              </button>
+              <button
+                onClick={async () => {
+                  if (!auth.profile?.id || currentChunkIndex === null) return;
+                  const transcriptChunk = localTranscription[currentChunkIndex];
+                  const translationChunk = localTranslation[currentChunkIndex];
+                  if (!transcriptChunk || !translationChunk) return;
+                  try {
+                    setSavingModeration(true);
+                    await moderationApi.updateSubtitleChunk(
+                      item.id,
+                      {
+                        chunkIndex: currentChunkIndex,
+                        transcript: { ...transcriptChunk, text: enEdit },
+                        translation: { ...translationChunk, text: ruEdit },
+                      },
+                      auth.profile.id,
+                      auth.profile.role
+                    );
+                    const nextTrans = [...localTranscription];
+                    const nextRu = [...localTranslation];
+                    nextTrans[currentChunkIndex] = {
+                      ...transcriptChunk,
+                      text: enEdit,
+                    };
+                    nextRu[currentChunkIndex] = {
+                      ...translationChunk,
+                      text: ruEdit,
+                    };
+                    setLocalTranscription(nextTrans);
+                    setLocalTranslation(nextRu);
+                    setSubtitleModal(false);
+                  } catch (err) {
+                    console.error("Failed to save subtitles", err);
+                    alert("Не удалось сохранить субтитры");
+                  } finally {
+                    setSavingModeration(false);
+                  }
+                }}
+                style={{
+                  ...buttonStyle,
+                  background: "linear-gradient(135deg, #2ea3ff, #6dd3ff)",
+                  color: "#0c1021",
+                  minWidth: 120,
+                }}
+                disabled={savingModeration}
+              >
+                {savingModeration ? "Сохраняем..." : "Сохранить"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </S.Card>
   );
 }
@@ -760,4 +949,10 @@ const buttonStyle: React.CSSProperties = {
   padding: "10px 14px",
   fontWeight: 700,
   cursor: "pointer",
+};
+
+const textareaStyle: React.CSSProperties = {
+  ...inputStyle,
+  minHeight: 80,
+  resize: "vertical",
 };

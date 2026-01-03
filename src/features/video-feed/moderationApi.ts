@@ -45,6 +45,22 @@ export const moderationApi = {
       headers: adminHeaders(userId, role),
     });
   },
+  updateSubtitleChunk(
+    contentId: string,
+    payload: {
+      chunkIndex: number;
+      transcript: { text: string; timestamp: [number, number] };
+      translation: { text: string; timestamp: [number, number] };
+    },
+    userId?: string | null,
+    role?: UserRole | null,
+  ) {
+    return apiFetch<VideoContent>(`video-learning/${contentId}/moderation/subtitles/chunk`, {
+      method: 'PATCH',
+      body: payload,
+      headers: adminHeaders(userId, role),
+    });
+  },
   deleteVideo(contentId: string, userId?: string | null, role?: UserRole | null) {
     return apiFetch<void>(`video-learning/${contentId}`, {
       method: 'DELETE',

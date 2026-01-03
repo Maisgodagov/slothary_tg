@@ -173,6 +173,22 @@ export const SubtitleLoading = styled.div`
   font-size: 12px;
 `;
 
+export const EditSubtitleButton = styled.button`
+  position: absolute;
+  top: -10px;
+  right: calc(18px + var(--safe-right));
+  border: none;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  border-radius: 12px;
+  padding: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+`;
+
 export const Controls = styled.div`
   display: grid;
   gap: 8px;

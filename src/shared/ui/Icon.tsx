@@ -13,6 +13,7 @@ import {
   Brain,
   Settings,
   UserRound,
+  Edit3,
 } from "lucide-react";
 
 type IconName =
@@ -33,7 +34,8 @@ type IconName =
   | "more"
   | "close"
   | "exercise"
-  | "exercise-filled";
+  | "exercise-filled"
+  | "edit";
 
 const ICON_MAP: Record<
   IconName,
@@ -63,6 +65,7 @@ const ICON_MAP: Record<
   close: X,
   exercise: Brain,
   "exercise-filled": Brain,
+  edit: Edit3,
 };
 
 interface IconProps {
