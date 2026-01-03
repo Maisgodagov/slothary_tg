@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { useAppSelector } from "../../../../app/hooks";
+import { selectAuth } from "../../../auth/slice";
+import { wordIdsFromSubtitles } from "../../../exercises/lib/wordIds";
+import { exercisesApi, type ExerciseItem } from "../../../exercises/api";
 import type { VideoCardProps } from "./types";
 import { findChunkText } from "./utils";
 import * as S from "./styles";
@@ -26,10 +30,13 @@ export function VideoCard({
   );
   const [isSeeking, setIsSeeking] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
+  const [exercises, setExercises] = useState<ExerciseItem[] | null>(null);
+  const [exercisesLoading, setExercisesLoading] = useState(false);
   const lastTapRef = useRef<number>(0);
   const playTimeoutRef = useRef<number | null>(null);
   const heartTimeoutRef = useRef<number | null>(null);
   const [heartIndicator, setHeartIndicator] = useState(false);
+  const auth = useAppSelector(selectAuth);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -180,6 +187,35 @@ export function VideoCard({
   }
   if (item.author) tags.push(item.author);
   if (item.isAdultContent) tags.push("18+");
+
+  const subtitlesSource = content?.transcription?.chunks ?? [];
+  const shouldShowExercises = isActive && showExercises;
+
+  useEffect(() => {
+    const loadExercises = async () => {
+      if (!shouldShowExercises || exercisesLoading || exercises) return;
+      if (!subtitlesSource.length) return;
+      try {
+        setExercisesLoading(true);
+        const wordIds = await wordIdsFromSubtitles(subtitlesSource as any, { limit: 120 });
+        if (!wordIds.length) {
+          setExercises([]);
+          return;
+        }
+        const { exercises: data } = await exercisesApi.getExercises(
+          { wordIds, exerciseLimit: 10, wordLimit: 20 },
+          auth.profile?.id
+        );
+        setExercises(data ?? []);
+      } catch (err) {
+        console.error("Failed to load exercises", err);
+        setExercises([]);
+      } finally {
+        setExercisesLoading(false);
+      }
+    };
+    loadExercises();
+  }, [shouldShowExercises, subtitlesSource, exercisesLoading, exercises, auth.profile?.id]);
 
   return (
     <S.Card ref={cardRef} $cardHeight={cardHeight} $maxHeight={maxHeight}>
