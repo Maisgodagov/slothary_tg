@@ -37,4 +37,14 @@ export const exercisesApi = {
       body,
     });
   },
+  async submitAnswer(
+    body: { wordId: number; isCorrect: boolean },
+    userId?: string | null,
+  ) {
+    return apiFetch<{ progress: ExerciseProgress }>('exercises/answer', {
+      method: 'POST',
+      headers: userId ? { 'x-user-id': userId } : undefined,
+      body,
+    });
+  },
 };

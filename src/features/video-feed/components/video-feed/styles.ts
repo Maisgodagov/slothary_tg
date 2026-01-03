@@ -385,3 +385,63 @@ export const ExercisePlaceholder = styled.div`
   font-weight: 600;
   line-height: 1.4;
 `;
+
+export const ExerciseList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+`;
+
+export const ExerciseCard = styled.div`
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+`;
+
+export const ExercisePrompt = styled.div`
+  font-weight: 800;
+  color: #f5f7ff;
+  font-size: 16px;
+`;
+
+export const ExerciseMeta = styled.div`
+  font-size: 12px;
+  color: #cfd3e0;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
+export const ExerciseOptions = styled.div`
+  display: grid;
+  gap: 8px;
+`;
+
+export const ExerciseOption = styled.button<{ $state?: "neutral" | "correct" | "wrong" }>`
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid
+    ${({ $state }) =>
+      $state === "correct"
+        ? "rgba(91, 214, 145, 0.7)"
+        : $state === "wrong"
+        ? "rgba(255, 95, 109, 0.7)"
+        : "rgba(255, 255, 255, 0.12)"};
+  background: ${({ $state }) =>
+    $state === "correct"
+      ? "rgba(91, 214, 145, 0.12)"
+      : $state === "wrong"
+      ? "rgba(255, 95, 109, 0.12)"
+      : "rgba(255, 255, 255, 0.06)"};
+  color: #f5f7ff;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+`;

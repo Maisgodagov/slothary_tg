@@ -32,6 +32,8 @@ export function VideoCard({
   const [showExercises, setShowExercises] = useState(false);
   const [exercises, setExercises] = useState<ExerciseItem[] | null>(null);
   const [exercisesLoading, setExercisesLoading] = useState(false);
+  const [exerciseIndex, setExerciseIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const lastTapRef = useRef<number>(0);
   const playTimeoutRef = useRef<number | null>(null);
   const heartTimeoutRef = useRef<number | null>(null);
@@ -190,6 +192,8 @@ export function VideoCard({
 
   const subtitlesSource = content?.transcription?.chunks ?? [];
   const shouldShowExercises = isActive && showExercises;
+  const currentExercise =
+    exercises && exerciseIndex < exercises.length ? exercises[exerciseIndex] : null;
 
   useEffect(() => {
     const loadExercises = async () => {
@@ -207,6 +211,8 @@ export function VideoCard({
           auth.profile?.id
         );
         setExercises(data ?? []);
+        setExerciseIndex(0);
+        setSelectedOption(null);
       } catch (err) {
         console.error("Failed to load exercises", err);
         setExercises([]);
@@ -216,6 +222,22 @@ export function VideoCard({
     };
     loadExercises();
   }, [shouldShowExercises, subtitlesSource, exercisesLoading, exercises, auth.profile?.id]);
+
+  const handleOptionSelect = async (option: string) => {
+    if (!currentExercise) return;
+    if (selectedOption) return;
+    const correct = option === currentExercise.correctAnswer;
+    setSelectedOption(option);
+    if (auth.profile?.id) {
+      exercisesApi
+        .submitAnswer({ wordId: currentExercise.wordId, isCorrect: correct }, auth.profile.id)
+        .catch((err) => console.error("submitAnswer failed", err));
+    }
+    setTimeout(() => {
+      setSelectedOption(null);
+      setExerciseIndex((idx) => idx + 1);
+    }, 800);
+  };
 
   return (
     <S.Card ref={cardRef} $cardHeight={cardHeight} $maxHeight={maxHeight}>
@@ -374,10 +396,52 @@ export function VideoCard({
       {isActive && (
         <S.ExerciseSheet $open={showExercises}>
           <S.ExerciseHandle />
-          <S.ExerciseTitle>Упражнения (заглушка)</S.ExerciseTitle>
-          <S.ExercisePlaceholder>
-            Здесь будет тренажёр слов и заданий, как в мобильном приложении.
-          </S.ExercisePlaceholder>
+          <S.ExerciseTitle>Упражнения</S.ExerciseTitle>
+          {exercisesLoading && (
+            <S.ExercisePlaceholder>Загружаем упражнения...</S.ExercisePlaceholder>
+          )}
+          {!exercisesLoading && currentExercise && (
+            <S.ExerciseList>
+              <S.ExerciseCard>
+                <S.ExercisePrompt>{currentExercise.prompt}</S.ExercisePrompt>
+                <S.ExerciseMeta>
+                  <span>
+                    {currentExercise.direction === "en-ru" ? "EN → RU" : "RU → EN"}
+                  </span>
+                  {currentExercise.translations?.length ? (
+                    <span>{currentExercise.translations.join(", ")}</span>
+                  ) : null}
+                </S.ExerciseMeta>
+                <S.ExerciseOptions>
+                  {currentExercise.options.map((opt, i) => {
+                    const state =
+                      selectedOption === null
+                        ? "neutral"
+                        : opt === currentExercise.correctAnswer
+                        ? "correct"
+                        : opt === selectedOption
+                        ? "wrong"
+                        : "neutral";
+                    return (
+                      <S.ExerciseOption
+                        key={i}
+                        $state={state as any}
+                        onClick={() => handleOptionSelect(opt)}
+                        disabled={selectedOption !== null}
+                      >
+                        {opt}
+                      </S.ExerciseOption>
+                    );
+                  })}
+                </S.ExerciseOptions>
+              </S.ExerciseCard>
+            </S.ExerciseList>
+          )}
+          {!exercisesLoading && !currentExercise && (
+            <S.ExercisePlaceholder>
+              Больше упражнений для этого видео нет.
+            </S.ExercisePlaceholder>
+          )}
         </S.ExerciseSheet>
       )}
     </S.Card>

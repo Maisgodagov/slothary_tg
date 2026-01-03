@@ -8,6 +8,7 @@ import { store, persistor } from './store';
 import HomePage from '../pages/HomePage';
 import DictionaryPage from '../pages/DictionaryPage';
 import VideoPage from '../pages/VideoPage';
+import ModerationPage from '../pages/ModerationPage';
 import { Loader } from '../shared/ui/Loader';
 import { NavBar } from '../shared/ui/NavBar';
 import '../shared/styles/global.css';
@@ -41,6 +42,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/video" element={<VideoPage />} />
                 <Route path="/dictionary" element={<DictionaryPage />} />
+                <Route path="/admin/moderation" element={<ModerationPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
