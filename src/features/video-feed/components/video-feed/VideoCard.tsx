@@ -210,7 +210,7 @@ export function VideoCard({
           <S.TapIndicator>
             <Icon
               name={tapIndicator === "play" ? "play" : "pause"}
-              size={64}
+              size={showExercises ? 48 : 64}
               color="#fff"
             />
           </S.TapIndicator>
