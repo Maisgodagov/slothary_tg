@@ -7,6 +7,7 @@ import type { VideoCardProps } from "./types";
 import { findChunkText } from "./utils";
 import * as S from "./styles";
 import { Icon } from "../../../../shared/ui/Icon";
+import { Loader } from "../../../../shared/ui/Loader";
 
 export function VideoCard({
   item,
@@ -43,6 +44,7 @@ export function VideoCard({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const tapTimeoutRef = useRef<number | null>(null);
+  const exercisesRequested = useRef(false);
 
   useEffect(() => {
     if (shouldLoad) {
@@ -191,14 +193,16 @@ export function VideoCard({
   if (item.isAdultContent) tags.push("18+");
 
   const subtitlesSource = content?.transcription?.chunks ?? [];
-  const shouldShowExercises = isActive && showExercises;
   const currentExercise =
     exercises && exerciseIndex < exercises.length ? exercises[exerciseIndex] : null;
+  const exercisesCount = exercises?.length ?? 0;
 
   useEffect(() => {
     const loadExercises = async () => {
-      if (!shouldShowExercises || exercisesLoading || exercises) return;
+      if (exercisesRequested.current || exercisesLoading || exercises) return;
+      if (!contentState.data) return;
       if (!subtitlesSource.length) return;
+      exercisesRequested.current = true;
       try {
         setExercisesLoading(true);
         const wordIds = await wordIdsFromSubtitles(subtitlesSource as any, { limit: 120 });
@@ -221,7 +225,7 @@ export function VideoCard({
       }
     };
     loadExercises();
-  }, [shouldShowExercises, subtitlesSource, exercisesLoading, exercises, auth.profile?.id]);
+  }, [contentState.data, subtitlesSource, exercisesLoading, exercises, auth.profile?.id]);
 
   const handleOptionSelect = async (option: string) => {
     if (!currentExercise) return;
@@ -238,6 +242,10 @@ export function VideoCard({
       setExerciseIndex((idx) => idx + 1);
     }, 800);
   };
+
+  const showSpinner =
+    contentState.loading || (exercisesLoading && (!exercises || exercises.length === 0));
+  const showExerciseButton = !showSpinner && exercisesCount > 0;
 
   return (
     <S.Card ref={cardRef} $cardHeight={cardHeight} $maxHeight={maxHeight}>
@@ -263,7 +271,13 @@ export function VideoCard({
         }}
       />
 
-      {tapIndicator && (
+      {showSpinner && (
+        <S.SpinnerOverlay>
+          <Loader />
+        </S.SpinnerOverlay>
+      )}
+
+      {tapIndicator && !showSpinner && (
         <S.TapOverlay $shrink={showExercises}>
           <S.TapIndicator>
             <Icon
@@ -289,7 +303,7 @@ export function VideoCard({
         </S.SettingsButton>
       )}
 
-      {!showExercises && (
+      {!showSpinner && !showExercises && (
         <S.TopRightStack $withSheet={showExercises}>
           <S.LikeButton onClick={() => onLike(item.id)}>
             <Icon
@@ -301,9 +315,12 @@ export function VideoCard({
               {likesCount}
             </span>
           </S.LikeButton>
-          <S.ExerciseButton onClick={() => setShowExercises((v) => !v)}>
-            <Icon name="exercise" size={34} color="#fff" />
-          </S.ExerciseButton>
+          {showExerciseButton && (
+            <S.ExerciseButton onClick={() => setShowExercises((v) => !v)}>
+              <Icon name="exercise" size={34} color="#fff" />
+              <span>{exercisesCount}</span>
+            </S.ExerciseButton>
+          )}
           <S.IconButton
             onClick={() => {
               setIsMuted((v) => {
@@ -321,7 +338,7 @@ export function VideoCard({
           </S.IconButton>
         </S.TopRightStack>
       )}
-      {!showExercises && (
+      {!showSpinner && !showExercises && (
         <S.TagsRow>
           {tags.map((tag) => (
             <S.Badge key={tag}>{tag}</S.Badge>
@@ -329,25 +346,27 @@ export function VideoCard({
         </S.TagsRow>
       )}
 
-      <S.Subtitles $withSheet={showExercises}>
-        {subtitlesVisible && (
-          <div style={{ display: "grid", gap: 3, marginBottom: 4 }}>
-            {contentState.loading && (
-              <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
-            )}
-            {enSub && (
-              <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 20 }}>
-                {enSub}
-              </S.SubtitleLine>
-            )}
-            {!showExercises && ruSub && (
-              <S.SubtitleLine $secondary>{ruSub}</S.SubtitleLine>
-            )}
-          </div>
-        )}
-      </S.Subtitles>
+      {!showSpinner && (
+        <S.Subtitles $withSheet={showExercises}>
+          {subtitlesVisible && (
+            <div style={{ display: "grid", gap: 3, marginBottom: 4 }}>
+              {contentState.loading && (
+                <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
+              )}
+              {enSub && (
+                <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 20 }}>
+                  {enSub}
+                </S.SubtitleLine>
+              )}
+              {!showExercises && ruSub && (
+                <S.SubtitleLine $secondary>{ruSub}</S.SubtitleLine>
+              )}
+            </div>
+          )}
+        </S.Subtitles>
+      )}
 
-      {isActive && !showExercises && (
+      {isActive && !showExercises && !showSpinner && (
         <S.SeekContainer>
           {isSeeking && (
             <S.SeekTimes>

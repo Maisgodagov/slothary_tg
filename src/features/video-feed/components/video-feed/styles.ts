@@ -279,6 +279,15 @@ export const TapOverlay = styled.div<{ $shrink?: boolean }>`
   pointer-events: none;
 `;
 
+export const SpinnerOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+`;
+
 export const IconButton = styled.button`
   backdrop-filter: none;
   background: transparent;
