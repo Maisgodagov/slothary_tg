@@ -186,7 +186,7 @@ export const SeekContainer = styled.div`
   right: 0;
   margin: 0 auto;
   max-width: 960px;
-  bottom: calc(var(--safe-bottom) + var(--nav-height) - 13px);
+  bottom: calc(var(--safe-bottom) + var(--nav-height) - 18px);
   padding: 0 0px;
   border-radius: 0;
   display: flex;
@@ -222,12 +222,15 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   &::-webkit-slider-runnable-track {
     height: ${({ $thin }) => ($thin ? "4px" : "10px")};
     border-radius: 999px;
+    z-index: 9999;
+
     background: transparent;
   }
 
   &::-moz-range-track {
     height: ${({ $thin }) => ($thin ? "4px" : "10px")};
     border-radius: 999px;
+    z-index: 9999;
     background: transparent;
   }
 
@@ -236,7 +239,7 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
     width: ${({ $showThumb }) => ($showThumb ? "24px" : "0px")};
     height: ${({ $showThumb }) => ($showThumb ? "24px" : "0px")};
     border-radius: 50%;
-    z-index: 5000;
+    z-index: 99000;
     background: ${({ $showThumb }) => ($showThumb ? "#ffffff" : "transparent")};
     border: ${({ $showThumb }) => ($showThumb ? "3px solid #2ea3ff" : "none")};
     box-shadow: ${({ $showThumb }) =>
@@ -249,7 +252,7 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
     width: ${({ $showThumb }) => ($showThumb ? "24px" : "0px")};
     height: ${({ $showThumb }) => ($showThumb ? "24px" : "0px")};
     border-radius: 50%;
-    z-index: 5000;
+    z-index: 999000;
 
     background: ${({ $showThumb }) => ($showThumb ? "#ffffff" : "transparent")};
     border: ${({ $showThumb }) => ($showThumb ? "3px solid #2ea3ff" : "none")};

@@ -232,11 +232,11 @@ export function VideoCard({
       )}
 
       {!showExercises && (
-      <S.TopRightStack $withSheet={showExercises}>
-        <S.IconButton
-          onClick={() => {
-            setIsMuted((v) => {
-              const el = videoRef.current;
+        <S.TopRightStack $withSheet={showExercises}>
+          <S.IconButton
+            onClick={() => {
+              setIsMuted((v) => {
+                const el = videoRef.current;
                 if (el) el.muted = !v;
                 return !v;
               });

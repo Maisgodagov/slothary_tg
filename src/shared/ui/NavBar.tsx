@@ -39,15 +39,12 @@ export function NavBar() {
         margin: "0 auto",
         maxWidth: 960,
         width: "100%",
-        background: "rgba(230, 143, 62, 0.9)",
+        background: "#251d32",
         border: "none",
         borderRadius: 0,
         padding: 2,
-        boxShadow: "0 6px 20px rgba(0,0,0,0.28)",
-        backdropFilter: "blur(5px)",
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",
-        zIndex: 1000,
       }}
     >
       {items.map((item) => (
