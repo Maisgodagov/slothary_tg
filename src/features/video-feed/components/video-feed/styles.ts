@@ -186,7 +186,7 @@ export const SeekContainer = styled.div`
   right: 0;
   margin: 0 auto;
   max-width: 960px;
-  bottom: calc(var(--safe-bottom) + var(--nav-height) - 19px);
+  bottom: calc(var(--safe-bottom) + var(--nav-height) - 20px);
   padding: 0 0px;
   border-radius: 0;
   display: flex;
