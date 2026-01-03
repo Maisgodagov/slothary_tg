@@ -151,7 +151,7 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
   align-items: center;
   justify-items: center;
   text-align: center;
-  pointer-events: none;
+  pointer-events: auto;
 `;
 
 export const SubtitleLine = styled.div<{ $secondary?: boolean }>`
@@ -188,6 +188,7 @@ export const EditSubtitleButton = styled.button`
   justify-content: center;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   z-index: 200;
+  pointer-events: auto;
 `;
 
 export const Controls = styled.div`

@@ -419,7 +419,14 @@ export function VideoCard({
       {!showSpinner && (
         <S.Subtitles $withSheet={showExercises}>
           {subtitlesVisible && (
-            <div style={{ display: "grid", gap: 3, marginBottom: 4 }}>
+            <div
+              style={{
+                display: "grid",
+                gap: 3,
+                marginBottom: 4,
+                pointerEvents: "none",
+              }}
+            >
               {contentState.loading && (
                 <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
               )}
