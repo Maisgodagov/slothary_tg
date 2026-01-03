@@ -68,31 +68,39 @@ export default function HomePage() {
       </p>
 
       {canModerate && (
-        <div
-          style={{
-            marginTop: 24,
-            padding: 16,
-            borderRadius: 12,
-            border: "1px solid var(--tg-border)",
-            background: "rgba(255,255,255,0.04)",
-            display: "grid",
-            gap: 8,
-          }}
-        >
-          <div style={{ fontWeight: 700 }}>Админские инструменты</div>
-          <div style={{ color: "var(--tg-subtle)", fontSize: 14 }}>
-            Модерация предрассчитанных упражнений: промпт, варианты ответов,
-            переводы и статус.
-          </div>
-          <div>
-            <Button
-              variant="primary"
-              onClick={() => navigate("/admin/moderation")}
-            >
-              Перейти к модерации упражнений
+        <>
+          <div style={{ marginTop: 12 }}>
+            <Button variant="ghost" onClick={() => navigate("/admin/moderation")}>
+              Модерация упражнений
             </Button>
           </div>
-        </div>
+
+          <div
+            style={{
+              marginTop: 16,
+              padding: 16,
+              borderRadius: 12,
+              border: "1px solid var(--tg-border)",
+              background: "rgba(255,255,255,0.04)",
+              display: "grid",
+              gap: 8,
+            }}
+          >
+            <div style={{ fontWeight: 700 }}>Админские инструменты</div>
+            <div style={{ color: "var(--tg-subtle)", fontSize: 14 }}>
+              Модерация предрассчитанных упражнений: промпт, варианты ответов,
+              переводы и статус.
+            </div>
+            <div>
+              <Button
+                variant="primary"
+                onClick={() => navigate("/admin/moderation")}
+              >
+                Перейти к модерации упражнений
+              </Button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
