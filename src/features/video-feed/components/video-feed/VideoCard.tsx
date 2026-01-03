@@ -363,8 +363,7 @@ export function VideoCard({
               onClick={() => setShowModeration(true)}
               $approved={isModerated}
             >
-              <Icon name="admin" size={28} color={isModerated ? "#0c1021" : "#fff"} />
-              <span>{isModerated ? "Модерировано" : "Модерация"}</span>
+              <Icon name="admin" size={30} color={isModerated ? "#3ec985" : "#fff"} />
             </S.ModerationButton>
           )}
           <S.IconButton
