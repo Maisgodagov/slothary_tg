@@ -206,7 +206,7 @@ export function VideoCard({
       />
 
       {tapIndicator && (
-        <S.TapOverlay>
+        <S.TapOverlay $shrink={showExercises}>
           <S.TapIndicator>
             <Icon
               name={tapIndicator === "play" ? "play" : "pause"}
@@ -218,7 +218,7 @@ export function VideoCard({
       )}
 
       {heartIndicator && (
-        <S.TapOverlay>
+        <S.TapOverlay $shrink={showExercises}>
           <S.TapIndicator>
             <Icon name="like" size={72} color="#ff5f6d" />
           </S.TapIndicator>

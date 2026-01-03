@@ -267,9 +267,12 @@ export const TapIndicator = styled.div`
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.9);
 `;
 
-export const TapOverlay = styled.div`
+export const TapOverlay = styled.div<{ $shrink?: boolean }>`
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: ${({ $shrink }) => ($shrink ? "48vh" : "100%")};
   display: flex;
   align-items: center;
   justify-content: center;
