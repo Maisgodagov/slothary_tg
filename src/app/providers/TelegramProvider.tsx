@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import WebApp from '@twa-dev/sdk';
+import { applyThemeTokens, type ThemeName } from '../../shared/styles/theme';
 
-type Theme = 'light' | 'dark';
+type Theme = ThemeName;
 type ThemeMode = 'system' | Theme;
 
 interface TelegramContextValue {
@@ -22,25 +23,7 @@ const TelegramContext = createContext<TelegramContextValue>({
 
 function applyTelegramTheme(theme: Theme) {
   document.body.dataset.theme = theme;
-  if (theme === 'light') {
-    document.documentElement.style.setProperty('--tg-bg', '#f5f7fb');
-    document.documentElement.style.setProperty('--tg-surface', '#ffffff');
-    document.documentElement.style.setProperty('--tg-card', '#eef2fb');
-    document.documentElement.style.setProperty('--tg-text', '#0b1020');
-    document.documentElement.style.setProperty('--tg-subtle', '#4b5368');
-    document.documentElement.style.setProperty('--tg-accent', '#0f7aa7');
-    document.documentElement.style.setProperty('--tg-accent-strong', '#0a5a7d');
-    document.documentElement.style.setProperty('--tg-border', '#d7ddeb');
-  } else {
-    document.documentElement.style.setProperty('--tg-bg', '#0f111a');
-    document.documentElement.style.setProperty('--tg-surface', '#171a27');
-    document.documentElement.style.setProperty('--tg-card', '#1f2435');
-    document.documentElement.style.setProperty('--tg-text', '#f5f7ff');
-    document.documentElement.style.setProperty('--tg-subtle', '#c1c7d6');
-    document.documentElement.style.setProperty('--tg-accent', '#6dd3ff');
-    document.documentElement.style.setProperty('--tg-accent-strong', '#2ea3ff');
-    document.documentElement.style.setProperty('--tg-border', '#2a3042');
-  }
+  applyThemeTokens(theme);
 }
 
 function updateSafeAreaFromViewport() {

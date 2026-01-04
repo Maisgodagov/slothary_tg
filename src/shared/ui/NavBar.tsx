@@ -12,7 +12,7 @@ const linkStyle: CSSProperties = {
   color: "var(--tg-subtle)",
   fontSize: 12,
   fontWeight: 600,
-  padding: "6px 8px",
+  padding: "6px 8px 2px",
   flex: 1,
   borderRadius: 12,
 };
@@ -40,7 +40,7 @@ export function NavBar() {
         maxHeight: "56px",
         maxWidth: 960,
         width: "100%",
-        background: "#251d32",
+        background: "var(--tg-surface)",
         border: "none",
         borderRadius: 0,
         padding: 2,
@@ -54,16 +54,16 @@ export function NavBar() {
           to={item.to}
           style={({ isActive }) => ({
             ...linkStyle,
-            color: isActive ? "var(--tg-text)" : (linkStyle.color as string),
+            color: "var(--tg-subtle)",
             background: isActive ? "rgba(109, 211, 255, 0.12)" : "transparent",
           })}
         >
-          {({ isActive }) => (
+          {() => (
             <>
               <Icon
-                name={(isActive ? item.iconActive : item.icon) as any}
+                name={item.icon as any}
                 size={22}
-                color={isActive ? "#fff" : (linkStyle.color as string)}
+                color={"var(--tg-subtle)"}
               />
               {item.label}
             </>
