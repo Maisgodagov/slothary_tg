@@ -1029,7 +1029,6 @@ export function VideoCard({
                 {savingModeration ? "Сохраняем..." : "Сохранить"}
               </button>
             </div>
-              </button>
             </div>
           </div>
         </div>
