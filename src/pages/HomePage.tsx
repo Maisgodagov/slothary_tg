@@ -8,14 +8,21 @@ export default function HomePage() {
   const navigate = useNavigate();
   const canModerate = auth.profile?.role === "admin";
 
+  const initial = (
+    auth.profile?.fullName?.[0] ??
+    auth.profile?.email?.[0] ??
+    "U"
+  ).toUpperCase();
+
   return (
     <div
       style={{
-        height: "100vh",
+        minHeight: "100vh",
         width: "100vw",
         padding: "24px 16px",
         boxSizing: "border-box",
         color: "var(--tg-text)",
+        background: "var(--tg-bg)",
       }}
     >
       <div
@@ -36,7 +43,7 @@ export default function HomePage() {
             borderRadius: 999,
             border: "1px solid var(--tg-border)",
             padding: "6px 10px",
-            background: "rgba(255,255,255,0.04)",
+            background: "var(--tg-card)",
             color: "var(--tg-text)",
             cursor: "pointer",
           }}
@@ -54,14 +61,12 @@ export default function HomePage() {
               color: "#0c1021",
             }}
           >
-            {(auth.profile?.fullName?.[0] ??
-              auth.profile?.email?.[0] ??
-              "U"
-            ).toUpperCase()}
+            {initial}
           </span>
           <span style={{ fontWeight: 600 }}>Профиль</span>
         </button>
       </div>
+
       <p style={{ margin: 0, color: "var(--tg-subtle)", lineHeight: 1.5 }}>
         Здесь будет витрина и контент главной страницы. Пока это заглушка.
       </p>
@@ -80,7 +85,7 @@ export default function HomePage() {
               padding: 16,
               borderRadius: 12,
               border: "1px solid var(--tg-border)",
-              background: "rgba(255,255,255,0.04)",
+              background: "var(--tg-card)",
               display: "grid",
               gap: 8,
             }}

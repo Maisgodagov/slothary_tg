@@ -34,7 +34,7 @@ body {
   margin: 0;
   font-family: "Inter", "SF Pro Display", "Roboto", system-ui, -apple-system,
     sans-serif;
-  background: radial-gradient(circle at 20% 20%, #121629, #0b0e1c 45%), #0b0e1c;
+  background: var(--tg-bg);
   color: var(--tg-text);
   min-height: 100vh;
   overscroll-behavior: none;
