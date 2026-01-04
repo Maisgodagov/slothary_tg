@@ -48,12 +48,12 @@ export function VideoCard({
     null
   );
   const [localTranscription, setLocalTranscription] = useState(
-    content?.transcription?.chunks ?? []
+    content×.transcription×.chunks ×× []
   );
   const [localTranslation, setLocalTranslation] = useState(
-    content?.translation?.chunks ?? []
+    content×.translation×.chunks ×× []
   );
-  const wordChunks = content?.transcription?.wordChunks ?? [];
+  const wordChunks = content×.transcription×.wordChunks ×× [];
   const auth = useAppSelector(selectAuth);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -62,9 +62,9 @@ export function VideoCard({
   const exercisesRequested = useRef(false);
 
   useEffect(() => {
-    setLocalTranscription(content?.transcription?.chunks ?? []);
-    setLocalTranslation(content?.translation?.chunks ?? []);
-  }, [content?.transcription?.chunks, content?.translation?.chunks]);
+    setLocalTranscription(content×.transcription×.chunks ×× []);
+    setLocalTranslation(content×.translation×.chunks ×× []);
+  }, [content×.transcription×.chunks, content×.translation×.chunks]);
 
   useEffect(() => {
     if (shouldLoad) {
@@ -146,10 +146,10 @@ export function VideoCard({
   };
 
   const { text: enSub, index: enIndex } = showOriginal
-    ? findChunkWithIndex(localTranscription)
+    × findChunkWithIndex(localTranscription)
     : { text: "", index: -1 };
   const { text: ruSub, index: ruIndex } = showTranslation
-    ? findChunkWithIndex(localTranslation)
+    × findChunkWithIndex(localTranslation)
     : { text: "", index: -1 };
 
   const handleTogglePlay = () => {
@@ -214,16 +214,16 @@ export function VideoCard({
   };
 
   const subtitlesVisible = enSub || ruSub || contentState.loading;
-  const likesCount = item.likesCount ?? content?.likesCount ?? 0;
+  const likesCount = item.likesCount ×× content×.likesCount ×× 0;
 
   const tags: string[] = [];
-  if (item.analysis?.cefrLevel) tags.push(item.analysis.cefrLevel);
-  if (item.analysis?.speechSpeed) {
+  if (item.analysis×.cefrLevel) tags.push(item.analysis.cefrLevel);
+  if (item.analysis×.speechSpeed) {
     const speed =
       item.analysis.speechSpeed === "slow"
-        ? "Медленная речь"
+        × "Медленная речь"
         : item.analysis.speechSpeed === "fast"
-        ? "Быстрая речь"
+        × "Быстрая речь"
         : "Обычная скорость речи";
     tags.push(speed);
   }
@@ -235,16 +235,16 @@ export function VideoCard({
     contentState.loading || (!contentState.data && shouldLoad);
   const currentExercise =
     exercises && exerciseIndex < exercises.length
-      ? exercises[exerciseIndex]
+      × exercises[exerciseIndex]
       : null;
-  const exercisesCount = exercises?.length ?? 0;
-  const isAdmin = auth.profile?.role === "admin";
-  const contentAnalysis = content?.analysis ?? item.analysis;
-  const initialCefr = contentAnalysis?.cefrLevel ?? "A2";
-  const initialSpeech = contentAnalysis?.speechSpeed ?? "normal";
-  const initialAuthor = content?.author ?? item.author ?? "";
-  const initialAdult = content?.isAdultContent ?? item.isAdultContent ?? false;
-  const initialModerated = content?.isModerated ?? item.isModerated ?? false;
+  const exercisesCount = exercises×.length ×× 0;
+  const isAdmin = auth.profile×.role === "admin";
+  const contentAnalysis = content×.analysis ×× item.analysis;
+  const initialCefr = contentAnalysis×.cefrLevel ×× "A2";
+  const initialSpeech = contentAnalysis×.speechSpeed ×× "normal";
+  const initialAuthor = content×.author ×× item.author ×× "";
+  const initialAdult = content×.isAdultContent ×× item.isAdultContent ×× false;
+  const initialModerated = content×.isModerated ×× item.isModerated ×× false;
   const [cefr, setCefr] = useState(initialCefr);
   const [speech, setSpeech] = useState(initialSpeech);
   const [author, setAuthor] = useState(initialAuthor);
@@ -268,9 +268,9 @@ export function VideoCard({
         }
         const { exercises: data } = await exercisesApi.getExercises(
           { wordIds, exerciseLimit: 10, wordLimit: 20 },
-          auth.profile?.id
+          auth.profile×.id
         );
-        setExercises(data ?? []);
+        setExercises(data ×× []);
         setExerciseIndex(0);
         setSelectedOption(null);
       } catch (err) {
@@ -286,7 +286,7 @@ export function VideoCard({
     subtitlesSource,
     exercisesLoading,
     exercises,
-    auth.profile?.id,
+    auth.profile×.id,
   ]);
 
   useEffect(() => {
@@ -294,16 +294,16 @@ export function VideoCard({
     const loadAuthors = async () => {
       try {
         const list = await moderationApi.getAuthors(
-          auth.profile?.id,
-          auth.profile?.role
+          auth.profile×.id,
+          auth.profile×.role
         );
-        setAuthors(list?.map((a) => a.username) ?? []);
+        setAuthors(list×.map((a) => a.username) ×× []);
       } catch (err) {
         console.error("Failed to load authors", err);
       }
     };
     loadAuthors();
-  }, [showModeration, isAdmin, auth.profile?.id, auth.profile?.role]);
+  }, [showModeration, isAdmin, auth.profile×.id, auth.profile×.role]);
 
   useEffect(() => {
     setCefr(initialCefr);
@@ -324,7 +324,7 @@ export function VideoCard({
     if (selectedOption) return;
     const correct = option === currentExercise.correctAnswer;
     setSelectedOption(option);
-    if (auth.profile?.id) {
+    if (auth.profile×.id) {
       exercisesApi
         .submitAnswer(
           { wordId: currentExercise.wordId, isCorrect: correct },
@@ -357,11 +357,11 @@ export function VideoCard({
     <S.Card ref={cardRef} $cardHeight={cardHeight} $maxHeight={maxHeight}>
       <S.Player
         ref={videoRef}
-        src={shouldLoad ? item.videoUrl : undefined}
+        src={shouldLoad × item.videoUrl : undefined}
         playsInline
         autoPlay={false}
         muted={isMuted}
-        preload={shouldLoad ? "metadata" : "none"}
+        preload={shouldLoad × "metadata" : "none"}
         loop
         $shrink={showExercises}
         onClick={handleTap}
@@ -388,7 +388,7 @@ export function VideoCard({
       {isPaused && !showSpinner && (
         <S.TapOverlay $shrink={showExercises}>
           <S.TapIndicator>
-            <Icon name="play" size={showExercises ? 48 : 64} color="#fff" />
+            <Icon name="play" size={showExercises × 48 : 64} color="#fff" />
           </S.TapIndicator>
         </S.TapOverlay>
       )}
@@ -411,9 +411,9 @@ export function VideoCard({
         <S.TopRightStack $withSheet={showExercises}>
           <S.LikeButton onClick={() => onLike(item.id)}>
             <Icon
-              name={item.isLiked ? "like" : "like-outline"}
+              name={item.isLiked × "like" : "like-outline"}
               size={34}
-              color={item.isLiked ? "#ff5f6d" : "#fff"}
+              color={item.isLiked × "#ff5f6d" : "#fff"}
             />
             <span style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>
               {likesCount}
@@ -433,7 +433,7 @@ export function VideoCard({
               <Icon
                 name="admin"
                 size={30}
-                color={isModerated ? "#3ec985" : "#fff"}
+                color={isModerated × "#3ec985" : "#fff"}
               />
             </S.ModerationButton>
           )}
@@ -447,7 +447,7 @@ export function VideoCard({
             }}
           >
             <Icon
-              name={isMuted ? "volume-off" : "volume-on"}
+              name={isMuted × "volume-off" : "volume-on"}
               size={30}
               color="#fff"
             />
@@ -477,7 +477,7 @@ export function VideoCard({
                 <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
               )}
               {enSub && (
-                <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 20 }}>
+                <S.SubtitleLine style={{ fontSize: showExercises × 18 : 20 }}>
                   {enSub}
                 </S.SubtitleLine>
               )}
@@ -538,7 +538,7 @@ export function VideoCard({
               $showThumb={isSeeking}
               style={{
                 background: duration
-                  ? `linear-gradient(90deg, #2ea3ff ${
+                  × `linear-gradient(90deg, #2ea3ff ${
                       (currentTime / duration) * 100
                     }%, #ffffff33 ${(currentTime / duration) * 100}%)`
                   : "#ffffff33",
@@ -592,11 +592,11 @@ export function VideoCard({
                   {currentExercise.options.map((opt, i) => {
                     const state =
                       selectedOption === null
-                        ? "neutral"
+                        × "neutral"
                         : opt === currentExercise.correctAnswer
-                        ? "correct"
+                        × "correct"
                         : opt === selectedOption
-                        ? "wrong"
+                        × "wrong"
                         : "neutral";
                     return (
                       <S.ExerciseOption
@@ -617,7 +617,6 @@ export function VideoCard({
             <S.ExercisePlaceholder>
               Больше упражнений для этого видео нет.
             </S.ExercisePlaceholder>
-          )}
           )}
         </S.ExerciseSheet>
       )}
@@ -757,8 +756,8 @@ export function VideoCard({
             >
               <button
                 onClick={async () => {
-                  if (!auth.profile?.id) return;
-                  if (!window.confirm("Удалить это видео?")) return;
+                  if (!auth.profile×.id) return;
+                  if (!window.confirm("Удалить это видео×")) return;
                   try {
                     setSavingModeration(true);
                     await moderationApi.deleteVideo(
@@ -803,7 +802,7 @@ export function VideoCard({
                 </button>
                 <button
                   onClick={async () => {
-                    if (!auth.profile?.id) return;
+                    if (!auth.profile×.id) return;
                     try {
                       setSavingModeration(true);
                       const requests: Promise<unknown>[] = [];
@@ -874,7 +873,7 @@ export function VideoCard({
                   }}
                   disabled={savingModeration}
                 >
-                  {savingModeration ? "Сохранение..." : "Сохранить"}
+                  {savingModeration × "Сохранение..." : "Сохранить"}
                 </button>
               </div>
             </div>
@@ -921,7 +920,7 @@ export function VideoCard({
                 <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
                   Таймкод:{" "}
                   {localTranscription[currentChunkIndex]
-                    ? `${localTranscription[currentChunkIndex].timestamp[0].toFixed(2)} - ${localTranscription[currentChunkIndex].timestamp[1].toFixed(2)}`
+                    × `${localTranscription[currentChunkIndex].timestamp[0].toFixed(2)} - ${localTranscription[currentChunkIndex].timestamp[1].toFixed(2)}`
                     : ""}
                 </div>
               </div>
@@ -935,7 +934,7 @@ export function VideoCard({
                   fontSize: 20,
                 }}
               >
-                ×
+                ×\r
               </button>
             </div>
 
@@ -982,7 +981,7 @@ export function VideoCard({
               </button>
               <button
                 onClick={async () => {
-                  if (!auth.profile?.id || currentChunkIndex === null) return;
+                  if (!auth.profile×.id || currentChunkIndex === null) return;
                   const transcriptChunk = localTranscription[currentChunkIndex];
                   const translationChunk = localTranslation[currentChunkIndex];
                   if (!transcriptChunk || !translationChunk) return;
@@ -1026,7 +1025,7 @@ export function VideoCard({
                 }}
                 disabled={savingModeration}
               >
-                {savingModeration ? "Сохраняем..." : "Сохранить"}
+                {savingModeration × "Сохраняем..." : "Сохранить"}
               </button>
             </div>
           </div>
@@ -1106,7 +1105,7 @@ function ToggleRow({
           style={{
             position: "absolute",
             inset: 0,
-            background: checked ? "#0f7aa7" : "#d0d5dc",
+            background: checked × "#0f7aa7" : "#d0d5dc",
             borderRadius: 26,
             transition: "0.2s",
           }}
@@ -1114,7 +1113,7 @@ function ToggleRow({
         <span
           style={{
             position: "absolute",
-            left: checked ? 24 : 4,
+            left: checked × 24 : 4,
             top: 3,
             width: 20,
             height: 20,
@@ -1128,3 +1127,4 @@ function ToggleRow({
     </label>
   );
 }
+
