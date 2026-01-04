@@ -27,10 +27,8 @@ export function VideoCard({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [tapIndicator, setTapIndicator] = useState<"play" | "pause" | null>(
-    null
-  );
   const [isSeeking, setIsSeeking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
   const [exercises, setExercises] = useState<ExerciseItem[] | null>(null);
   const [exercisesLoading, setExercisesLoading] = useState(false);
@@ -94,9 +92,10 @@ export function VideoCard({
     if (!el) return;
 
     if (isActive) {
-      el.play().catch(() => null);
+      el.play().then(() => setIsPaused(false)).catch(() => null);
     } else {
       el.pause();
+      setIsPaused(true);
     }
   }, [isActive]);
 
@@ -155,21 +154,10 @@ export function VideoCard({
     const willPlay = el.paused;
     if (willPlay) {
       el.play();
-      setTapIndicator("play");
-      if (tapTimeoutRef.current) {
-        window.clearTimeout(tapTimeoutRef.current);
-      }
-      tapTimeoutRef.current = window.setTimeout(
-        () => setTapIndicator(null),
-        500
-      );
+      setIsPaused(false);
     } else {
       el.pause();
-      setTapIndicator("pause");
-      if (tapTimeoutRef.current) {
-        window.clearTimeout(tapTimeoutRef.current);
-      }
-      tapTimeoutRef.current = null;
+      setIsPaused(true);
     }
   };
 
@@ -238,6 +226,7 @@ export function VideoCard({
   if (item.isAdultContent) tags.push("18+");
 
   const subtitlesSource = localTranscription;
+  const isContentLoading = contentState.loading || (!contentState.data && shouldLoad);
   const currentExercise =
     exercises && exerciseIndex < exercises.length ? exercises[exerciseIndex] : null;
   const exercisesCount = exercises?.length ?? 0;
@@ -321,8 +310,7 @@ export function VideoCard({
     }, 800);
   };
 
-  const showSpinner =
-    contentState.loading || (exercisesLoading && (!exercises || exercises.length === 0));
+  const showSpinner = isContentLoading;
   const showExerciseButton = !showSpinner && exercisesCount > 0;
 
   const findWordTimestamp = (
@@ -351,6 +339,8 @@ export function VideoCard({
         onClick={handleTap}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onPlay={() => setIsPaused(false)}
+        onPause={() => setIsPaused(true)}
         onEnded={() => {
           const el = videoRef.current;
           if (!el) return;
@@ -367,14 +357,10 @@ export function VideoCard({
         </S.SpinnerOverlay>
       )}
 
-      {tapIndicator && !showSpinner && (
+      {isPaused && !showSpinner && (
         <S.TapOverlay $shrink={showExercises}>
           <S.TapIndicator>
-            <Icon
-              name={tapIndicator === "play" ? "play" : "pause"}
-              size={showExercises ? 48 : 64}
-              color="#fff"
-            />
+            <Icon name="play" size={showExercises ? 48 : 64} color="#fff" />
           </S.TapIndicator>
         </S.TapOverlay>
       )}
