@@ -5,12 +5,14 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { logout, selectAuth } from "../features/auth/slice";
 import { Button } from "../shared/ui/Button";
 import { LoginForm } from "../features/auth/components/LoginForm";
+import { useTelegram } from "../app/providers/TelegramProvider";
 
 export default function ProfilePage() {
   const auth = useAppSelector(selectAuth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
+  const { themeMode, setThemeMode, theme } = useTelegram();
 
   const initials = useMemo(() => {
     const name = auth.profile?.fullName || auth.profile?.email || "";
@@ -51,6 +53,7 @@ export default function ProfilePage() {
           </Button>
         </div>
         <LoginForm mode={mode} />
+        <ThemeSelector themeMode={themeMode} setThemeMode={setThemeMode} />
         <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
           Если вы открыли веб-апп в Telegram, авторизация происходит автоматически.
           Здесь можно войти по логину и паролю для тестов в браузере.
@@ -139,6 +142,67 @@ export default function ProfilePage() {
           Выйти
         </Button>
       </div>
+
+      <div
+        style={{
+          padding: 16,
+          borderRadius: 12,
+          border: "1px solid var(--tg-border)",
+          background: "rgba(255,255,255,0.04)",
+          display: "grid",
+          gap: 10,
+        }}
+      >
+        <div style={{ fontWeight: 700 }}>Тема приложения</div>
+        <ThemeSelector themeMode={themeMode} setThemeMode={setThemeMode} />
+        <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
+          Сейчас: {themeMode === "system" ? `как в системе (${theme})` : themeMode}
+        </div>
+      </div>
     </div>
   );
 }
+
+function ThemeSelector({
+  themeMode,
+  setThemeMode,
+}: {
+  themeMode: "light" | "dark" | "system";
+  setThemeMode: (m: "light" | "dark" | "system") => void;
+}) {
+  const options: { label: string; value: "light" | "dark" | "system" }[] = [
+    { label: "Как в системе", value: "system" },
+    { label: "Светлая", value: "light" },
+    { label: "Тёмная", value: "dark" },
+  ];
+  return (
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => setThemeMode(opt.value)}
+          style={{
+            padding: "8px 12px",
+            borderRadius: 12,
+            border:
+              themeMode === opt.value
+                ? "1px solid var(--tg-accent-strong)"
+                : "1px solid var(--tg-border)",
+            background:
+              themeMode === opt.value
+                ? "rgba(109, 211, 255, 0.15)"
+                : "rgba(255,255,255,0.04)",
+            color: "var(--tg-text)",
+            cursor: "pointer",
+            fontWeight: 700,
+          }}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+
+

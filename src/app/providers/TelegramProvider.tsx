@@ -2,16 +2,21 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import WebApp from '@twa-dev/sdk';
 
 type Theme = 'light' | 'dark';
+type ThemeMode = 'system' | Theme;
 
 interface TelegramContextValue {
   webApp: typeof WebApp | null;
   theme: Theme;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
   initData: string;
 }
 
 const TelegramContext = createContext<TelegramContextValue>({
   webApp: null,
   theme: 'dark',
+  themeMode: 'system',
+  setThemeMode: () => {},
   initData: '',
 });
 
@@ -78,7 +83,18 @@ function updateSafeAreaFromViewport() {
 }
 
 export function TelegramProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(WebApp?.colorScheme ?? 'dark');
+  const [systemTheme, setSystemTheme] = useState<Theme>(WebApp?.colorScheme ?? 'dark');
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    try {
+      const stored = localStorage.getItem('tg-theme-mode');
+      if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
+    } catch {
+      /* ignore */
+    }
+    return 'system';
+  });
+
+  const theme: Theme = themeMode === 'system' ? systemTheme : themeMode;
 
   useEffect(() => {
     if (!WebApp?.initData) {
@@ -92,12 +108,15 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
     WebApp.setBackgroundColor('#0f111a');
 
     applyTelegramTheme(WebApp.colorScheme ?? 'dark');
+    setSystemTheme(WebApp.colorScheme ?? 'dark');
     updateSafeAreaFromViewport();
 
     const handleThemeChange = (newTheme: unknown) => {
       if (typeof newTheme === 'string') {
-        setTheme(newTheme as Theme);
-        applyTelegramTheme(newTheme as Theme);
+        setSystemTheme(newTheme as Theme);
+        if (themeMode === 'system') {
+          applyTelegramTheme(newTheme as Theme);
+        }
       }
     };
 
@@ -131,13 +150,32 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    const mql = window.matchMedia?.('(prefers-color-scheme: dark)');
+    if (!mql) return;
+    const handler = () => setSystemTheme(mql.matches ? 'dark' : 'light');
+    handler();
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tg-theme-mode', themeMode);
+    } catch {
+      /* ignore */
+    }
+  }, [themeMode]);
+
   const value = useMemo<TelegramContextValue>(
     () => ({
       webApp: WebApp?.initData ? WebApp : null,
       theme,
+      themeMode,
+      setThemeMode,
       initData: WebApp?.initData ?? '',
     }),
-    [theme],
+    [theme, themeMode],
   );
 
   return <TelegramContext.Provider value={value}>{children}</TelegramContext.Provider>;
