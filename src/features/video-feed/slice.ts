@@ -24,7 +24,7 @@ interface VideoFeedState {
   filters: FeedFilters;
 }
 
-const initialFilters: FeedFilters = {
+export const initialFilters: FeedFilters = {
   cefrLevels: null,
   speechSpeeds: null,
   showAdultContent: true,

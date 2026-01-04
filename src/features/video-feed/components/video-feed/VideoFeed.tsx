@@ -2,7 +2,7 @@
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 import { Loader } from "../../../../shared/ui/Loader";
 import { selectAuth } from "../../../auth/slice";
-import { loadFeed, selectVideoFeed, setFilters, toggleLike } from "../../slice";
+import { initialFilters, loadFeed, selectVideoFeed, setFilters, toggleLike } from "../../slice";
 import { videoFeedApi } from "../../api";
 import type { VideoFeedItem } from "../../types";
 import type { ContentState } from "./types";
@@ -143,40 +143,56 @@ export function VideoFeed() {
       {feed.status === "loading" && <Loader />}
       {feed.error && <S.ErrorText>{feed.error}</S.ErrorText>}
 
-      <S.FeedScroll $navOffset={NAV_OFFSET}>
-        {items.map((item, index) => {
-          const isActive = activeId ? activeId === item.id : index === 0;
-          const isNext = index === (activeIndex >= 0 ? activeIndex + 1 : 1);
-          const shouldLoad = isActive || isNext;
+      {items.length === 0 && feed.status === "idle" ? (
+        <S.EmptyState>
+          <S.EmptyTitle>Видео по текущим фильтрам закончились</S.EmptyTitle>
+          <S.EmptyText>Поменяйте параметры или сбросьте фильтры, чтобы продолжить.</S.EmptyText>
+          <S.EmptyButton
+            onClick={() => {
+              setTempFilters(initialFilters);
+              dispatch(setFilters(initialFilters));
+              dispatch(loadFeed({ reset: true }));
+            }}
+          >
+            Сбросить фильтры
+          </S.EmptyButton>
+        </S.EmptyState>
+      ) : (
+        <S.FeedScroll $navOffset={NAV_OFFSET}>
+          {items.map((item, index) => {
+            const isActive = activeId ? activeId === item.id : index === 0;
+            const isNext = index === (activeIndex >= 0 ? activeIndex + 1 : 1);
+            const shouldLoad = isActive || isNext;
 
-          return (
-            <VideoCard
-              key={item.id}
-              item={item}
-              contentState={contentMap[item.id] ?? {}}
-              onLoadContent={() => loadContent(item.id)}
-              onLike={toggleLikeHandler}
-              showOriginal={showOriginal}
-              showTranslation={showTranslation}
-              cardHeight={cardHeight}
-              maxHeight={maxHeight}
-              isActive={isActive}
-              onVisibleChange={handleVisibleChange}
-              shouldLoad={shouldLoad}
-              onOpenSettings={() => {
-                setTempFilters(feed.filters);
-                setSettingsOpen(true);
-              }}
-            />
-          );
-        })}
+            return (
+              <VideoCard
+                key={item.id}
+                item={item}
+                contentState={contentMap[item.id] ?? {}}
+                onLoadContent={() => loadContent(item.id)}
+                onLike={toggleLikeHandler}
+                showOriginal={showOriginal}
+                showTranslation={showTranslation}
+                cardHeight={cardHeight}
+                maxHeight={maxHeight}
+                isActive={isActive}
+                onVisibleChange={handleVisibleChange}
+                shouldLoad={shouldLoad}
+                onOpenSettings={() => {
+                  setTempFilters(feed.filters);
+                  setSettingsOpen(true);
+                }}
+              />
+            );
+          })}
 
-        {feed.hasMore && (
-          <S.Sentinel ref={sentinelRef}>
-            {isLoadingMore && <Loader />}
-          </S.Sentinel>
-        )}
-      </S.FeedScroll>
+          {feed.hasMore && (
+            <S.Sentinel ref={sentinelRef}>
+              {isLoadingMore && <Loader />}
+            </S.Sentinel>
+          )}
+        </S.FeedScroll>
+      )}
 
       {settingsOpen && (
         <SettingsModal

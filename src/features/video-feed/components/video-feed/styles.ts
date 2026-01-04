@@ -31,6 +31,36 @@ export const HelperText = styled.div`
   font-size: 12px;
 `;
 
+export const EmptyState = styled.div`
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 24px 16px;
+  color: var(--tg-text);
+  text-align: center;
+`;
+
+export const EmptyTitle = styled.div`
+  font-size: 18px;
+  font-weight: 800;
+`;
+
+export const EmptyText = styled.div`
+  font-size: 14px;
+  color: var(--tg-subtle);
+  max-width: 320px;
+`;
+
+export const EmptyButton = styled.button`
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--tg-border);
+  background: var(--tg-card);
+  color: var(--tg-text);
+  font-weight: 700;
+  cursor: pointer;
+`;
+
 export const Sentinel = styled.div`
   height: 12px;
   width: 100%;
