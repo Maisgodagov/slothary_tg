@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { useAppSelector } from "../../../../app/hooks";
 import { selectAuth } from "../../../auth/slice";
 import { wordIdsFromSubtitles } from "../../../exercises/lib/wordIds";
@@ -216,10 +216,10 @@ export function VideoCard({
   if (item.analysis?.speechSpeed) {
     const speed =
       item.analysis.speechSpeed === "slow"
-        ? "Медленная речь"
+        ? "РњРµРґР»РµРЅРЅР°СЏ СЂРµС‡СЊ"
         : item.analysis.speechSpeed === "fast"
-        ? "Быстрая речь"
-        : "Обычная скорость речи";
+        ? "Р‘С‹СЃС‚СЂР°СЏ СЂРµС‡СЊ"
+        : "РћР±С‹С‡РЅР°СЏ СЃРєРѕСЂРѕСЃС‚СЊ СЂРµС‡Рё";
     tags.push(speed);
   }
   if (item.author) tags.push(item.author);
@@ -442,7 +442,7 @@ export function VideoCard({
               }}
             >
               {contentState.loading && (
-                <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
+                <S.SubtitleLoading>Р—Р°РіСЂСѓР¶Р°РµРј СЃСѓР±С‚РёС‚СЂС‹...</S.SubtitleLoading>
               )}
               {enSub && (
                 <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 20 }}>
@@ -519,9 +519,9 @@ export function VideoCard({
       {isActive && (
         <S.ExerciseSheet $open={showExercises}>
           <S.ExerciseHandle />
-          <S.ExerciseTitle>Переведи это слово</S.ExerciseTitle>
+          <S.ExerciseTitle>РџРµСЂРµРІРµРґРё СЌС‚Рѕ СЃР»РѕРІРѕ</S.ExerciseTitle>
           {exercisesLoading && (
-            <S.ExercisePlaceholder>Загружаем упражнения...</S.ExercisePlaceholder>
+            <S.ExercisePlaceholder>Р—Р°РіСЂСѓР¶Р°РµРј СѓРїСЂР°Р¶РЅРµРЅРёСЏ...</S.ExercisePlaceholder>
           )}
           {!exercisesLoading && currentExercise && (
             <S.ExerciseList>
@@ -578,37 +578,47 @@ export function VideoCard({
           )}
           {!exercisesLoading && !currentExercise && (
             <S.ExercisePlaceholder>
-              Больше упражнений для этого видео нет.
+              Р‘РѕР»СЊС€Рµ СѓРїСЂР°Р¶РЅРµРЅРёР№ РґР»СЏ СЌС‚РѕРіРѕ РІРёРґРµРѕ РЅРµС‚.
             </S.ExercisePlaceholder>
           )}
         </S.ExerciseSheet>
       )}
 
-      {showModeration && isAdmin && (
+            {showModeration && isAdmin && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.6)",
+            background: "rgba(0,0,0,0.55)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 12,
+            padding: 14,
           }}
         >
           <div
             style={{
               width: "100%",
-              maxWidth: 520,
-              background: "#0f1428",
-              border: "1px solid var(--tg-border)",
-              borderRadius: 16,
-              padding: 16,
-              color: "var(--tg-text)",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+              maxWidth: 640,
+              background: "#ffffff",
+              border: "1px solid #e6e8ef",
+              borderRadius: 20,
+              padding: "22px 20px 26px",
+              color: "#1a1d29",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.28)",
+              position: "relative",
             }}
           >
+            <div
+              style={{
+                width: 44,
+                height: 4,
+                background: "#d9dce3",
+                borderRadius: 4,
+                margin: "0 auto 18px",
+              }}
+            />
             <div
               style={{
                 display: "flex",
@@ -618,35 +628,29 @@ export function VideoCard({
               }}
             >
               <div>
-                <div style={{ fontSize: 18, fontWeight: 800 }}>
-                  Модерация видео
-                </div>
-                <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
-                  ID: {item.id}
-                </div>
+                <div style={{ fontSize: 18, fontWeight: 800 }}>Модерация видео</div>
+                <div style={{ fontSize: 12, color: "#6a6f7a" }}>ID: {item.id}</div>
               </div>
               <button
                 onClick={() => setShowModeration(false)}
                 style={{
-                  border: "none",
-                  background: "transparent",
-                  color: "var(--tg-subtle)",
+                  border: "1px solid #e6e8ef",
+                  background: "#f5f6fa",
+                  color: "#404658",
                   cursor: "pointer",
-                  fontSize: 20,
+                  width: 32,
+                  height: 32,
+                  borderRadius: 12,
                 }}
               >
-                ×
+                <Icon name="close" size={18} />
               </button>
             </div>
 
             <div style={{ display: "grid", gap: 12 }}>
               <label style={labelStyle}>
                 Уровень языка
-                <select
-                  value={cefr}
-                  onChange={(e) => setCefr(e.target.value as any)}
-                  style={inputStyle}
-                >
+                <select value={cefr} onChange={(e) => setCefr(e.target.value as any)} style={inputStyle}>
                   {["A1", "A2", "B1", "B2", "C1", "C2"].map((lvl) => (
                     <option key={lvl} value={lvl}>
                       {lvl}
@@ -657,11 +661,7 @@ export function VideoCard({
 
               <label style={labelStyle}>
                 Скорость речи
-                <select
-                  value={speech}
-                  onChange={(e) => setSpeech(e.target.value as any)}
-                  style={inputStyle}
-                >
+                <select value={speech} onChange={(e) => setSpeech(e.target.value as any)} style={inputStyle}>
                   <option value="slow">Медленная речь</option>
                   <option value="normal">Обычная скорость речи</option>
                   <option value="fast">Быстрая речь</option>
@@ -684,16 +684,12 @@ export function VideoCard({
                 </datalist>
               </label>
 
-              <label style={{ ...labelStyle, flexDirection: "row", gap: 8 }}>
-                <input
-                  type="checkbox"
-                  checked={isAdult}
-                  onChange={(e) => setIsAdult(e.target.checked)}
-                />
+              <label style={{ ...labelStyle, flexDirection: "row", gap: 8, alignItems: "center" }}>
+                <input type="checkbox" checked={isAdult} onChange={(e) => setIsAdult(e.target.checked)} />
                 <span>18+ контент</span>
               </label>
 
-              <label style={{ ...labelStyle, flexDirection: "row", gap: 8 }}>
+              <label style={{ ...labelStyle, flexDirection: "row", gap: 8, alignItems: "center" }}>
                 <input
                   type="checkbox"
                   checked={isModerated}
@@ -740,9 +736,9 @@ export function VideoCard({
                   onClick={() => setShowModeration(false)}
                   style={{
                     ...buttonStyle,
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid var(--tg-border)",
-                    color: "#fff",
+                    background: "#f5f6fa",
+                    border: "1px solid #d8dadd",
+                    color: "#1a1d29",
                   }}
                 >
                   Отмена
@@ -787,28 +783,26 @@ export function VideoCard({
                       setShowModeration(false);
                     } catch (err) {
                       console.error("Save moderation failed", err);
-                      alert("Не удалось сохранить модерацию");
+                      alert("Не удалось сохранить");
                     } finally {
                       setSavingModeration(false);
                     }
                   }}
                   style={{
                     ...buttonStyle,
-                    background: "linear-gradient(135deg, #2ea3ff, #6dd3ff)",
-                    color: "#0c1021",
+                    background: "#0f7aa7",
+                    color: "#fff",
                     minWidth: 120,
                   }}
                   disabled={savingModeration}
                 >
-                  {savingModeration ? "Сохраняем..." : "Сохранить"}
+                  {savingModeration ? "Сохранение..." : "Сохранить"}
                 </button>
               </div>
             </div>
           </div>
         </div>
-      )}
-
-      {subtitleModal && isAdmin && currentChunkIndex !== null && (
+      )}{subtitleModal && isAdmin && currentChunkIndex !== null && (
         <div
           style={{
             position: "fixed",
@@ -842,9 +836,9 @@ export function VideoCard({
               }}
             >
               <div>
-                <div style={{ fontSize: 18, fontWeight: 800 }}>Редактировать субтитры</div>
+                <div style={{ fontSize: 18, fontWeight: 800 }}>Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ СЃСѓР±С‚РёС‚СЂС‹</div>
                 <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
-                  Таймкод:{" "}
+                  РўР°Р№РјРєРѕРґ:{" "}
                   {localTranscription[currentChunkIndex]
                     ? `${localTranscription[currentChunkIndex].timestamp[0].toFixed(
                         2
@@ -862,13 +856,13 @@ export function VideoCard({
                   fontSize: 20,
                 }}
               >
-                ×
+                Г—
               </button>
             </div>
 
             <div style={{ display: "grid", gap: 12 }}>
               <label style={labelStyle}>
-                Английские субтитры
+                РђРЅРіР»РёР№СЃРєРёРµ СЃСѓР±С‚РёС‚СЂС‹
                 <textarea
                   style={textareaStyle}
                   rows={3}
@@ -878,7 +872,7 @@ export function VideoCard({
               </label>
 
               <label style={labelStyle}>
-                Русские субтитры
+                Р СѓСЃСЃРєРёРµ СЃСѓР±С‚РёС‚СЂС‹
                 <textarea
                   style={textareaStyle}
                   rows={3}
@@ -905,7 +899,7 @@ export function VideoCard({
                   color: "#fff",
                 }}
               >
-                Отмена
+                РћС‚РјРµРЅР°
               </button>
               <button
                 onClick={async () => {
@@ -940,7 +934,7 @@ export function VideoCard({
                     setSubtitleModal(false);
                   } catch (err) {
                     console.error("Failed to save subtitles", err);
-                    alert("Не удалось сохранить субтитры");
+                    alert("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ СЃСѓР±С‚РёС‚СЂС‹");
                   } finally {
                     setSavingModeration(false);
                   }
@@ -953,7 +947,7 @@ export function VideoCard({
                 }}
                 disabled={savingModeration}
               >
-                {savingModeration ? "Сохраняем..." : "Сохранить"}
+                {savingModeration ? "РЎРѕС…СЂР°РЅСЏРµРј..." : "РЎРѕС…СЂР°РЅРёС‚СЊ"}
               </button>
             </div>
           </div>
@@ -994,3 +988,4 @@ const textareaStyle: React.CSSProperties = {
   minHeight: 80,
   resize: "vertical",
 };
+
