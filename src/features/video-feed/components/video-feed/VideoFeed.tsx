@@ -30,6 +30,16 @@ export function VideoFeed() {
   const [tempFilters, setTempFilters] = useState(feed.filters);
 
   useEffect(() => {
+    if (settingsOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [settingsOpen]);
+
+  useEffect(() => {
     if (feed.items.length === 0) {
       dispatch(loadFeed({ reset: true }));
     }
