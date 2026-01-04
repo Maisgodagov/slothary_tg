@@ -44,7 +44,9 @@ export function VideoCard({
   const [subtitleModal, setSubtitleModal] = useState(false);
   const [enEdit, setEnEdit] = useState("");
   const [ruEdit, setRuEdit] = useState("");
-  const [currentChunkIndex, setCurrentChunkIndex] = useState<number | null>(null);
+  const [currentChunkIndex, setCurrentChunkIndex] = useState<number | null>(
+    null
+  );
   const [localTranscription, setLocalTranscription] = useState(
     content?.transcription?.chunks ?? []
   );
@@ -92,7 +94,9 @@ export function VideoCard({
     if (!el) return;
 
     if (isActive) {
-      el.play().then(() => setIsPaused(false)).catch(() => null);
+      el.play()
+        .then(() => setIsPaused(false))
+        .catch(() => null);
     } else {
       el.pause();
       setIsPaused(true);
@@ -122,7 +126,8 @@ export function VideoCard({
     const activeIdx = chunks.findIndex(
       (ch) => currentTime >= ch.timestamp[0] && currentTime < ch.timestamp[1]
     );
-    if (activeIdx !== -1) return { text: chunks[activeIdx].text, index: activeIdx };
+    if (activeIdx !== -1)
+      return { text: chunks[activeIdx].text, index: activeIdx };
 
     // If in pause, keep previous chunk visible for a short grace period
     let lastIdx = -1;
@@ -216,19 +221,22 @@ export function VideoCard({
   if (item.analysis?.speechSpeed) {
     const speed =
       item.analysis.speechSpeed === "slow"
-        ? "РњРµРґР»РµРЅРЅР°СЏ СЂРµС‡СЊ"
+        ? "Медленная речь"
         : item.analysis.speechSpeed === "fast"
-        ? "Р‘С‹СЃС‚СЂР°СЏ СЂРµС‡СЊ"
-        : "РћР±С‹С‡РЅР°СЏ СЃРєРѕСЂРѕСЃС‚СЊ СЂРµС‡Рё";
+        ? "Быстрая речь"
+        : "Обычная скорость речи";
     tags.push(speed);
   }
   if (item.author) tags.push(item.author);
   if (item.isAdultContent) tags.push("18+");
 
   const subtitlesSource = localTranscription;
-  const isContentLoading = contentState.loading || (!contentState.data && shouldLoad);
+  const isContentLoading =
+    contentState.loading || (!contentState.data && shouldLoad);
   const currentExercise =
-    exercises && exerciseIndex < exercises.length ? exercises[exerciseIndex] : null;
+    exercises && exerciseIndex < exercises.length
+      ? exercises[exerciseIndex]
+      : null;
   const exercisesCount = exercises?.length ?? 0;
   const isAdmin = auth.profile?.role === "admin";
   const contentAnalysis = content?.analysis ?? item.analysis;
@@ -251,7 +259,9 @@ export function VideoCard({
       exercisesRequested.current = true;
       try {
         setExercisesLoading(true);
-        const wordIds = await wordIdsFromSubtitles(subtitlesSource as any, { limit: 120 });
+        const wordIds = await wordIdsFromSubtitles(subtitlesSource as any, {
+          limit: 120,
+        });
         if (!wordIds.length) {
           setExercises([]);
           return;
@@ -271,13 +281,22 @@ export function VideoCard({
       }
     };
     loadExercises();
-  }, [contentState.data, subtitlesSource, exercisesLoading, exercises, auth.profile?.id]);
+  }, [
+    contentState.data,
+    subtitlesSource,
+    exercisesLoading,
+    exercises,
+    auth.profile?.id,
+  ]);
 
   useEffect(() => {
     if (!showModeration || !isAdmin) return;
     const loadAuthors = async () => {
       try {
-        const list = await moderationApi.getAuthors(auth.profile?.id, auth.profile?.role);
+        const list = await moderationApi.getAuthors(
+          auth.profile?.id,
+          auth.profile?.role
+        );
         setAuthors(list?.map((a) => a.username) ?? []);
       } catch (err) {
         console.error("Failed to load authors", err);
@@ -292,7 +311,13 @@ export function VideoCard({
     setAuthor(initialAuthor);
     setIsAdult(initialAdult);
     setIsModerated(initialModerated);
-  }, [initialAdult, initialAuthor, initialCefr, initialModerated, initialSpeech]);
+  }, [
+    initialAdult,
+    initialAuthor,
+    initialCefr,
+    initialModerated,
+    initialSpeech,
+  ]);
 
   const handleOptionSelect = async (option: string) => {
     if (!currentExercise) return;
@@ -301,7 +326,10 @@ export function VideoCard({
     setSelectedOption(option);
     if (auth.profile?.id) {
       exercisesApi
-        .submitAnswer({ wordId: currentExercise.wordId, isCorrect: correct }, auth.profile.id)
+        .submitAnswer(
+          { wordId: currentExercise.wordId, isCorrect: correct },
+          auth.profile.id
+        )
         .catch((err) => console.error("submitAnswer failed", err));
     }
     setTimeout(() => {
@@ -402,7 +430,11 @@ export function VideoCard({
               onClick={() => setShowModeration(true)}
               $approved={isModerated}
             >
-              <Icon name="admin" size={30} color={isModerated ? "#3ec985" : "#fff"} />
+              <Icon
+                name="admin"
+                size={30}
+                color={isModerated ? "#3ec985" : "#fff"}
+              />
             </S.ModerationButton>
           )}
           <S.IconButton
@@ -442,7 +474,7 @@ export function VideoCard({
               }}
             >
               {contentState.loading && (
-                <S.SubtitleLoading>Р—Р°РіСЂСѓР¶Р°РµРј СЃСѓР±С‚РёС‚СЂС‹...</S.SubtitleLoading>
+                <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
               )}
               {enSub && (
                 <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 20 }}>
@@ -518,10 +550,14 @@ export function VideoCard({
 
       {isActive && (
         <S.ExerciseSheet $open={showExercises}>
+      {isActive && (
+        <S.ExerciseSheet $open={showExercises}>
           <S.ExerciseHandle />
-          <S.ExerciseTitle>РџРµСЂРµРІРµРґРё СЌС‚Рѕ СЃР»РѕРІРѕ</S.ExerciseTitle>
+          <S.ExerciseTitle>Переведи это слово</S.ExerciseTitle>
           {exercisesLoading && (
-            <S.ExercisePlaceholder>Р—Р°РіСЂСѓР¶Р°РµРј СѓРїСЂР°Р¶РЅРµРЅРёСЏ...</S.ExercisePlaceholder>
+            <S.ExercisePlaceholder>
+              Загружаем упражнения...
+            </S.ExercisePlaceholder>
           )}
           {!exercisesLoading && currentExercise && (
             <S.ExerciseList>
@@ -546,12 +582,13 @@ export function VideoCard({
                     </S.ListenButton>
                   )}
                 </div>
-                {currentExercise.direction === "en-ru" && currentExercise.partOfSpeech && (
-                  <div style={{ color: "#cfd3e0", fontSize: 12 }}>
-                    {currentExercise.partOfSpeech}
-                  </div>
-                )}
-            <S.ExerciseOptions>
+                {currentExercise.direction === "en-ru" &&
+                  currentExercise.partOfSpeech && (
+                    <div style={{ color: "#cfd3e0", fontSize: 12 }}>
+                      {currentExercise.partOfSpeech}
+                    </div>
+                  )}
+                <S.ExerciseOptions>
                   {currentExercise.options.map((opt, i) => {
                     const state =
                       selectedOption === null
@@ -578,13 +615,14 @@ export function VideoCard({
           )}
           {!exercisesLoading && !currentExercise && (
             <S.ExercisePlaceholder>
-              Р‘РѕР»СЊС€Рµ СѓРїСЂР°Р¶РЅРµРЅРёР№ РґР»СЏ СЌС‚РѕРіРѕ РІРёРґРµРѕ РЅРµС‚.
+              Больше упражнений для этого видео нет.
             </S.ExercisePlaceholder>
+          )}
           )}
         </S.ExerciseSheet>
       )}
 
-            {showModeration && isAdmin && (
+      {showModeration && isAdmin && (
         <div
           style={{
             position: "fixed",
@@ -628,8 +666,12 @@ export function VideoCard({
               }}
             >
               <div>
-                <div style={{ fontSize: 18, fontWeight: 800 }}>Модерация видео</div>
-                <div style={{ fontSize: 12, color: "#6a6f7a" }}>ID: {item.id}</div>
+                <div style={{ fontSize: 18, fontWeight: 800 }}>
+                  Модерация видео
+                </div>
+                <div style={{ fontSize: 12, color: "#6a6f7a" }}>
+                  ID: {item.id}
+                </div>
               </div>
               <button
                 onClick={() => setShowModeration(false)}
@@ -650,7 +692,11 @@ export function VideoCard({
             <div style={{ display: "grid", gap: 12 }}>
               <label style={labelStyle}>
                 Уровень языка
-                <select value={cefr} onChange={(e) => setCefr(e.target.value as any)} style={inputStyle}>
+                <select
+                  value={cefr}
+                  onChange={(e) => setCefr(e.target.value as any)}
+                  style={inputStyle}
+                >
                   {["A1", "A2", "B1", "B2", "C1", "C2"].map((lvl) => (
                     <option key={lvl} value={lvl}>
                       {lvl}
@@ -661,7 +707,11 @@ export function VideoCard({
 
               <label style={labelStyle}>
                 Скорость речи
-                <select value={speech} onChange={(e) => setSpeech(e.target.value as any)} style={inputStyle}>
+                <select
+                  value={speech}
+                  onChange={(e) => setSpeech(e.target.value as any)}
+                  style={inputStyle}
+                >
                   <option value="slow">Медленная речь</option>
                   <option value="normal">Обычная скорость речи</option>
                   <option value="fast">Быстрая речь</option>
@@ -684,8 +734,16 @@ export function VideoCard({
                 </datalist>
               </label>
 
-              <ToggleRow label="18+ контент" checked={isAdult} onChange={setIsAdult} />
-              <ToggleRow label="Видео прошло модерацию" checked={isModerated} onChange={setIsModerated} />
+              <ToggleRow
+                label="18+ контент"
+                checked={isAdult}
+                onChange={setIsAdult}
+              />
+              <ToggleRow
+                label="Видео прошло модерацию"
+                checked={isModerated}
+                onChange={setIsModerated}
+              />
             </div>
 
             <div
@@ -703,7 +761,11 @@ export function VideoCard({
                   if (!window.confirm("Удалить это видео?")) return;
                   try {
                     setSavingModeration(true);
-                    await moderationApi.deleteVideo(item.id, auth.profile.id, auth.profile.role);
+                    await moderationApi.deleteVideo(
+                      item.id,
+                      auth.profile.id,
+                      auth.profile.role
+                    );
                     setShowModeration(false);
                   } catch (err) {
                     console.error("Delete video failed", err);
@@ -720,7 +782,14 @@ export function VideoCard({
               >
                 Удалить
               </button>
-              <div style={{ display: "flex", gap: 8, flex: 1, justifyContent: "flex-end" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  flex: 1,
+                  justifyContent: "flex-end",
+                }}
+              >
                 <button
                   onClick={() => setShowModeration(false)}
                   style={{
@@ -740,22 +809,42 @@ export function VideoCard({
                       const requests: Promise<unknown>[] = [];
                       if (cefr !== initialCefr) {
                         requests.push(
-                          moderationApi.updateCefrLevel(item.id, cefr, auth.profile.id, auth.profile.role)
+                          moderationApi.updateCefrLevel(
+                            item.id,
+                            cefr,
+                            auth.profile.id,
+                            auth.profile.role
+                          )
                         );
                       }
                       if (speech !== initialSpeech) {
                         requests.push(
-                          moderationApi.updateSpeechSpeed(item.id, speech, auth.profile.id, auth.profile.role)
+                          moderationApi.updateSpeechSpeed(
+                            item.id,
+                            speech,
+                            auth.profile.id,
+                            auth.profile.role
+                          )
                         );
                       }
                       if (author !== initialAuthor) {
                         requests.push(
-                          moderationApi.updateAuthor(item.id, author, auth.profile.id, auth.profile.role)
+                          moderationApi.updateAuthor(
+                            item.id,
+                            author,
+                            auth.profile.id,
+                            auth.profile.role
+                          )
                         );
                       }
                       if (isAdult !== initialAdult) {
                         requests.push(
-                          moderationApi.updateAdult(item.id, isAdult, auth.profile.id, auth.profile.role)
+                          moderationApi.updateAdult(
+                            item.id,
+                            isAdult,
+                            auth.profile.id,
+                            auth.profile.role
+                          )
                         );
                       }
                       if (isModerated !== initialModerated) {
@@ -791,7 +880,8 @@ export function VideoCard({
             </div>
           </div>
         </div>
-      )}{subtitleModal && isAdmin && currentChunkIndex !== null && (
+      )}
+      {subtitleModal && isAdmin && currentChunkIndex !== null && (
         <div
           style={{
             position: "fixed",
@@ -825,13 +915,13 @@ export function VideoCard({
               }}
             >
               <div>
-                <div style={{ fontSize: 18, fontWeight: 800 }}>Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ СЃСѓР±С‚РёС‚СЂС‹</div>
+                <div style={{ fontSize: 18, fontWeight: 800 }}>
+                  Редактировать субтитры
+                </div>
                 <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
-                  РўР°Р№РјРєРѕРґ:{" "}
+                  Таймкод:{" "}
                   {localTranscription[currentChunkIndex]
-                    ? `${localTranscription[currentChunkIndex].timestamp[0].toFixed(
-                        2
-                      )} - ${localTranscription[currentChunkIndex].timestamp[1].toFixed(2)}`
+                    ? `${localTranscription[currentChunkIndex].timestamp[0].toFixed(2)} - ${localTranscription[currentChunkIndex].timestamp[1].toFixed(2)}`
                     : ""}
                 </div>
               </div>
@@ -845,13 +935,13 @@ export function VideoCard({
                   fontSize: 20,
                 }}
               >
-                Г—
+                ×
               </button>
             </div>
 
             <div style={{ display: "grid", gap: 12 }}>
               <label style={labelStyle}>
-                РђРЅРіР»РёР№СЃРєРёРµ СЃСѓР±С‚РёС‚СЂС‹
+                Английские субтитры
                 <textarea
                   style={textareaStyle}
                   rows={3}
@@ -861,7 +951,7 @@ export function VideoCard({
               </label>
 
               <label style={labelStyle}>
-                Р СѓСЃСЃРєРёРµ СЃСѓР±С‚РёС‚СЂС‹
+                Русские субтитры
                 <textarea
                   style={textareaStyle}
                   rows={3}
@@ -888,7 +978,7 @@ export function VideoCard({
                   color: "#fff",
                 }}
               >
-                РћС‚РјРµРЅР°
+                Отмена
               </button>
               <button
                 onClick={async () => {
@@ -923,7 +1013,7 @@ export function VideoCard({
                     setSubtitleModal(false);
                   } catch (err) {
                     console.error("Failed to save subtitles", err);
-                    alert("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ СЃСѓР±С‚РёС‚СЂС‹");
+                    alert("Не удалось сохранить субтитры");
                   } finally {
                     setSavingModeration(false);
                   }
@@ -936,7 +1026,9 @@ export function VideoCard({
                 }}
                 disabled={savingModeration}
               >
-                {savingModeration ? "РЎРѕС…СЂР°РЅСЏРµРј..." : "РЎРѕС…СЂР°РЅРёС‚СЊ"}
+                {savingModeration ? "Сохраняем..." : "Сохранить"}
+              </button>
+            </div>
               </button>
             </div>
           </div>
@@ -1038,4 +1130,3 @@ function ToggleRow({
     </label>
   );
 }
-
