@@ -23,14 +23,14 @@ const TelegramContext = createContext<TelegramContextValue>({
 function applyTelegramTheme(theme: Theme) {
   document.body.dataset.theme = theme;
   if (theme === 'light') {
-    document.documentElement.style.setProperty('--tg-bg', '#f8f9fe');
+    document.documentElement.style.setProperty('--tg-bg', '#f5f7fb');
     document.documentElement.style.setProperty('--tg-surface', '#ffffff');
-    document.documentElement.style.setProperty('--tg-card', '#f3f5fb');
-    document.documentElement.style.setProperty('--tg-text', '#0c1021');
-    document.documentElement.style.setProperty('--tg-subtle', '#4a4f66');
-    document.documentElement.style.setProperty('--tg-accent', '#007aff');
-    document.documentElement.style.setProperty('--tg-accent-strong', '#0056d2');
-    document.documentElement.style.setProperty('--tg-border', '#d8deed');
+    document.documentElement.style.setProperty('--tg-card', '#eef2fb');
+    document.documentElement.style.setProperty('--tg-text', '#0b1020');
+    document.documentElement.style.setProperty('--tg-subtle', '#4b5368');
+    document.documentElement.style.setProperty('--tg-accent', '#0f7aa7');
+    document.documentElement.style.setProperty('--tg-accent-strong', '#0a5a7d');
+    document.documentElement.style.setProperty('--tg-border', '#d7ddeb');
   } else {
     document.documentElement.style.setProperty('--tg-bg', '#0f111a');
     document.documentElement.style.setProperty('--tg-surface', '#171a27');
