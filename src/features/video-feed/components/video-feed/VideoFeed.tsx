@@ -178,12 +178,6 @@ export function VideoFeed() {
         )}
       </S.FeedScroll>
 
-      {feed.hasMore && (
-        <S.HelperText>
-          Прокручивайте вниз, лента подгружается автоматически
-        </S.HelperText>
-      )}
-
       {settingsOpen && (
         <SettingsModal
           filters={tempFilters}

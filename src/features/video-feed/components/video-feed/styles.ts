@@ -1,10 +1,9 @@
 import styled from "styled-components";
 
 export const FeedContainer = styled.div<{ $navOffset: number }>`
-  height: calc(
-    100vh - var(--safe-bottom) - ${({ $navOffset }) => $navOffset}px
-  );
+  height: 100vh;
   padding: 0;
+  overflow: hidden;
 `;
 
 export const FeedScroll = styled.div<{ $navOffset: number }>`
