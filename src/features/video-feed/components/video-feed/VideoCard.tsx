@@ -684,19 +684,8 @@ export function VideoCard({
                 </datalist>
               </label>
 
-              <label style={{ ...labelStyle, flexDirection: "row", gap: 8, alignItems: "center" }}>
-                <input type="checkbox" checked={isAdult} onChange={(e) => setIsAdult(e.target.checked)} />
-                <span>18+ контент</span>
-              </label>
-
-              <label style={{ ...labelStyle, flexDirection: "row", gap: 8, alignItems: "center" }}>
-                <input
-                  type="checkbox"
-                  checked={isModerated}
-                  onChange={(e) => setIsModerated(e.target.checked)}
-                />
-                <span>Видео прошло модерацию</span>
-              </label>
+              <ToggleRow label="18+ контент" checked={isAdult} onChange={setIsAdult} />
+              <ToggleRow label="Видео прошло модерацию" checked={isModerated} onChange={setIsModerated} />
             </div>
 
             <div
