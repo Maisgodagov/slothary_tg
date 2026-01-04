@@ -978,3 +978,64 @@ const textareaStyle: React.CSSProperties = {
   resize: "vertical",
 };
 
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label
+      style={{
+        ...labelStyle,
+        flexDirection: "row",
+        gap: 10,
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      <span style={{ fontWeight: 700, color: "#1a1d29" }}>{label}</span>
+      <span
+        style={{
+          position: "relative",
+          display: "inline-block",
+          width: 48,
+          height: 26,
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+        />
+        <span
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: checked ? "#0f7aa7" : "#d0d5dc",
+            borderRadius: 26,
+            transition: "0.2s",
+          }}
+        />
+        <span
+          style={{
+            position: "absolute",
+            left: checked ? 24 : 4,
+            top: 3,
+            width: 20,
+            height: 20,
+            borderRadius: "50%",
+            background: "#fff",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+            transition: "0.2s",
+          }}
+        />
+      </span>
+    </label>
+  );
+}
+
