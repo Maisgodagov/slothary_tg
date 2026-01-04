@@ -386,9 +386,9 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   max-width: 960px;
   height: 48vh;
   min-height: 360px;
-  background: linear-gradient(180deg, #121523 0%, #0d0f1a 100%);
+  background: var(--tg-card);
   border-radius: 18px 18px 0 0;
-  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.2);
   z-index: 130;
   padding: 16px 16px calc(12px + var(--safe-bottom));
   display: flex;
@@ -404,23 +404,23 @@ export const ExerciseHandle = styled.div`
   width: 52px;
   height: 5px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.15);
   margin: 0 auto;
 `;
 
 export const ExerciseTitle = styled.div`
   font-size: 18px;
   font-weight: 800;
-  color: #f5f7ff;
+  color: var(--tg-text);
   text-align: center;
 `;
 
 export const ExercisePlaceholder = styled.div`
   flex: 1;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px dashed rgba(255, 255, 255, 0.08);
-  color: #cfd3e0;
+  background: var(--tg-surface);
+  border: 1px dashed var(--tg-border);
+  color: var(--tg-text);
   display: grid;
   place-items: center;
   text-align: center;
@@ -438,8 +438,8 @@ export const ExerciseList = styled.div`
 `;
 
 export const ExerciseCard = styled.div`
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--tg-surface);
+  border: 1px solid var(--tg-border);
   border-radius: 14px;
   padding: 12px;
   display: grid;
@@ -448,13 +448,13 @@ export const ExerciseCard = styled.div`
 
 export const ExercisePrompt = styled.div`
   font-weight: 800;
-  color: #f5f7ff;
+  color: var(--tg-text);
   font-size: 20px;
 `;
 
 export const ExerciseMeta = styled.div`
   font-size: 12px;
-  color: #cfd3e0;
+  color: var(--tg-subtle);
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -475,14 +475,14 @@ export const ExerciseOption = styled.button<{ $state?: "neutral" | "correct" | "
         ? "rgba(91, 214, 145, 0.7)"
         : $state === "wrong"
         ? "rgba(255, 95, 109, 0.7)"
-        : "rgba(255, 255, 255, 0.12)"};
+        : "var(--tg-border)"};
   background: ${({ $state }) =>
     $state === "correct"
       ? "rgba(91, 214, 145, 0.12)"
       : $state === "wrong"
       ? "rgba(255, 95, 109, 0.12)"
-      : "rgba(255, 255, 255, 0.06)"};
-  color: #f5f7ff;
+      : "var(--tg-surface)"};
+  color: var(--tg-text);
   font-weight: 700;
   font-size: 17px;
   text-align: left;
@@ -499,8 +499,8 @@ export const ListenButton = styled.button`
   height: 36px;
   border-radius: 12px;
   border: none;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f5f7ff;
+  background: var(--tg-border);
+  color: var(--tg-text);
   cursor: pointer;
   svg {
     filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));

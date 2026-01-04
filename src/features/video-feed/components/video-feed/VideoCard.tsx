@@ -550,8 +550,6 @@ export function VideoCard({
 
       {isActive && (
         <S.ExerciseSheet $open={showExercises}>
-      {isActive && (
-        <S.ExerciseSheet $open={showExercises}>
           <S.ExerciseHandle />
           <S.ExerciseTitle>Переведи это слово</S.ExerciseTitle>
           {exercisesLoading && (
@@ -934,7 +932,7 @@ export function VideoCard({
                   fontSize: 20,
                 }}
               >
-                ?\r
+                ×
               </button>
             </div>
 
@@ -1127,5 +1125,6 @@ function ToggleRow({
     </label>
   );
 }
+
 
 
