@@ -247,7 +247,7 @@ function Section({
               style={{
                 padding: "10px 14px",
                 borderRadius: 14,
-                border: isActive ? "1px solid #0f7aa7" : "1px solid #d8dadd",
+                border: "none",
                 background: isActive ? "#dbeef5" : "#ededf0",
                 color: "#1a1d29",
                 fontWeight: 700,
