@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+﻿import { useState, type FormEvent } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { login, register, selectAuth } from '../slice';
 import { Input } from '../../../shared/ui/Input';
@@ -32,7 +32,7 @@ export function LoginForm({ mode = 'login' }: LoginFormProps) {
       <Input label="Email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
       <Input
         label="Пароль"
-        placeholder="••••••••"
+        placeholder="••••••"
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
