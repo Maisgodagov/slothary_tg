@@ -61,6 +61,73 @@ export const EmptyButton = styled.button`
   cursor: pointer;
 `;
 
+export const ModalBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+`;
+
+export const ModalCard = styled.div`
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  color: #1a1d29;
+  border-radius: 18px;
+  padding: 20px 18px 18px;
+  border: 1px solid #e6e8ef;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+  display: grid;
+  gap: 12px;
+  position: relative;
+`;
+
+export const ModalTitle = styled.div`
+  font-size: 20px;
+  font-weight: 600;
+`;
+
+export const ModalText = styled.div`
+  font-size: 14px;
+  color: #4b5368;
+  line-height: 1.5;
+`;
+
+export const ModalActions = styled.div`
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+`;
+
+export const ModalButton = styled.button<{ $primary?: boolean }>`
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: ${({ $primary }) => ($primary ? "none" : "1px solid #d8dadd")};
+  background: ${({ $primary }) => ($primary ? "#0f7aa7" : "#f5f6fa")};
+  color: ${({ $primary }) => ($primary ? "#fff" : "#1a1d29")};
+  font-weight: 700;
+  cursor: pointer;
+`;
+
+export const ModalClose = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  border: 1px solid #e6e8ef;
+  background: #f5f6fa;
+  color: #404658;
+  font-size: 18px;
+  cursor: pointer;
+`;
+
 export const Sentinel = styled.div`
   height: 12px;
   width: 100%;
@@ -82,8 +149,8 @@ export const Player = styled.video<{ $shrink?: boolean }>`
   display: block;
   width: ${({ $shrink }) => ($shrink ? "60vw" : "100%")};
   max-width: ${({ $shrink }) => ($shrink ? "430px" : "100%")};
-  height: ${({ $shrink }) => ($shrink ? "46vh" : "100%")};
-  max-height: ${({ $shrink }) => ($shrink ? "48vh" : "100%")};
+  height: ${({ $shrink }) => ($shrink ? "52vh" : "100%")};
+  max-height: ${({ $shrink }) => ($shrink ? "52vh" : "100%")};
   object-fit: cover;
   aspect-ratio: 9 / 16;
   border-radius: ${({ $shrink }) => ($shrink ? "18px" : "0px")};
@@ -172,7 +239,7 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
   left: 0;
   right: 0;
-  bottom: ${({ $withSheet }) => ($withSheet ? "45vh" : "0")};
+  bottom: ${({ $withSheet }) => ($withSheet ? "39vh" : "0")};
   padding: 12px 16px calc(18px + var(--safe-bottom));
   color: #fff;
   display: grid;
@@ -413,16 +480,16 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   bottom: 58px;
   margin: 0 auto;
   max-width: 960px;
-  height: 48vh;
-  min-height: 360px;
+  height: 42vh;
+  min-height: 385px;
   background: var(--tg-card);
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.2);
   z-index: 130;
-  padding: 16px 16px calc(12px + var(--safe-bottom));
+  padding: 18px 16px calc(16px + var(--safe-bottom));
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   transform: translateY(${({ $open }) => ($open ? "0%" : "110%")});
   opacity: ${({ $open }) => ($open ? 1 : 0)};
   transition: transform 0.24s ease, opacity 0.24s ease;
@@ -431,15 +498,15 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
 
 export const ExerciseHandle = styled.div`
   width: 52px;
-  height: 5px;
+  height: 4px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.15);
-  margin: 0 auto;
+  margin: 4px auto 0;
 `;
 
 export const ExerciseTitle = styled.div`
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 22px;
+  font-weight: 700;
   color: var(--tg-text);
   text-align: center;
 `;
@@ -461,7 +528,7 @@ export const ExercisePlaceholder = styled.div`
 export const ExerciseList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   overflow-y: auto;
   padding-right: 4px;
 `;
@@ -470,15 +537,18 @@ export const ExerciseCard = styled.div`
   background: var(--tg-surface);
   border: 1px solid var(--tg-border);
   border-radius: 14px;
-  padding: 12px;
+  padding: 14px 12px;
   display: grid;
-  gap: 10px;
+  gap: 8px;
 `;
 
 export const ExercisePrompt = styled.div`
-  font-weight: 800;
+  font-weight: 600;
   color: var(--tg-text);
-  font-size: 20px;
+  font-size: 26px;
+  justify-content: center;
+  display: flex;
+  width: 100%;
 `;
 
 export const ExerciseMeta = styled.div`
@@ -491,13 +561,15 @@ export const ExerciseMeta = styled.div`
 
 export const ExerciseOptions = styled.div`
   display: grid;
-  gap: 8px;
+  gap: 10px;
 `;
 
-export const ExerciseOption = styled.button<{ $state?: "neutral" | "correct" | "wrong" }>`
+export const ExerciseOption = styled.button<{
+  $state?: "neutral" | "correct" | "wrong";
+}>`
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 14px 14px;
+  border-radius: 14px;
   border: 1px solid
     ${({ $state }) =>
       $state === "correct"
@@ -513,7 +585,7 @@ export const ExerciseOption = styled.button<{ $state?: "neutral" | "correct" | "
       : "var(--tg-surface)"};
   color: var(--tg-text);
   font-weight: 700;
-  font-size: 17px;
+  font-size: 20px;
   text-align: left;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;

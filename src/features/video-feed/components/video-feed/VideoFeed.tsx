@@ -28,6 +28,7 @@ export function VideoFeed() {
   const lastUserId = useRef<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState(feed.filters);
+  const [showEndModal, setShowEndModal] = useState(false);
 
   useEffect(() => {
     if (settingsOpen) {
@@ -138,6 +139,17 @@ export function VideoFeed() {
     [activeId, items]
   );
 
+  useEffect(() => {
+    if (
+      !feed.hasMore &&
+      feed.status === "idle" &&
+      items.length > 0 &&
+      activeIndex >= items.length - 1
+    ) {
+      setShowEndModal(true);
+    }
+  }, [feed.hasMore, feed.status, items.length, activeIndex]);
+
   return (
     <S.FeedContainer $navOffset={NAV_OFFSET}>
       {feed.status === "loading" && <Loader />}
@@ -192,6 +204,37 @@ export function VideoFeed() {
             </S.Sentinel>
           )}
         </S.FeedScroll>
+      )}
+
+      {showEndModal && (
+        <S.ModalBackdrop
+          onClick={() => {
+            setShowEndModal(false);
+          }}
+        >
+          <S.ModalCard onClick={(e) => e.stopPropagation()}>
+            <S.ModalTitle>Видео по фильтрам закончились</S.ModalTitle>
+            <S.ModalText>
+              Измените параметры подбора или сбросьте фильтры, чтобы продолжить просмотр.
+            </S.ModalText>
+            <S.ModalActions>
+              <S.ModalButton onClick={() => setShowEndModal(false)}>Закрыть</S.ModalButton>
+              <S.ModalButton
+                $primary
+                onClick={() => {
+                  setShowEndModal(false);
+                  setTempFilters(initialFilters);
+                  setContentMap({});
+                  setActiveId(null);
+                  dispatch(setFilters(initialFilters));
+                  dispatch(loadFeed({ reset: true }));
+                }}
+              >
+                Сбросить фильтры
+              </S.ModalButton>
+            </S.ModalActions>
+          </S.ModalCard>
+        </S.ModalBackdrop>
       )}
 
       {settingsOpen && (

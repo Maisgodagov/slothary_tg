@@ -47,6 +47,7 @@ export function VideoCard({
   const [currentChunkIndex, setCurrentChunkIndex] = useState<number | null>(
     null
   );
+  const [authorModal, setAuthorModal] = useState<string | null>(null);
   const [localTranscription, setLocalTranscription] = useState(
     content?.transcription?.chunks ?? []
   );
@@ -216,8 +217,8 @@ export function VideoCard({
   const subtitlesVisible = enSub || ruSub || contentState.loading;
   const likesCount = item.likesCount ?? content?.likesCount ?? 0;
 
-  const tags: string[] = [];
-  if (item.analysis?.cefrLevel) tags.push(item.analysis.cefrLevel);
+  const tags: { label: string; type?: "author" }[] = [];
+  if (item.analysis?.cefrLevel) tags.push({ label: item.analysis.cefrLevel });
   if (item.analysis?.speechSpeed) {
     const speed =
       item.analysis.speechSpeed === "slow"
@@ -225,10 +226,10 @@ export function VideoCard({
         : item.analysis.speechSpeed === "fast"
         ? "Быстрая речь"
         : "Обычная скорость речи";
-    tags.push(speed);
+    tags.push({ label: speed });
   }
-  if (item.author) tags.push(item.author);
-  if (item.isAdultContent) tags.push("18+");
+  if (item.author) tags.push({ label: item.author, type: "author" });
+  if (item.isAdultContent) tags.push({ label: "18+" });
 
   const subtitlesSource = localTranscription;
   const isContentLoading =
@@ -456,9 +457,26 @@ export function VideoCard({
       )}
       {!showSpinner && !showExercises && (
         <S.TagsRow>
-          {tags.map((tag) => (
-            <S.Badge key={tag}>{tag}</S.Badge>
-          ))}
+          {tags.map((tag) =>
+            tag.type === "author" ? (
+              <S.Badge
+                key={tag.label}
+                as="button"
+                type="button"
+                onClick={() => setAuthorModal(tag.label)}
+                style={{
+                  cursor: "pointer",
+                  border: "none",
+                  outline: "none",
+                  padding: "8px 12px",
+                }}
+              >
+                {tag.label}
+              </S.Badge>
+            ) : (
+              <S.Badge key={tag.label}>{tag.label}</S.Badge>
+            )
+          )}
         </S.TagsRow>
       )}
 
@@ -551,7 +569,6 @@ export function VideoCard({
       {isActive && (
         <S.ExerciseSheet $open={showExercises}>
           <S.ExerciseHandle />
-          <S.ExerciseTitle>Переведи это слово</S.ExerciseTitle>
           {exercisesLoading && (
             <S.ExercisePlaceholder>
               Загружаем упражнения...
@@ -918,7 +935,11 @@ export function VideoCard({
                 <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
                   Таймкод:{" "}
                   {localTranscription[currentChunkIndex]
-                    ? `${localTranscription[currentChunkIndex].timestamp[0].toFixed(2)} - ${localTranscription[currentChunkIndex].timestamp[1].toFixed(2)}`
+                    ? `${localTranscription[
+                        currentChunkIndex
+                      ].timestamp[0].toFixed(2)} - ${localTranscription[
+                        currentChunkIndex
+                      ].timestamp[1].toFixed(2)}`
                     : ""}
                 </div>
               </div>
@@ -1029,6 +1050,35 @@ export function VideoCard({
           </div>
         </div>
       )}
+
+      {authorModal && (
+        <S.ModalBackdrop onClick={() => setAuthorModal(null)}>
+          <S.ModalCard onClick={(e) => e.stopPropagation()}>
+            <S.ModalClose onClick={() => setAuthorModal(null)}>×</S.ModalClose>
+            <S.ModalTitle>Авторское право</S.ModalTitle>
+            <S.ModalText>
+              Все права на видеоматериал принадлежат его законному автору. Ролик
+              получен из открытых источников и используется исключительно в
+              образовательных и ознакомительных целях.
+            </S.ModalText>
+            <S.ModalActions>
+              <S.ModalButton
+                as="a"
+                href={`https://www.tiktok.com/${
+                  authorModal.startsWith("@") ? authorModal : `@${authorModal}`
+                }`}
+                target="_blank"
+                rel="noreferrer"
+                $primary
+                style={{ textDecoration: "none" }}
+              >
+                Перейти к автору (
+                {authorModal.startsWith("@") ? authorModal : `@${authorModal}`})
+              </S.ModalButton>
+            </S.ModalActions>
+          </S.ModalCard>
+        </S.ModalBackdrop>
+      )}
     </S.Card>
   );
 }
@@ -1125,6 +1175,3 @@ function ToggleRow({
     </label>
   );
 }
-
-
-
