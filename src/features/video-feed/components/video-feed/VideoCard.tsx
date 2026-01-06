@@ -354,21 +354,6 @@ export function VideoCard({
     return null;
   };
 
-  const partOfSpeechMap: Record<string, string> = {
-    noun: "существительное",
-    verb: "глагол",
-    adjective: "прилагательное",
-    adverb: "наречие",
-    pronoun: "местоимение",
-    preposition: "предлог",
-    conjunction: "союз",
-    interjection: "междометие",
-    article: "артикль",
-    determiner: "определитель",
-    "phrasal verb": "фразовый глагол",
-    phrasal_verb: "фразовый глагол",
-  };
-
   return (
     <S.Card ref={cardRef} $cardHeight={cardHeight} $maxHeight={maxHeight}>
       <S.Player
