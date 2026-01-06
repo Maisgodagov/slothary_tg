@@ -354,6 +354,21 @@ export function VideoCard({
     return null;
   };
 
+  const partOfSpeechMap: Record<string, string> = {
+    noun: "существительное",
+    verb: "глагол",
+    adjective: "прилагательное",
+    adverb: "наречие",
+    pronoun: "местоимение",
+    preposition: "предлог",
+    conjunction: "союз",
+    interjection: "междометие",
+    article: "артикль",
+    determiner: "определитель",
+    "phrasal verb": "фразовый глагол",
+    phrasal_verb: "фразовый глагол",
+  };
+
   return (
     <S.Card ref={cardRef} $cardHeight={cardHeight} $maxHeight={maxHeight}>
       <S.Player
@@ -579,11 +594,11 @@ export function VideoCard({
               <S.ExerciseCard>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <S.ExercisePrompt>{currentExercise.prompt}</S.ExercisePrompt>
-                  {currentExercise.direction === "en-ru" && (
-                    <S.ListenButton
-                      onClick={() => {
-                        const ts = findWordTimestamp(
-                          currentExercise.word || currentExercise.prompt,
+                {currentExercise.direction === "en-ru" && (
+                  <S.ListenButton
+                    onClick={() => {
+                      const ts = findWordTimestamp(
+                        currentExercise.word || currentExercise.prompt,
                           wordChunks
                         );
                         if (ts === null) return;
@@ -599,8 +614,17 @@ export function VideoCard({
                 </div>
                 {currentExercise.direction === "en-ru" &&
                   currentExercise.partOfSpeech && (
-                    <div style={{ color: "#cfd3e0", fontSize: 12 }}>
-                      {currentExercise.partOfSpeech}
+                    <div
+                      style={{
+                        color: "#2d3038",
+                        fontSize: 13,
+                        textAlign: "center",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {partOfSpeechMap[
+                        currentExercise.partOfSpeech.toLowerCase()
+                      ] ?? currentExercise.partOfSpeech}
                     </div>
                   )}
                 <S.ExerciseOptions>

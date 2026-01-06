@@ -280,7 +280,7 @@ function Section({
           fontWeight: 700,
           letterSpacing: 0.5,
           marginBottom: 12,
-          color: "#6a6f7a",
+          color: "var(--tg-subtle, #cfd5e4)",
         }}
       >
         {title.toUpperCase()}
@@ -301,8 +301,10 @@ function Section({
                 padding: "10px 14px",
                 borderRadius: 14,
                 border: "none",
-                background: isActive ? "#dbeef5" : "#ededf0",
-                color: "#1a1d29",
+                background: isActive
+                  ? "#3c4f70"
+                  : "var(--tg-card, #1f273b)",
+                color: "var(--tg-text, #e9edf7)",
                 fontWeight: 700,
                 cursor: "pointer",
               }}
@@ -410,12 +412,12 @@ function SettingsModal({
         style={{
           width: "100%",
           maxWidth: 720,
-          background: "#ffffff",
+          background: "var(--tg-surface, #0f1428)",
           borderRadius: 20,
-          border: "1px solid #e6e8ef",
+          border: "1px solid var(--tg-border, #2b3245)",
           padding: "22px 20px 26px",
-          color: "#1a1d29",
-          boxShadow: "0 -8px 30px rgba(0,0,0,0.25)",
+          color: "var(--tg-text, #e9edf7)",
+          boxShadow: "0 -8px 30px rgba(0,0,0,0.45)",
           position: "relative",
         }}
       >
@@ -428,9 +430,9 @@ function SettingsModal({
             width: 32,
             height: 32,
             borderRadius: 12,
-            border: "none",
-            background: "#f5f6fa",
-            color: "#404658",
+            border: "1px solid var(--tg-border, #2b3245)",
+            background: "var(--tg-card, #1f273b)",
+            color: "var(--tg-text, #e9edf7)",
             cursor: "pointer",
           }}
           aria-label="Закрыть"
@@ -441,7 +443,7 @@ function SettingsModal({
           style={{
             width: 44,
             height: 4,
-            background: "#d9dce3",
+            background: "var(--tg-border, #2b3245)",
             borderRadius: 4,
             margin: "0 auto 20px",
           }}
@@ -477,7 +479,7 @@ function SettingsModal({
 
         <div
           style={{
-            borderTop: "1px solid #e6e8ef",
+            borderTop: "1px solid var(--tg-border, #2b3245)",
             margin: "18px 0",
             opacity: 1,
           }}

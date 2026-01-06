@@ -69,10 +69,17 @@ export const loadFeed = createAsyncThunk<VideoFeedResponse, { reset?: boolean } 
     const { filters } = videoFeed;
     try {
       const moderationFilter = filters.moderationFilter ?? "all";
+      const role = auth.profile?.role === "admin" ? "admin" : null;
+      console.log("[feed] request", {
+        userId,
+        role,
+        cursor: options?.reset ? null : videoFeed.cursor,
+        filters,
+      });
       return await videoFeedApi.getFeed(userId, {
         cursor: options?.reset ? null : videoFeed.cursor,
         limit: 5,
-        role: auth.profile?.role ?? null,
+        role,
         moderationFilter,
         showAdultContent: filters.showAdultContent,
         cefrLevels: filters.cefrLevels ? filters.cefrLevels.join(",") : undefined,

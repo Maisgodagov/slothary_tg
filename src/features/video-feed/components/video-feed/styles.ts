@@ -75,12 +75,12 @@ export const ModalBackdrop = styled.div`
 export const ModalCard = styled.div`
   width: 100%;
   max-width: 520px;
-  background: #ffffff;
-  color: #1a1d29;
+  background: var(--tg-surface, #0f1428);
+  color: var(--tg-text, #e9edf7);
   border-radius: 18px;
   padding: 20px 18px 18px;
-  border: 1px solid #e6e8ef;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--tg-border, #2b3245);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
   display: grid;
   gap: 12px;
   position: relative;
@@ -93,7 +93,7 @@ export const ModalTitle = styled.div`
 
 export const ModalText = styled.div`
   font-size: 14px;
-  color: #4b5368;
+  color: var(--tg-subtle, #cfd5e4);
   line-height: 1.5;
 `;
 
@@ -107,9 +107,11 @@ export const ModalActions = styled.div`
 export const ModalButton = styled.button<{ $primary?: boolean }>`
   padding: 10px 14px;
   border-radius: 12px;
-  border: ${({ $primary }) => ($primary ? "none" : "1px solid #d8dadd")};
-  background: ${({ $primary }) => ($primary ? "#0f7aa7" : "#f5f6fa")};
-  color: ${({ $primary }) => ($primary ? "#fff" : "#1a1d29")};
+  border: ${({ $primary }) =>
+    $primary ? "none" : "1px solid var(--tg-border, #30384a)"};
+  background: ${({ $primary }) =>
+    $primary ? "#0f7aa7" : "var(--tg-card, #1f273b)"};
+  color: ${({ $primary }) => ($primary ? "#fff" : "var(--tg-text, #e9edf7)")};
   font-weight: 700;
   cursor: pointer;
 `;
@@ -121,9 +123,9 @@ export const ModalClose = styled.button`
   width: 32px;
   height: 32px;
   border-radius: 12px;
-  border: 1px solid #e6e8ef;
-  background: #f5f6fa;
-  color: #404658;
+  border: 1px solid var(--tg-border, #30384a);
+  background: var(--tg-card, #1f273b);
+  color: var(--tg-text, #e9edf7);
   font-size: 18px;
   cursor: pointer;
 `;
@@ -482,9 +484,9 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   max-width: 960px;
   height: 42vh;
   min-height: 385px;
-  background: var(--tg-card);
+  background: var(--tg-card, #0f1428);
   border-radius: 18px 18px 0 0;
-  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.3);
   z-index: 130;
   padding: 18px 16px calc(16px + var(--safe-bottom));
   display: flex;
@@ -500,23 +502,23 @@ export const ExerciseHandle = styled.div`
   width: 52px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--tg-border, rgba(255, 255, 255, 0.14));
   margin: 4px auto 0;
 `;
 
 export const ExerciseTitle = styled.div`
   font-size: 22px;
   font-weight: 700;
-  color: var(--tg-text);
+  color: var(--tg-text, #e9edf7);
   text-align: center;
 `;
 
 export const ExercisePlaceholder = styled.div`
   flex: 1;
   border-radius: 14px;
-  background: var(--tg-surface);
-  border: 1px dashed var(--tg-border);
-  color: var(--tg-text);
+  background: var(--tg-surface, #121a2a);
+  border: 1px dashed var(--tg-border, #2b3245);
+  color: var(--tg-text, #e9edf7);
   display: grid;
   place-items: center;
   text-align: center;
@@ -534,8 +536,8 @@ export const ExerciseList = styled.div`
 `;
 
 export const ExerciseCard = styled.div`
-  background: var(--tg-surface);
-  border: 1px solid var(--tg-border);
+  background: var(--tg-surface, #121a2a);
+  border: 1px solid var(--tg-border, #2b3245);
   border-radius: 14px;
   padding: 14px 12px;
   display: grid;
@@ -544,7 +546,7 @@ export const ExerciseCard = styled.div`
 
 export const ExercisePrompt = styled.div`
   font-weight: 600;
-  color: var(--tg-text);
+  color: var(--tg-text, #e9edf7);
   font-size: 26px;
   justify-content: center;
   display: flex;
@@ -553,7 +555,7 @@ export const ExercisePrompt = styled.div`
 
 export const ExerciseMeta = styled.div`
   font-size: 12px;
-  color: var(--tg-subtle);
+  color: var(--tg-subtle, #cfd5e4);
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -582,8 +584,8 @@ export const ExerciseOption = styled.button<{
       ? "rgba(91, 214, 145, 0.12)"
       : $state === "wrong"
       ? "rgba(255, 95, 109, 0.12)"
-      : "var(--tg-surface)"};
-  color: var(--tg-text);
+      : "var(--tg-surface, #121a2a)"};
+  color: var(--tg-text, #e9edf7);
   font-weight: 700;
   font-size: 20px;
   text-align: left;
@@ -600,10 +602,11 @@ export const ListenButton = styled.button`
   height: 36px;
   border-radius: 12px;
   border: none;
-  background: var(--tg-border);
-  color: var(--tg-text);
+  background: var(--tg-border, #2b3245);
+  color: var(--tg-text, #e9edf7);
   cursor: pointer;
   svg {
-    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
+    filter: none;
   }
+  box-shadow: none;
 `;
