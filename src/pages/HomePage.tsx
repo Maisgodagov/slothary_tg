@@ -29,11 +29,10 @@ export default function HomePage() {
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: "flex-end",
           marginBottom: 12,
         }}
       >
-        <h1 style={{ marginTop: 0, marginBottom: 0 }}>Главная</h1>
         <button
           onClick={() => navigate("/profile")}
           style={{
@@ -63,49 +62,15 @@ export default function HomePage() {
           >
             {initial}
           </span>
-          <span style={{ fontWeight: 600 }}>Профиль</span>
+          <span style={{ fontWeight: 600 }}>
+            {auth.profile?.fullName ||
+              [auth.profile?.firstName, auth.profile?.lastName].filter(Boolean).join(" ") ||
+              auth.profile?.email ||
+              "Профиль"}
+          </span>
         </button>
       </div>
 
-      <p style={{ margin: 0, color: "var(--tg-subtle)", lineHeight: 1.5 }}>
-        Здесь будет витрина и контент главной страницы. Пока это заглушка.
-      </p>
-
-      {canModerate && (
-        <>
-          <div style={{ marginTop: 12 }}>
-            <Button variant="ghost" onClick={() => navigate("/admin/moderation")}>
-              Модерация упражнений
-            </Button>
-          </div>
-
-          <div
-            style={{
-              marginTop: 16,
-              padding: 16,
-              borderRadius: 12,
-              border: "1px solid var(--tg-border)",
-              background: "var(--tg-card)",
-              display: "grid",
-              gap: 8,
-            }}
-          >
-            <div style={{ fontWeight: 700 }}>Админские инструменты</div>
-            <div style={{ color: "var(--tg-subtle)", fontSize: 14 }}>
-              Модерация предрассчитанных упражнений: промпт, варианты ответов,
-              переводы и статус.
-            </div>
-            <div>
-              <Button
-                variant="primary"
-                onClick={() => navigate("/admin/moderation")}
-              >
-                Перейти к модерации упражнений
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }
