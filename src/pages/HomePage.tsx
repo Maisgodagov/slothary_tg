@@ -1,18 +1,29 @@
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
-// import { Button } from "../shared/ui/Button";
 
 export default function HomePage() {
   const auth = useAppSelector(selectAuth);
   const navigate = useNavigate();
-  // const canModerate = auth.profile?.role === "admin";
 
   const initial = (
     auth.profile?.fullName?.[0] ??
     auth.profile?.email?.[0] ??
     "U"
   ).toUpperCase();
+
+  const displayName =
+    auth.profile?.fullName ||
+    auth.profile?.email ||
+    (auth.profile as any)?.username ||
+    "Ïðîôèëü";
+
+  const avatarUrl =
+    (auth.profile as any)?.avatar ||
+    (auth.profile as any)?.photoUrl ||
+    (auth.profile as any)?.image ||
+    (auth.profile as any)?.picture ||
+    null;
 
   return (
     <div
@@ -47,24 +58,36 @@ export default function HomePage() {
             cursor: "pointer",
           }}
         >
-          <span
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #2ea3ff55, #6dd3ff44)",
-              display: "grid",
-              placeItems: "center",
-              fontWeight: 700,
-              fontSize: 13,
-              color: "#0c1021",
-            }}
-          >
-            {initial}
-          </span>
-          <span style={{ fontWeight: 600 }}>
-            {auth.profile?.fullName || "ÐŸÑ€Ð¾Ñ„Ð¸Ð»ÑŒ"}
-          </span>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "1px solid var(--tg-border)",
+              }}
+            />
+          ) : (
+            <span
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #2ea3ff55, #6dd3ff44)",
+                display: "grid",
+                placeItems: "center",
+                fontWeight: 700,
+                fontSize: 13,
+                color: "#0c1021",
+              }}
+            >
+              {initial}
+            </span>
+          )}
+          <span style={{ fontWeight: 600 }}>{displayName}</span>
         </button>
       </div>
     </div>
