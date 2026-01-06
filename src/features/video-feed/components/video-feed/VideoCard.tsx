@@ -22,6 +22,7 @@ export function VideoCard({
   onVisibleChange,
   shouldLoad,
   onOpenSettings,
+  onExercisesToggle,
 }: VideoCardProps) {
   const content = contentState.data;
   const [currentTime, setCurrentTime] = useState(0);
@@ -354,6 +355,10 @@ export function VideoCard({
     return null;
   };
 
+  useEffect(() => {
+    if (onExercisesToggle) onExercisesToggle(showExercises);
+  }, [showExercises, onExercisesToggle]);
+
   return (
     <S.Card ref={cardRef} $cardHeight={cardHeight} $maxHeight={maxHeight}>
       <S.Player
@@ -628,6 +633,12 @@ export function VideoCard({
             </S.ExercisePlaceholder>
           )}
         </S.ExerciseSheet>
+      )}
+      {isActive && (
+        <S.ExerciseOverlay
+          $open={showExercises}
+          onClick={() => setShowExercises(false)}
+        />
       )}
 
       {showModeration && isAdmin && (

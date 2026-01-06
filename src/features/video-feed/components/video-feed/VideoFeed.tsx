@@ -30,6 +30,7 @@ export function VideoFeed() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState(feed.filters);
   const [showEndModal, setShowEndModal] = useState(false);
+  const [exercisesOpen, setExercisesOpen] = useState(false);
 
   useEffect(() => {
     if (settingsOpen) {
@@ -186,7 +187,7 @@ export function VideoFeed() {
           </S.EmptyButton>
         </S.EmptyState>
       ) : (
-        <S.FeedScroll $navOffset={NAV_OFFSET}>
+        <S.FeedScroll $navOffset={NAV_OFFSET} $locked={exercisesOpen}>
           {items.map((item, index) => {
             const isActive = activeId ? activeId === item.id : index === 0;
             const isNext = index === (activeIndex >= 0 ? activeIndex + 1 : 1);
@@ -210,6 +211,7 @@ export function VideoFeed() {
                   setTempFilters(feed.filters);
                   setSettingsOpen(true);
                 }}
+                onExercisesToggle={(open) => setExercisesOpen(open)}
               />
             );
           })}

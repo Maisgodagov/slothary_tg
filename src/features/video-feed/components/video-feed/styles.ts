@@ -6,13 +6,13 @@ export const FeedContainer = styled.div<{ $navOffset: number }>`
   overflow: hidden;
 `;
 
-export const FeedScroll = styled.div<{ $navOffset: number }>`
+export const FeedScroll = styled.div<{ $navOffset: number; $locked?: boolean }>`
   display: grid;
   gap: 0;
   height: calc(
     100vh - var(--safe-bottom) - ${({ $navOffset }) => $navOffset}px
   );
-  overflow-y: auto;
+  overflow-y: ${({ $locked }) => ($locked ? "hidden" : "auto")};
   padding: 0;
   scroll-snap-type: y mandatory;
   overscroll-behavior-y: contain;
@@ -494,6 +494,14 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   transform: translateY(${({ $open }) => ($open ? "0%" : "110%")});
   opacity: ${({ $open }) => ($open ? 1 : 0)};
   transition: transform 0.24s ease, opacity 0.24s ease;
+  pointer-events: ${({ $open }) => ($open ? "auto" : "none")};
+`;
+
+export const ExerciseOverlay = styled.div<{ $open: boolean }>`
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 125;
   pointer-events: ${({ $open }) => ($open ? "auto" : "none")};
 `;
 

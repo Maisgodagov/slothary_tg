@@ -19,4 +19,5 @@ export interface VideoCardProps {
   onVisibleChange: (id: string, ratio: number) => void;
   shouldLoad: boolean;
   onOpenSettings: () => void;
+  onExercisesToggle?: (open: boolean) => void;
 }
