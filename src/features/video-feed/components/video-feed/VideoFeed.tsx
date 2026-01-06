@@ -25,6 +25,7 @@ export function VideoFeed() {
   );
   const [activeId, setActiveId] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const lastCursorRequested = useRef<string | null>(null);
   const lastUserId = useRef<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState(feed.filters);
@@ -42,6 +43,7 @@ export function VideoFeed() {
 
   useEffect(() => {
     if (feed.items.length === 0) {
+      lastCursorRequested.current = null;
       dispatch(loadFeed({ reset: true }));
     }
   }, [feed.items.length, dispatch]);
@@ -51,6 +53,7 @@ export function VideoFeed() {
     if (lastUserId.current === currentUserId) return;
 
     lastUserId.current = currentUserId;
+    lastCursorRequested.current = null;
     setContentMap({});
     setActiveId(null);
     dispatch(loadFeed({ reset: true }));
@@ -138,6 +141,19 @@ export function VideoFeed() {
     () => items.findIndex((i: VideoFeedItem) => i.id === activeId),
     [activeId, items]
   );
+
+  useEffect(() => {
+    if (
+      feed.hasMore &&
+      feed.status === "idle" &&
+      items.length > 0 &&
+      activeIndex >= items.length - 2
+    ) {
+      if (lastCursorRequested.current === feed.cursor) return;
+      lastCursorRequested.current = feed.cursor;
+      dispatch(loadFeed({ reset: false }));
+    }
+  }, [activeIndex, items.length, feed.hasMore, feed.status, feed.cursor, dispatch]);
 
   useEffect(() => {
     if (
@@ -246,6 +262,7 @@ export function VideoFeed() {
             setSettingsOpen(false);
             setContentMap({});
             setActiveId(null);
+            lastCursorRequested.current = null;
             dispatch(setFilters(tempFilters));
             dispatch(loadFeed({ reset: true }));
           }}
