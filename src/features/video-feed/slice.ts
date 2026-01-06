@@ -142,7 +142,7 @@ const videoFeedSlice = createSlice({
         state.items = [...state.items, ...newItems];
         state.cursor = action.payload.nextCursor;
         state.fetchedCursors = [...state.fetchedCursors, action.payload.nextCursor ?? null];
-        const noMore = !action.payload.nextCursor || newItems.length === 0;
+        const noMore = !action.payload.nextCursor;
         state.hasMore = action.payload.hasMore && !noMore;
       })
       .addCase(loadFeed.rejected, (state, action) => {
