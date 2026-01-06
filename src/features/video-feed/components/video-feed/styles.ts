@@ -483,7 +483,6 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   margin: 0 auto;
   max-width: 960px;
   height: 42vh;
-  min-height: 385px;
   background: var(--tg-card, #0f1428);
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.3);
