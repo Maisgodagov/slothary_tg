@@ -594,11 +594,11 @@ export function VideoCard({
               <S.ExerciseCard>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <S.ExercisePrompt>{currentExercise.prompt}</S.ExercisePrompt>
-                {currentExercise.direction === "en-ru" && (
-                  <S.ListenButton
-                    onClick={() => {
-                      const ts = findWordTimestamp(
-                        currentExercise.word || currentExercise.prompt,
+                  {currentExercise.direction === "en-ru" && (
+                    <S.ListenButton
+                      onClick={() => {
+                        const ts = findWordTimestamp(
+                          currentExercise.word || currentExercise.prompt,
                           wordChunks
                         );
                         if (ts === null) return;
@@ -612,21 +612,6 @@ export function VideoCard({
                     </S.ListenButton>
                   )}
                 </div>
-                {currentExercise.direction === "en-ru" &&
-                  currentExercise.partOfSpeech && (
-                    <div
-                      style={{
-                        color: "#2d3038",
-                        fontSize: 13,
-                        textAlign: "center",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {partOfSpeechMap[
-                        currentExercise.partOfSpeech.toLowerCase()
-                      ] ?? currentExercise.partOfSpeech}
-                    </div>
-                  )}
                 <S.ExerciseOptions>
                   {currentExercise.options.map((opt, i) => {
                     const state =
