@@ -487,7 +487,7 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.3);
   z-index: 130;
-  padding: 18px 16px 16px;
+  padding: 18px 16px 8px;
   display: flex;
   flex-direction: column;
   gap: 12px;
