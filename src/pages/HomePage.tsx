@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
-import { Button } from "../shared/ui/Button";
+// import { Button } from "../shared/ui/Button";
 
 export default function HomePage() {
   const auth = useAppSelector(selectAuth);
   const navigate = useNavigate();
-  const canModerate = auth.profile?.role === "admin";
+  // const canModerate = auth.profile?.role === "admin";
 
   const initial = (
     auth.profile?.fullName?.[0] ??
@@ -63,14 +63,10 @@ export default function HomePage() {
             {initial}
           </span>
           <span style={{ fontWeight: 600 }}>
-            {auth.profile?.fullName ||
-              [auth.profile?.firstName, auth.profile?.lastName].filter(Boolean).join(" ") ||
-              auth.profile?.email ||
-              "Профиль"}
+            {auth.profile?.fullName || "Профиль"}
           </span>
         </button>
       </div>
-
     </div>
   );
 }
