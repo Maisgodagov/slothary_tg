@@ -151,8 +151,8 @@ export const Player = styled.video<{ $shrink?: boolean }>`
   display: block;
   width: ${({ $shrink }) => ($shrink ? "60vw" : "100%")};
   max-width: ${({ $shrink }) => ($shrink ? "430px" : "100%")};
-  height: ${({ $shrink }) => ($shrink ? "52vh" : "100%")};
-  max-height: ${({ $shrink }) => ($shrink ? "52vh" : "100%")};
+  height: ${({ $shrink }) => ($shrink ? "56vh" : "100%")};
+  max-height: ${({ $shrink }) => ($shrink ? "56vh" : "100%")};
   object-fit: cover;
   aspect-ratio: 9 / 16;
   border-radius: ${({ $shrink }) => ($shrink ? "18px" : "0px")};
@@ -482,7 +482,7 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   bottom: 58px;
   margin: 0 auto;
   max-width: 960px;
-  height: 42vh;
+  height: 38vh;
   background: var(--tg-card, #0f1428);
   border-radius: 18px 18px 0 0;
   box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.3);
