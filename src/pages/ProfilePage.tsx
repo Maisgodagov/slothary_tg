@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../app/hooks";
@@ -26,9 +26,9 @@ export default function ProfilePage() {
       <div style={wrapperStyle}>
         <div style={headerRow}>
           <Button variant="ghost" onClick={() => navigate("/")}>
-            ← На главную
+            в†ђ РќР° РіР»Р°РІРЅСѓСЋ
           </Button>
-          <h2 style={{ margin: 0 }}>Профиль</h2>
+          <h2 style={{ margin: 0 }}>РџСЂРѕС„РёР»СЊ</h2>
         </div>
 
         <div style={cardStyle}>
@@ -37,21 +37,21 @@ export default function ProfilePage() {
               variant={mode === "login" ? "primary" : "ghost"}
               onClick={() => setMode("login")}
             >
-              Войти
+              Р’РѕР№С‚Рё
             </Button>
             <Button
               variant={mode === "register" ? "primary" : "ghost"}
               onClick={() => setMode("register")}
             >
-              Регистрация
+              Р РµРіРёСЃС‚СЂР°С†РёСЏ
             </Button>
           </div>
           <LoginForm mode={mode} />
           <ThemeSelector themeMode={themeMode} setThemeMode={setThemeMode} />
           <div style={hintText}>
-            Если вы открыли веб-апп в Telegram, авторизация происходит
-            автоматически. Здесь можно войти по логину и паролю для тестов в
-            браузере.
+            Р•СЃР»Рё РІС‹ РѕС‚РєСЂС‹Р»Рё РІРµР±-Р°РїРї РІ Telegram, Р°РІС‚РѕСЂРёР·Р°С†РёСЏ РїСЂРѕРёСЃС…РѕРґРёС‚
+            Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё. Р—РґРµСЃСЊ РјРѕР¶РЅРѕ РІРѕР№С‚Рё РїРѕ Р»РѕРіРёРЅСѓ Рё РїР°СЂРѕР»СЋ РґР»СЏ С‚РµСЃС‚РѕРІ РІ
+            Р±СЂР°СѓР·РµСЂРµ.
           </div>
         </div>
       </div>
@@ -64,7 +64,7 @@ export default function ProfilePage() {
     <div style={wrapperStyle}>
       <div style={headerRow}>
         <Button variant="ghost" onClick={() => navigate("/")}>
-          ← На главную
+          в†ђ РќР° РіР»Р°РІРЅСѓСЋ
         </Button>
       </div>
 
@@ -85,21 +85,28 @@ export default function ProfilePage() {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 700 }}>{fullName}</div>
             <div style={{ color: "var(--tg-subtle)", marginTop: 2 }}>{email}</div>
-            <div style={roleBadge}>Роль: {role}</div>
+            <div style={roleBadge}>Р РѕР»СЊ: {role}</div>
           </div>
         </div>
 
         <div style={{ display: "flex", gap: 8 }}>
           <Button variant="ghost" onClick={() => dispatch(logout())}>
-            Выйти
+            Р’С‹Р№С‚Рё
           </Button>
         </div>
+        {role === "admin" && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <Button variant="primary" onClick={() => navigate("/admin/moderation")}>
+              Exercises moderation
+            </Button>
+          </div>
+        )}
 
         <div style={cardStyle}>
-          <div style={{ fontWeight: 700 }}>Тема приложения</div>
+          <div style={{ fontWeight: 700 }}>РўРµРјР° РїСЂРёР»РѕР¶РµРЅРёСЏ</div>
           <ThemeSelector themeMode={themeMode} setThemeMode={setThemeMode} />
           <div style={hintText}>
-            Сейчас: {themeMode === "system" ? `как в системе (${theme})` : themeMode}
+            РЎРµР№С‡Р°СЃ: {themeMode === "system" ? `РєР°Рє РІ СЃРёСЃС‚РµРјРµ (${theme})` : themeMode}
           </div>
         </div>
       </div>
@@ -115,9 +122,9 @@ function ThemeSelector({
   setThemeMode: (m: "light" | "dark" | "system") => void;
 }) {
   const options: { label: string; value: "light" | "dark" | "system" }[] = [
-    { label: "Как в системе", value: "system" },
-    { label: "Светлая", value: "light" },
-    { label: "Тёмная", value: "dark" },
+    { label: "РљР°Рє РІ СЃРёСЃС‚РµРјРµ", value: "system" },
+    { label: "РЎРІРµС‚Р»Р°СЏ", value: "light" },
+    { label: "РўС‘РјРЅР°СЏ", value: "dark" },
   ];
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -209,3 +216,4 @@ const hintText: React.CSSProperties = {
   fontSize: 12,
   color: "var(--tg-subtle)",
 };
+
