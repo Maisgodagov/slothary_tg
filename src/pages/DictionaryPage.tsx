@@ -162,7 +162,7 @@ function SnippetCard({
       <div
         style={{
           width: "clamp(220px, 72vw, 360px)",
-          height: "clamp(360px, 70vh, 560px)",
+          height: "clamp(340px, 64vh, 520px)",
           borderRadius: 22,
           background: "var(--tg-card)",
           border: "1px solid var(--tg-border)",
@@ -175,7 +175,7 @@ function SnippetCard({
     <div
       style={{
         width: "clamp(220px, 72vw, 360px)",
-        height: "clamp(360px, 70vh, 560px)",
+        height: "clamp(340px, 64vh, 520px)",
         borderRadius: 22,
         overflow: "hidden",
         background: "#000",
@@ -575,15 +575,6 @@ export default function DictionaryPage() {
           gap: 12,
         }}
       >
-        <div
-          style={{
-            fontSize: 20,
-            fontWeight: 700,
-            textAlign: "center",
-          }}
-        >
-          Видеословарь
-        </div>
         <div
           style={{
             display: "grid",
