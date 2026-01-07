@@ -500,7 +500,7 @@ export function VideoCard({
                 <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
               )}
               {enSub && (
-                <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 20 }}>
+                <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 18 }}>
                   {enSub}
                 </S.SubtitleLine>
               )}

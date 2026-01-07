@@ -120,6 +120,14 @@ const videoFeedSlice = createSlice({
   initialState,
   reducers: {
     resetFeed: () => initialState,
+    upsertItem: (state, action: PayloadAction<VideoFeedItem>) => {
+      const index = state.items.findIndex((item) => item.id === action.payload.id);
+      if (index >= 0) {
+        state.items[index] = action.payload;
+      } else {
+        state.items = [action.payload, ...state.items];
+      }
+    },
     setFilters: (state, action: PayloadAction<Partial<FeedFilters>>) => {
       state.filters = { ...state.filters, ...action.payload };
       state.items = [];
@@ -168,7 +176,7 @@ const videoFeedSlice = createSlice({
   },
 });
 
-export const { resetFeed, setFilters } = videoFeedSlice.actions;
+export const { resetFeed, setFilters, upsertItem } = videoFeedSlice.actions;
 export const selectVideoFeed = (state: RootState) => state.videoFeed;
 
 export default videoFeedSlice.reducer;

@@ -2,7 +2,7 @@
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 import { Loader } from "../../../../shared/ui/Loader";
 import { selectAuth } from "../../../auth/slice";
-import { initialFilters, loadFeed, selectVideoFeed, setFilters, toggleLike } from "../../slice";
+import { initialFilters, loadFeed, selectVideoFeed, setFilters, toggleLike, upsertItem } from "../../slice";
 import { videoFeedApi } from "../../api";
 import type { VideoFeedItem } from "../../types";
 import type { ContentState } from "./types";
@@ -12,7 +12,7 @@ import { Icon } from "../../../../shared/ui/Icon";
 
 const NAV_OFFSET = 38;
 
-export function VideoFeed() {
+export function VideoFeed({ initialContentId }: { initialContentId?: string | null } = {}) {
   const dispatch = useAppDispatch();
   const feed = useAppSelector(selectVideoFeed);
   const auth = useAppSelector(selectAuth);
@@ -31,6 +31,62 @@ export function VideoFeed() {
   const [tempFilters, setTempFilters] = useState(feed.filters);
   const [showEndModal, setShowEndModal] = useState(false);
   const [exercisesOpen, setExercisesOpen] = useState(false);
+  const pendingFocusId = useRef<string | null>(null);
+  const feedScrollRef = useRef<HTMLDivElement | null>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const focusFetchAttempted = useRef(false);
+
+  const resolveUserId = useCallback(() => {
+    if (auth.profile?.id) return auth.profile.id;
+    try {
+      const fromStorage = localStorage.getItem("guestUserId");
+      if (fromStorage) return fromStorage;
+      const newId = crypto.randomUUID();
+      localStorage.setItem("guestUserId", newId);
+      return newId;
+    } catch {
+      return `guest-${Math.random().toString(36).slice(2, 10)}`;
+    }
+  }, [auth.profile?.id]);
+
+  useEffect(() => {
+    if (!initialContentId) return;
+    pendingFocusId.current = initialContentId;
+  }, [initialContentId]);
+
+  useEffect(() => {
+    if (!initialContentId) return;
+    if (focusFetchAttempted.current) return;
+    if (feed.items.some((item) => item.id === initialContentId)) return;
+
+    focusFetchAttempted.current = true;
+    const userId = resolveUserId();
+    const role = auth.profile?.role ?? null;
+
+    videoFeedApi
+      .getContent(userId, initialContentId, role)
+      .then((content) => {
+        const item = {
+          id: content.id,
+          videoName: content.videoName,
+          videoUrl: content.videoUrl,
+          durationSeconds: content.durationSeconds,
+          analysis: content.analysis,
+          status: "NOT_STARTED" as const,
+          likesCount: content.likesCount,
+          isLiked: content.isLiked,
+          audioLevel: content.audioLevel,
+          createdAt: content.createdAt,
+          isAdultContent: content.isAdultContent,
+          isModerated: content.isModerated,
+          author: content.author ?? null,
+        };
+        dispatch(upsertItem(item));
+      })
+      .catch(() => {
+        focusFetchAttempted.current = false;
+      });
+  }, [auth.profile?.role, dispatch, feed.items, initialContentId, resolveUserId]);
 
   useEffect(() => {
     if (settingsOpen) {
@@ -65,6 +121,17 @@ export function VideoFeed() {
       setActiveId(feed.items[0].id);
     }
   }, [feed.items.length, activeId]);
+
+  useEffect(() => {
+    if (!pendingFocusId.current || feed.items.length === 0) return;
+    const targetId = pendingFocusId.current;
+    const node = cardRefs.current[targetId];
+    if (!node) return;
+
+    node.scrollIntoView({ behavior: "auto", block: "start" });
+    setActiveId(targetId);
+    pendingFocusId.current = null;
+  }, [feed.items]);
 
   const loadContent = useCallback(
     async (videoId: string) => {
@@ -187,32 +254,42 @@ export function VideoFeed() {
           </S.EmptyButton>
         </S.EmptyState>
       ) : (
-        <S.FeedScroll $navOffset={NAV_OFFSET} $locked={exercisesOpen}>
+        <S.FeedScroll
+          ref={feedScrollRef}
+          $navOffset={NAV_OFFSET}
+          $locked={exercisesOpen}
+        >
           {items.map((item, index) => {
             const isActive = activeId ? activeId === item.id : index === 0;
             const isNext = index === (activeIndex >= 0 ? activeIndex + 1 : 1);
             const shouldLoad = isActive || isNext;
 
             return (
-              <VideoCard
+              <div
                 key={item.id}
-                item={item}
-                contentState={contentMap[item.id] ?? {}}
-                onLoadContent={() => loadContent(item.id)}
-                onLike={toggleLikeHandler}
-                showOriginal={showOriginal}
-                showTranslation={showTranslation}
-                cardHeight={cardHeight}
-                maxHeight={maxHeight}
-                isActive={isActive}
-                onVisibleChange={handleVisibleChange}
-                shouldLoad={shouldLoad}
-                onOpenSettings={() => {
-                  setTempFilters(feed.filters);
-                  setSettingsOpen(true);
+                ref={(node) => {
+                  cardRefs.current[item.id] = node;
                 }}
-                onExercisesToggle={(open) => setExercisesOpen(open)}
-              />
+              >
+                <VideoCard
+                  item={item}
+                  contentState={contentMap[item.id] ?? {}}
+                  onLoadContent={() => loadContent(item.id)}
+                  onLike={toggleLikeHandler}
+                  showOriginal={showOriginal}
+                  showTranslation={showTranslation}
+                  cardHeight={cardHeight}
+                  maxHeight={maxHeight}
+                  isActive={isActive}
+                  onVisibleChange={handleVisibleChange}
+                  shouldLoad={shouldLoad}
+                  onOpenSettings={() => {
+                    setTempFilters(feed.filters);
+                    setSettingsOpen(true);
+                  }}
+                  onExercisesToggle={(open) => setExercisesOpen(open)}
+                />
+              </div>
             );
           })}
 
