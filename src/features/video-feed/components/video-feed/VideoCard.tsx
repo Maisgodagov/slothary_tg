@@ -284,11 +284,11 @@ export function VideoCard({
           setExercises([]);
           return;
         }
-        const exercisesRole = "admin";
+        // const exercisesRole = "admin";
         const { exercises: data } = await exercisesApi.getExercises(
           { wordIds, exerciseLimit: 10, wordLimit: 20 },
-          resolveUserId(),
-          exercisesRole
+          resolveUserId()
+          // exercisesRole
         );
         setExercises(data ?? []);
         setExerciseIndex(0);
@@ -610,10 +610,7 @@ export function VideoCard({
                         const lookupWord = exerciseText(
                           currentExercise.word || currentExercise.prompt
                         );
-                        const ts = findWordTimestamp(
-                          lookupWord,
-                          wordChunks
-                        );
+                        const ts = findWordTimestamp(lookupWord, wordChunks);
                         if (ts === null) return;
                         const el = videoRef.current;
                         if (!el) return;
