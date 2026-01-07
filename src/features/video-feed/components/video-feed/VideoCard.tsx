@@ -62,6 +62,18 @@ export function VideoCard({
   const cardRef = useRef<HTMLDivElement | null>(null);
   const tapTimeoutRef = useRef<number | null>(null);
   const exercisesRequested = useRef(false);
+  const resolveUserId = () => {
+    if (auth.profile?.id) return auth.profile.id;
+    try {
+      const fromStorage = localStorage.getItem("guestUserId");
+      if (fromStorage) return fromStorage;
+      const newId = crypto.randomUUID();
+      localStorage.setItem("guestUserId", newId);
+      return newId;
+    } catch {
+      return `guest-${Math.random().toString(36).slice(2, 10)}`;
+    }
+  };
 
   useEffect(() => {
     setLocalTranscription(content?.transcription?.chunks ?? []);
@@ -239,6 +251,10 @@ export function VideoCard({
     exercises && exerciseIndex < exercises.length
       ? exercises[exerciseIndex]
       : null;
+  const exerciseText = (value?: string | null) => {
+    if (!value) return "";
+    return value.split(",")[0]?.trim() ?? value;
+  };
   const exercisesCount = exercises?.length ?? 0;
   const isAdmin = auth.profile?.role === "admin";
   const contentAnalysis = content?.analysis ?? item.analysis;
@@ -268,9 +284,11 @@ export function VideoCard({
           setExercises([]);
           return;
         }
+        const exercisesRole = "admin";
         const { exercises: data } = await exercisesApi.getExercises(
           { wordIds, exerciseLimit: 10, wordLimit: 20 },
-          auth.profile?.id
+          resolveUserId(),
+          exercisesRole
         );
         setExercises(data ?? []);
         setExerciseIndex(0);
@@ -583,12 +601,17 @@ export function VideoCard({
             <S.ExerciseList>
               <S.ExerciseCard>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <S.ExercisePrompt>{currentExercise.prompt}</S.ExercisePrompt>
+                  <S.ExercisePrompt>
+                    {exerciseText(currentExercise.prompt)}
+                  </S.ExercisePrompt>
                   {currentExercise.direction === "en-ru" && (
                     <S.ListenButton
                       onClick={() => {
+                        const lookupWord = exerciseText(
+                          currentExercise.word || currentExercise.prompt
+                        );
                         const ts = findWordTimestamp(
-                          currentExercise.word || currentExercise.prompt,
+                          lookupWord,
                           wordChunks
                         );
                         if (ts === null) return;
@@ -619,7 +642,7 @@ export function VideoCard({
                         onClick={() => handleOptionSelect(opt)}
                         disabled={selectedOption !== null}
                       >
-                        {opt}
+                        {exerciseText(opt)}
                       </S.ExerciseOption>
                     );
                   })}
