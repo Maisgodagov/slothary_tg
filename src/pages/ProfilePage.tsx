@@ -6,6 +6,7 @@ import { logout, selectAuth } from "../features/auth/slice";
 import { Button } from "../shared/ui/Button";
 import { LoginForm } from "../features/auth/components/LoginForm";
 import { useTelegram } from "../app/providers/TelegramProvider";
+import { Icon } from "../shared/ui/Icon";
 
 export default function ProfilePage() {
   const auth = useAppSelector(selectAuth);
@@ -25,7 +26,14 @@ export default function ProfilePage() {
     return (
       <div style={wrapperStyle}>
         <div style={headerRow}>
-          <Button variant="ghost" onClick={() => navigate("/")}>На главную</Button>
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            style={iconButtonStyle}
+            aria-label="Назад"
+          >
+            <Icon name="back" size={20} />
+          </button>
           <h2 style={{ margin: 0 }}>Профиль</h2>
         </div>
 
@@ -45,10 +53,9 @@ export default function ProfilePage() {
             </Button>
           </div>
           <LoginForm mode={mode} />
-          <ThemeSelector themeMode={themeMode} setThemeMode={setThemeMode} />
           <div style={hintText}>
-            Если вы открыли приложение вне Telegram, используйте вход по логину и паролю.
-            В Telegram авторизация происходит автоматически.
+            Если вы открыли приложение вне Telegram, используйте вход по логину
+            и паролю. В Telegram авторизация происходит автоматически.
           </div>
         </div>
       </div>
@@ -56,16 +63,37 @@ export default function ProfilePage() {
   }
 
   const { fullName, email, role, avatarUrl } = auth.profile;
+  const isTelegramUser = email?.endsWith("@telegram.local");
 
   return (
     <div style={wrapperStyle}>
       <div style={headerRow}>
-        <Button variant="ghost" onClick={() => navigate("/")}>На главную</Button>
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          style={iconButtonStyle}
+          aria-label="Назад"
+        >
+          <Icon name="back" size={20} />
+        </button>
       </div>
 
       <div style={{ width: "100%", maxWidth: 560, display: "grid", gap: 12 }}>
-        <div style={{ ...cardStyle, display: "flex", gap: 16, alignItems: "center" }}>
-          <div style={avatarStyle}>
+        <div
+          style={{
+            ...cardStyle,
+            display: "flex",
+            gap: 16,
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            style={{
+              ...avatarStyle,
+              border: role === "admin" ? "2px solid #f2c45a" : "none",
+            }}
+          >
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -79,20 +107,44 @@ export default function ProfilePage() {
 
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 700 }}>{fullName}</div>
-            <div style={{ color: "var(--tg-subtle)", marginTop: 2 }}>{email}</div>
-            <div style={roleBadge}>Роль: {role}</div>
+            {role === "admin" && <div style={roleBadge}>Роль: {role}</div>}
           </div>
-        </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button variant="ghost" onClick={() => dispatch(logout())}>
-            Выйти
-          </Button>
+          <div
+            style={{
+              marginLeft: "auto",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: 8,
+            }}
+          >
+            {!isTelegramUser && (
+              <button
+                type="button"
+                onClick={() => dispatch(logout())}
+                style={iconButtonStyle}
+                aria-label="Выйти"
+                title="Выйти"
+              >
+                <Icon name="logout" size={18} />
+              </button>
+            )}
+
+            <ThemeToggle
+              themeMode={themeMode}
+              systemTheme={theme}
+              setThemeMode={setThemeMode}
+            />
+          </div>
         </div>
 
         {role === "admin" && (
           <div style={{ display: "flex", gap: 8 }}>
-            <Button variant="primary" onClick={() => navigate("/admin/moderation")}>
+            <Button
+              variant="primary"
+              onClick={() => navigate("/admin/moderation")}
+            >
               Модерация упражнений
             </Button>
             <Button variant="ghost" onClick={() => navigate("/admin/users")}>
@@ -100,59 +152,86 @@ export default function ProfilePage() {
             </Button>
           </div>
         )}
-
-        <div style={cardStyle}>
-          <div style={{ fontWeight: 700 }}>Тема приложения</div>
-          <ThemeSelector themeMode={themeMode} setThemeMode={setThemeMode} />
-          <div style={hintText}>
-            Сейчас: {themeMode === "system" ? `Как в системе (${theme})` : themeMode}
-          </div>
-        </div>
       </div>
     </div>
   );
 }
 
-function ThemeSelector({
+function ThemeToggle({
   themeMode,
+  systemTheme,
   setThemeMode,
 }: {
   themeMode: "light" | "dark" | "system";
-  setThemeMode: (m: "light" | "dark" | "system") => void;
+  systemTheme: "light" | "dark";
+  setThemeMode: (m: "light" | "dark") => void;
 }) {
-  const options: { label: string; value: "light" | "dark" | "system" }[] = [
-    { label: "Как в системе", value: "system" },
-    { label: "Светлая", value: "light" },
-    { label: "Темная", value: "dark" },
-  ];
+  const isDark =
+    themeMode === "dark" || (themeMode === "system" && systemTheme === "dark");
+
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => setThemeMode(opt.value)}
+    <button
+      type="button"
+      onClick={() => setThemeMode(isDark ? "light" : "dark")}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: 4,
+        borderRadius: 999,
+        border: "1px solid var(--tg-border)",
+        background: "var(--tg-surface)",
+        color: "var(--tg-text)",
+        cursor: "pointer",
+        transition: "background 0.25s ease, border-color 0.25s ease",
+      }}
+      aria-label="Переключить тему"
+      title="Переключить тему"
+    >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          width: 80,
+          height: 40,
+          borderRadius: 999,
+          background: "var(--tg-card)",
+          padding: 4,
+          gap: 4,
+          transition: "background 0.25s ease",
+        }}
+      >
+        <div
           style={{
-            padding: "8px 12px",
-            borderRadius: 12,
-            border:
-              themeMode === opt.value
-                ? "1px solid var(--tg-accent-strong)"
-                : "1px solid var(--tg-border)",
-            background:
-              themeMode === opt.value
-                ? "rgba(109, 211, 255, 0.15)"
-                : "var(--tg-surface)",
-            color: "var(--tg-text)",
-            cursor: "pointer",
-            fontWeight: 700,
-            minWidth: 120,
-            textAlign: "center",
+            borderRadius: 999,
+            background: isDark ? "transparent" : "#3a4db7",
+            display: "grid",
+            placeItems: "center",
+            transition: "background 0.3s ease",
           }}
         >
-          {opt.label}
-        </button>
-      ))}
-    </div>
+          <Icon
+            name="sun"
+            size={18}
+            color={isDark ? "var(--tg-subtle)" : "#fff"}
+          />
+        </div>
+        <div
+          style={{
+            borderRadius: 999,
+            background: isDark ? "#3a4db7" : "transparent",
+            display: "grid",
+            placeItems: "center",
+            transition: "background 0.3s ease",
+          }}
+        >
+          <Icon
+            name="moon"
+            size={18}
+            color={isDark ? "#fff" : "var(--tg-subtle)"}
+          />
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -214,4 +293,16 @@ const roleBadge: React.CSSProperties = {
 const hintText: React.CSSProperties = {
   fontSize: 12,
   color: "var(--tg-subtle)",
+};
+
+const iconButtonStyle: React.CSSProperties = {
+  width: 36,
+  height: 36,
+  borderRadius: 10,
+  border: "1px solid var(--tg-border)",
+  background: "var(--tg-card)",
+  color: "var(--tg-text)",
+  display: "grid",
+  placeItems: "center",
+  cursor: "pointer",
 };

@@ -10,11 +10,15 @@ import {
   PlayCircle,
   MoreVertical,
   X,
+  LogOut,
   Brain,
   Settings,
   UserRound,
   Edit3,
   Search,
+  ArrowLeft,
+  Sun,
+  Moon,
   Flame,
 } from "lucide-react";
 
@@ -35,10 +39,14 @@ type IconName =
   | "video-filled"
   | "more"
   | "close"
+  | "logout"
   | "exercise"
   | "exercise-filled"
   | "edit"
   | "search"
+  | "back"
+  | "sun"
+  | "moon"
   | "flame";
 
 const ICON_MAP: Record<
@@ -67,10 +75,14 @@ const ICON_MAP: Record<
   "video-filled": PlayCircle,
   more: MoreVertical,
   close: X,
+  logout: LogOut,
   exercise: Brain,
   "exercise-filled": Brain,
   edit: Edit3,
   search: Search,
+  back: ArrowLeft,
+  sun: Sun,
+  moon: Moon,
   flame: Flame,
 };
 
