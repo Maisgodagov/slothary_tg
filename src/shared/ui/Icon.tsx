@@ -15,6 +15,7 @@ import {
   UserRound,
   Edit3,
   Search,
+  Flame,
 } from "lucide-react";
 
 type IconName =
@@ -37,7 +38,8 @@ type IconName =
   | "exercise"
   | "exercise-filled"
   | "edit"
-  | "search";
+  | "search"
+  | "flame";
 
 const ICON_MAP: Record<
   IconName,
@@ -69,6 +71,7 @@ const ICON_MAP: Record<
   "exercise-filled": Brain,
   edit: Edit3,
   search: Search,
+  flame: Flame,
 };
 
 interface IconProps {

@@ -14,8 +14,9 @@ import ProfilePage from '../pages/ProfilePage';
 import { Loader } from '../shared/ui/Loader';
 import { NavBar } from '../shared/ui/NavBar';
 import '../shared/styles/global.css';
-import { useAppDispatch } from './hooks';
-import { telegramAuth } from '../features/auth/slice';
+import { useAppDispatch, useAppSelector } from './hooks';
+import { selectAuth, setProfile, telegramAuth } from '../features/auth/slice';
+import { usersApi } from '../features/users/api';
 
 function AutoTelegramAuth() {
   const { initData } = useTelegram();
@@ -31,6 +32,30 @@ function AutoTelegramAuth() {
   return null;
 }
 
+function StreakRefresher() {
+  const auth = useAppSelector(selectAuth);
+  const dispatch = useAppDispatch();
+  const refreshedFor = useRef<string | null>(null);
+
+  useEffect(() => {
+    const userId = auth.profile?.id;
+    if (!userId || refreshedFor.current === userId) return;
+    refreshedFor.current = userId;
+
+    usersApi
+      .refreshStreak(userId)
+      .then((result) => {
+        if (!auth.profile) return;
+        dispatch(setProfile({ ...auth.profile, streakDays: result.streakDays }));
+      })
+      .catch(() => {
+        // ignore streak refresh failures
+      });
+  }, [auth.profile, dispatch]);
+
+  return null;
+}
+
 function App() {
   return (
     <TelegramProvider>
@@ -38,6 +63,7 @@ function App() {
         <PersistGate loading={<Loader />} persistor={persistor}>
           <HashRouter>
             <AutoTelegramAuth />
+            <StreakRefresher />
             <div className="page">
               <Routes>
                 <Route path="/" element={<HomePage />} />
