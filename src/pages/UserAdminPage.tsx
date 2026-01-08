@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { useAppSelector } from '../app/hooks';
-import { selectAuth } from '../features/auth/slice';
-import { usersAdminApi, type AdminUser } from '../features/admin/usersApi';
-import { Button } from '../shared/ui/Button';
+import { useAppSelector } from "../app/hooks";
+import { selectAuth } from "../features/auth/slice";
+import { usersAdminApi, type AdminUser } from "../features/admin/usersApi";
+import { Button } from "../shared/ui/Button";
 
 const PAGE_SIZE = 50;
 
 export default function UserAdminPage() {
   const auth = useAppSelector(selectAuth);
   const navigate = useNavigate();
-  const isAdmin = auth.profile?.role === 'admin';
+  const isAdmin = auth.profile?.role === "admin";
 
   const [items, setItems] = useState<AdminUser[]>([]);
   const [page, setPage] = useState(1);
@@ -29,13 +29,19 @@ export default function UserAdminPage() {
     try {
       const response = await usersAdminApi.getUsers(
         { page: nextPage, limit: PAGE_SIZE },
-        auth.profile?.role ?? null,
+        auth.profile?.role ?? null
       );
       setTotalPages(response.totalPages);
       setPage(response.page);
-      setItems((prev) => (replace ? response.items : [...prev, ...response.items]));
+      setItems((prev) =>
+        replace ? response.items : [...prev, ...response.items]
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось загрузить пользователей');
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Не удалось загрузить пользователей"
+      );
     } finally {
       setLoading(false);
     }
@@ -48,21 +54,23 @@ export default function UserAdminPage() {
   }, [isAdmin]);
 
   const title = useMemo(() => {
-    if (!isAdmin) return 'Доступ ограничен';
-    return 'Пользователи';
+    if (!isAdmin) return "Доступ ограничен";
+    return "Пользователи";
   }, [isAdmin]);
 
   if (!isAdmin) {
     return (
       <div style={wrapperStyle}>
         <div style={headerRow}>
-          <Button variant="ghost" onClick={() => navigate('/profile')}>
+          <Button variant="ghost" onClick={() => navigate("/profile")}>
             Назад
           </Button>
         </div>
         <div style={cardStyle}>
           <div style={{ fontWeight: 700 }}>{title}</div>
-          <div style={{ color: 'var(--tg-subtle)' }}>Только администратор может просматривать список пользователей.</div>
+          <div style={{ color: "var(--tg-subtle)" }}>
+            Только администратор может просматривать список пользователей.
+          </div>
         </div>
       </div>
     );
@@ -71,7 +79,7 @@ export default function UserAdminPage() {
   return (
     <div style={wrapperStyle}>
       <div style={headerRow}>
-        <Button variant="ghost" onClick={() => navigate('/profile')}>
+        <Button variant="ghost" onClick={() => navigate("/profile")}>
           Назад
         </Button>
         <div style={{ fontWeight: 700 }}>{title}</div>
@@ -87,7 +95,11 @@ export default function UserAdminPage() {
                   <img
                     src={user.avatarUrl}
                     alt={user.fullName}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
                   />
                 ) : (
                   getInitials(user.fullName || user.email)
@@ -95,7 +107,9 @@ export default function UserAdminPage() {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700 }}>{user.fullName}</div>
-                <div style={{ color: 'var(--tg-subtle)', fontSize: 13 }}>{user.email}</div>
+                <div style={{ color: "var(--tg-subtle)", fontSize: 13 }}>
+                  {user.email}
+                </div>
               </div>
             </div>
 
@@ -108,24 +122,38 @@ export default function UserAdminPage() {
                 <div style={statLabel}>Лайков</div>
                 <div style={statValue}>{user.likedCount}</div>
               </div>
+              <div>
+                <div style={statLabel}>Заходил</div>
+                <div style={statValue}>{formatLastSeen(user.lastSeenAt)}</div>
+              </div>
             </div>
 
             <div style={roleRow}>
-              <span style={{ color: 'var(--tg-subtle)' }}>Роль</span>
+              <span style={{ color: "var(--tg-subtle)" }}>Роль</span>
               <select
                 value={user.role}
                 disabled={saving[user.id]}
                 onChange={async (event) => {
-                  const nextRole = event.target.value as AdminUser['role'];
+                  const nextRole = event.target.value as AdminUser["role"];
                   if (nextRole === user.role) return;
                   setSaving((prev) => ({ ...prev, [user.id]: true }));
                   try {
-                    await usersAdminApi.updateUserRole(user.id, nextRole, auth.profile?.role ?? null);
+                    await usersAdminApi.updateUserRole(
+                      user.id,
+                      nextRole,
+                      auth.profile?.role ?? null
+                    );
                     setItems((prev) =>
-                      prev.map((item) => (item.id === user.id ? { ...item, role: nextRole } : item)),
+                      prev.map((item) =>
+                        item.id === user.id ? { ...item, role: nextRole } : item
+                      )
                     );
                   } catch (err) {
-                    setError(err instanceof Error ? err.message : 'Не удалось обновить роль');
+                    setError(
+                      err instanceof Error
+                        ? err.message
+                        : "Не удалось обновить роль"
+                    );
                   } finally {
                     setSaving((prev) => ({ ...prev, [user.id]: false }));
                   }
@@ -147,7 +175,7 @@ export default function UserAdminPage() {
             variant="ghost"
             onClick={() => loadPage(page + 1)}
             disabled={loading}
-            style={{ justifySelf: 'center' }}
+            style={{ justifySelf: "center" }}
           >
             Показать еще
           </Button>
@@ -160,73 +188,133 @@ export default function UserAdminPage() {
 }
 
 const getInitials = (value: string) => {
-  const parts = value.split(' ').filter(Boolean);
+  const parts = value.split(" ").filter(Boolean);
   if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
   return value.slice(0, 2).toUpperCase();
 };
 
+const formatLastSeen = (value?: string | null) => {
+  if (!value) return "N/A";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "N/A";
+
+  const now = new Date();
+  const diffMs = now.getTime() - parsed.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+
+  if (diffMinutes < 180) {
+    if (diffMinutes < 1) return "Только что";
+    if (diffMinutes < 60) return `${diffMinutes} минут назад`;
+    const hours = Math.floor(diffMinutes / 60);
+    return `${hours} часов назад`;
+  }
+
+  const pad2 = (num: number) => String(num).padStart(2, "0");
+  const time = `${pad2(parsed.getHours())}:${pad2(parsed.getMinutes())}`;
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const thatDay = new Date(
+    parsed.getFullYear(),
+    parsed.getMonth(),
+    parsed.getDate()
+  );
+  const dayDiff = Math.round((today.getTime() - thatDay.getTime()) / 86400000);
+
+  if (dayDiff === 0) {
+    return `Сегодня в ${time}`;
+  }
+  if (dayDiff === 1) {
+    return `Вчера в ${time}`;
+  }
+
+  const months = [
+    "Января",
+    "Февраля",
+    "Марта",
+    "Апреля",
+    "Мая",
+    "Июня",
+    "Июля",
+    "Августа",
+    "Сентября",
+    "Октября",
+    "Ноября",
+    "Декабря",
+  ];
+
+  const day = parsed.getDate();
+  const month = months[parsed.getMonth()] || "";
+  const year = parsed.getFullYear();
+
+  if (year === now.getFullYear()) {
+    return `${day} ${month} в ${time}`;
+  }
+
+  return `${day} ${month} ${year} в ${time}`;
+};
+
 const wrapperStyle: React.CSSProperties = {
-  padding: '20px 16px 32px',
+  padding: "20px 16px 32px",
   paddingBottom: 55,
-  minHeight: '100vh',
-  color: 'var(--tg-text)',
-  background: 'var(--tg-bg)',
-  display: 'flex',
-  flexDirection: 'column',
+  minHeight: "100vh",
+  color: "var(--tg-text)",
+  background: "var(--tg-bg)",
+  display: "flex",
+  flexDirection: "column",
   gap: 16,
 };
 
 const headerRow: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
   gap: 12,
 };
 
 const listWrapper: React.CSSProperties = {
-  display: 'grid',
+  display: "grid",
   gap: 12,
 };
 
 const cardStyle: React.CSSProperties = {
   padding: 16,
   borderRadius: 14,
-  border: '1px solid var(--tg-border)',
-  background: 'var(--tg-card)',
+  border: "1px solid var(--tg-border)",
+  background: "var(--tg-card)",
 };
 
 const userCard: React.CSSProperties = {
   ...cardStyle,
-  display: 'grid',
+  display: "grid",
   gap: 12,
 };
 
 const userHeader: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
+  display: "flex",
+  alignItems: "center",
   gap: 12,
 };
 
 const avatarStyle: React.CSSProperties = {
   width: 56,
   height: 56,
-  borderRadius: '50%',
-  overflow: 'hidden',
-  background: 'linear-gradient(135deg, #2ea3ff55, #6dd3ff33)',
-  display: 'grid',
-  placeItems: 'center',
+  borderRadius: "50%",
+  overflow: "hidden",
+  background: "linear-gradient(135deg, #2ea3ff55, #6dd3ff33)",
+  display: "grid",
+  placeItems: "center",
   fontWeight: 700,
-  color: '#0c1021',
+  color: "#0c1021",
 };
 
 const statsRow: React.CSSProperties = {
-  display: 'flex',
+  display: "flex",
   gap: 16,
 };
 
 const statLabel: React.CSSProperties = {
   fontSize: 12,
-  color: 'var(--tg-subtle)',
+  color: "var(--tg-subtle)",
 };
 
 const statValue: React.CSSProperties = {
@@ -235,27 +323,27 @@ const statValue: React.CSSProperties = {
 };
 
 const roleRow: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
   gap: 12,
 };
 
 const roleSelect: React.CSSProperties = {
-  padding: '8px 10px',
+  padding: "8px 10px",
   borderRadius: 10,
-  border: '1px solid var(--tg-border)',
-  background: 'var(--tg-surface)',
-  color: 'var(--tg-text)',
+  border: "1px solid var(--tg-border)",
+  background: "var(--tg-surface)",
+  color: "var(--tg-text)",
   fontWeight: 600,
 };
 
 const errorText: React.CSSProperties = {
-  color: '#ff6b6b',
-  textAlign: 'center',
+  color: "#ff6b6b",
+  textAlign: "center",
 };
 
 const loadingText: React.CSSProperties = {
-  color: 'var(--tg-subtle)',
-  textAlign: 'center',
+  color: "var(--tg-subtle)",
+  textAlign: "center",
 };

@@ -9,6 +9,7 @@ export type AdminUser = {
   avatarUrl?: string;
   watchedCount: number;
   likedCount: number;
+  lastSeenAt?: string | null;
 };
 
 export type AdminUsersResponse = {
