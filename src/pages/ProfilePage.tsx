@@ -95,6 +95,9 @@ export default function ProfilePage() {
             <Button variant="primary" onClick={() => navigate("/admin/moderation")}>
               Модерация упражнений
             </Button>
+            <Button variant="ghost" onClick={() => navigate("/admin/users")}>
+              Администрирование пользователей
+            </Button>
           </div>
         )}
 

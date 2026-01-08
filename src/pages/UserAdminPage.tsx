@@ -1,0 +1,261 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useAppSelector } from '../app/hooks';
+import { selectAuth } from '../features/auth/slice';
+import { usersAdminApi, type AdminUser } from '../features/admin/usersApi';
+import { Button } from '../shared/ui/Button';
+
+const PAGE_SIZE = 50;
+
+export default function UserAdminPage() {
+  const auth = useAppSelector(selectAuth);
+  const navigate = useNavigate();
+  const isAdmin = auth.profile?.role === 'admin';
+
+  const [items, setItems] = useState<AdminUser[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState<Record<string, boolean>>({});
+
+  const canLoadMore = page < totalPages;
+
+  const loadPage = async (nextPage: number, replace = false) => {
+    if (!isAdmin) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await usersAdminApi.getUsers(
+        { page: nextPage, limit: PAGE_SIZE },
+        auth.profile?.role ?? null,
+      );
+      setTotalPages(response.totalPages);
+      setPage(response.page);
+      setItems((prev) => (replace ? response.items : [...prev, ...response.items]));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось загрузить пользователей');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    loadPage(1, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
+
+  const title = useMemo(() => {
+    if (!isAdmin) return 'Доступ ограничен';
+    return 'Пользователи';
+  }, [isAdmin]);
+
+  if (!isAdmin) {
+    return (
+      <div style={wrapperStyle}>
+        <div style={headerRow}>
+          <Button variant="ghost" onClick={() => navigate('/profile')}>
+            Назад
+          </Button>
+        </div>
+        <div style={cardStyle}>
+          <div style={{ fontWeight: 700 }}>{title}</div>
+          <div style={{ color: 'var(--tg-subtle)' }}>Только администратор может просматривать список пользователей.</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={wrapperStyle}>
+      <div style={headerRow}>
+        <Button variant="ghost" onClick={() => navigate('/profile')}>
+          Назад
+        </Button>
+        <div style={{ fontWeight: 700 }}>{title}</div>
+        <div style={{ width: 64 }} />
+      </div>
+
+      <div style={listWrapper}>
+        {items.map((user) => (
+          <div key={user.id} style={userCard}>
+            <div style={userHeader}>
+              <div style={avatarStyle}>
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.fullName}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  getInitials(user.fullName || user.email)
+                )}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700 }}>{user.fullName}</div>
+                <div style={{ color: 'var(--tg-subtle)', fontSize: 13 }}>{user.email}</div>
+              </div>
+            </div>
+
+            <div style={statsRow}>
+              <div>
+                <div style={statLabel}>Просмотрено</div>
+                <div style={statValue}>{user.watchedCount}</div>
+              </div>
+              <div>
+                <div style={statLabel}>Лайков</div>
+                <div style={statValue}>{user.likedCount}</div>
+              </div>
+            </div>
+
+            <div style={roleRow}>
+              <span style={{ color: 'var(--tg-subtle)' }}>Роль</span>
+              <select
+                value={user.role}
+                disabled={saving[user.id]}
+                onChange={async (event) => {
+                  const nextRole = event.target.value as AdminUser['role'];
+                  if (nextRole === user.role) return;
+                  setSaving((prev) => ({ ...prev, [user.id]: true }));
+                  try {
+                    await usersAdminApi.updateUserRole(user.id, nextRole, auth.profile?.role ?? null);
+                    setItems((prev) =>
+                      prev.map((item) => (item.id === user.id ? { ...item, role: nextRole } : item)),
+                    );
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Не удалось обновить роль');
+                  } finally {
+                    setSaving((prev) => ({ ...prev, [user.id]: false }));
+                  }
+                }}
+                style={roleSelect}
+              >
+                <option value="student">student</option>
+                <option value="teacher">teacher</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+          </div>
+        ))}
+
+        {error && <div style={errorText}>{error}</div>}
+
+        {canLoadMore && (
+          <Button
+            variant="ghost"
+            onClick={() => loadPage(page + 1)}
+            disabled={loading}
+            style={{ justifySelf: 'center' }}
+          >
+            Показать еще
+          </Button>
+        )}
+
+        {loading && <div style={loadingText}>Загрузка...</div>}
+      </div>
+    </div>
+  );
+}
+
+const getInitials = (value: string) => {
+  const parts = value.split(' ').filter(Boolean);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return value.slice(0, 2).toUpperCase();
+};
+
+const wrapperStyle: React.CSSProperties = {
+  padding: '20px 16px 32px',
+  paddingBottom: 55,
+  minHeight: '100vh',
+  color: 'var(--tg-text)',
+  background: 'var(--tg-bg)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 16,
+};
+
+const headerRow: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 12,
+};
+
+const listWrapper: React.CSSProperties = {
+  display: 'grid',
+  gap: 12,
+};
+
+const cardStyle: React.CSSProperties = {
+  padding: 16,
+  borderRadius: 14,
+  border: '1px solid var(--tg-border)',
+  background: 'var(--tg-card)',
+};
+
+const userCard: React.CSSProperties = {
+  ...cardStyle,
+  display: 'grid',
+  gap: 12,
+};
+
+const userHeader: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+};
+
+const avatarStyle: React.CSSProperties = {
+  width: 56,
+  height: 56,
+  borderRadius: '50%',
+  overflow: 'hidden',
+  background: 'linear-gradient(135deg, #2ea3ff55, #6dd3ff33)',
+  display: 'grid',
+  placeItems: 'center',
+  fontWeight: 700,
+  color: '#0c1021',
+};
+
+const statsRow: React.CSSProperties = {
+  display: 'flex',
+  gap: 16,
+};
+
+const statLabel: React.CSSProperties = {
+  fontSize: 12,
+  color: 'var(--tg-subtle)',
+};
+
+const statValue: React.CSSProperties = {
+  fontSize: 16,
+  fontWeight: 700,
+};
+
+const roleRow: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 12,
+};
+
+const roleSelect: React.CSSProperties = {
+  padding: '8px 10px',
+  borderRadius: 10,
+  border: '1px solid var(--tg-border)',
+  background: 'var(--tg-surface)',
+  color: 'var(--tg-text)',
+  fontWeight: 600,
+};
+
+const errorText: React.CSSProperties = {
+  color: '#ff6b6b',
+  textAlign: 'center',
+};
+
+const loadingText: React.CSSProperties = {
+  color: 'var(--tg-subtle)',
+  textAlign: 'center',
+};

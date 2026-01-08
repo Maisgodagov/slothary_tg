@@ -9,6 +9,7 @@ import HomePage from '../pages/HomePage';
 import DictionaryPage from '../pages/DictionaryPage';
 import VideoPage from '../pages/VideoPage';
 import ModerationPage from '../pages/ModerationPage';
+import UserAdminPage from '../pages/UserAdminPage';
 import ProfilePage from '../pages/ProfilePage';
 import { Loader } from '../shared/ui/Loader';
 import { NavBar } from '../shared/ui/NavBar';
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/video" element={<VideoPage />} />
                 <Route path="/dictionary" element={<DictionaryPage />} />
                 <Route path="/admin/moderation" element={<ModerationPage />} />
+                <Route path="/admin/users" element={<UserAdminPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
