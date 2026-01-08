@@ -23,7 +23,7 @@ type ListParams = {
   limit: number;
 };
 
-const adminHeaders = (role?: UserRole | null) => {
+const adminHeaders = (role?: UserRole | null): Record<string, string> => {
   if (!role) return {};
   return { 'x-user-role': role };
 };
