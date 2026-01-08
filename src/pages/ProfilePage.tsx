@@ -278,18 +278,6 @@ const avatarStyle: React.CSSProperties = {
   fontSize: 20,
 };
 
-const roleBadge: React.CSSProperties = {
-  marginTop: 8,
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "6px 10px",
-  borderRadius: 999,
-  background: "rgba(255,255,255,0.06)",
-  fontSize: 13,
-  fontWeight: 600,
-};
-
 const hintText: React.CSSProperties = {
   fontSize: 12,
   color: "var(--tg-subtle)",
