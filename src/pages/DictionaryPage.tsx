@@ -66,6 +66,33 @@ const buildHighlightedText = (text: string, highlight: string): ReactNode => {
   return nodes.length ? nodes : text;
 };
 
+const snippetKey = (snippet: PhraseSnippet) => {
+  if (snippet.id) return snippet.id;
+  return `${snippet.contentId}-${snippet.startSeconds}-${snippet.endSeconds}-${snippet.matchedText}`;
+};
+
+const dedupeSnippets = (list: PhraseSnippet[]) => {
+  const seen = new Set<string>();
+  return list.filter((snippet) => {
+    const key = snippetKey(snippet);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+const mergeSnippets = (base: PhraseSnippet[], next: PhraseSnippet[]) => {
+  const seen = new Set(base.map((snippet) => snippetKey(snippet)));
+  const merged = [...base];
+  next.forEach((snippet) => {
+    const key = snippetKey(snippet);
+    if (seen.has(key)) return;
+    seen.add(key);
+    merged.push(snippet);
+  });
+  return merged;
+};
+
 function SnippetCard({
   snippet,
   isActive,
@@ -411,7 +438,7 @@ export default function DictionaryPage() {
         signal: controller.signal,
       });
 
-      setItems(response.items);
+      setItems(dedupeSnippets(response.items));
       setHasMore(response.hasMore);
       setNextCursor(response.nextCursor);
       setTotal(response.total);
@@ -437,7 +464,7 @@ export default function DictionaryPage() {
         userId: auth.profile?.id ?? null,
       });
 
-      setItems((prev) => [...prev, ...response.items]);
+      setItems((prev) => mergeSnippets(prev, response.items));
       setHasMore(response.hasMore);
       setNextCursor(response.nextCursor);
       setTotal(response.total);
