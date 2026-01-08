@@ -410,6 +410,24 @@ export default function DictionaryPage() {
     return () => observer.disconnect();
   }, [items.length, updateCardWidth]);
 
+  const handleClear = useCallback(() => {
+    setQuery("");
+    setItems([]);
+    setHighlight("");
+    setHasMore(false);
+    setNextCursor(null);
+    setTotal(0);
+    setStatus("idle");
+    setError(null);
+    setHasSearched(false);
+    setActiveIndex(0);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
   const handleSearch = useCallback(async () => {
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -610,23 +628,48 @@ export default function DictionaryPage() {
             alignItems: "center",
           }}
         >
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Введите слово или фразу"
-            style={{
-              width: "100%",
-              borderRadius: 12,
-              border: "1px solid var(--tg-border)",
-              padding: "10px 12px",
-              background: "var(--tg-card)",
-              color: "var(--tg-text)",
-              fontSize: 14,
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") handleSearch();
-            }}
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Введите слово или фразу"
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                border: "1px solid var(--tg-border)",
+                padding: "10px 36px 10px 12px",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                fontSize: 14,
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") handleSearch();
+              }}
+            />
+            {query.trim().length > 0 && (
+              <button
+                onClick={handleClear}
+                style={{
+                  position: "absolute",
+                  right: 8,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  border: "none",
+                  background: "transparent",
+                  color: "var(--tg-subtle)",
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: "pointer",
+                }}
+                aria-label="Очистить"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            )}
+          </div>
           <button
             onClick={handleSearch}
             disabled={status === "loading"}
