@@ -107,7 +107,6 @@ export default function ProfilePage() {
 
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 700 }}>{fullName}</div>
-            {role === "admin" && <div style={roleBadge}>Роль: {role}</div>}
           </div>
 
           <div
@@ -168,6 +167,7 @@ function ThemeToggle({
 }) {
   const isDark =
     themeMode === "dark" || (themeMode === "system" && systemTheme === "dark");
+  const activeColor = isDark ? "#3a4db7" : "#f19a0e";
 
   return (
     <button
@@ -203,7 +203,7 @@ function ThemeToggle({
         <div
           style={{
             borderRadius: 999,
-            background: isDark ? "transparent" : "#3a4db7",
+            background: isDark ? "transparent" : activeColor,
             display: "grid",
             placeItems: "center",
             transition: "background 0.3s ease",
@@ -218,7 +218,7 @@ function ThemeToggle({
         <div
           style={{
             borderRadius: 999,
-            background: isDark ? "#3a4db7" : "transparent",
+            background: isDark ? activeColor : "transparent",
             display: "grid",
             placeItems: "center",
             transition: "background 0.3s ease",
