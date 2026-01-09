@@ -21,6 +21,10 @@
   --tg-safe-area-inset-right: var(--safe-right);
   --tg-safe-area-inset-bottom: var(--safe-bottom);
   --tg-safe-area-inset-left: var(--safe-left);
+  --tg-content-safe-area-inset-top: var(--tg-safe-area-inset-top);
+  --tg-content-safe-area-inset-right: var(--tg-safe-area-inset-right);
+  --tg-content-safe-area-inset-bottom: var(--tg-safe-area-inset-bottom);
+  --tg-content-safe-area-inset-left: var(--tg-safe-area-inset-left);
   --nav-height: 56px;
 }
 

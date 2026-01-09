@@ -36,6 +36,8 @@ function updateSafeAreaFromViewport() {
   const webApp = (window as any).Telegram?.WebApp;
   const vh = webApp?.viewportHeight || 0;
   const vsh = webApp?.viewportStableHeight || 0;
+  const tgSafe = webApp?.safeAreaInset;
+  const tgContentSafe = webApp?.contentSafeAreaInset;
 
   // Insets from visual viewport (browser chrome)
   const topVV = vv ? Math.max(0, vv.offsetTop) : 0;
@@ -50,10 +52,11 @@ function updateSafeAreaFromViewport() {
   const extraTop = 5;
   const extraBottom = 20;
 
-  const top = Math.max(topVV, topFromTelegram) + extraTop;
-  const bottom = Math.max(bottomVV, bottomFromTelegram) + extraBottom;
-  const left = leftVV;
-  const right = rightVV;
+  const top = Math.max(topVV, topFromTelegram, Number(tgSafe?.top ?? 0)) + extraTop;
+  const bottom =
+    Math.max(bottomVV, bottomFromTelegram, Number(tgSafe?.bottom ?? 0)) + extraBottom;
+  const left = Math.max(leftVV, Number(tgSafe?.left ?? 0));
+  const right = Math.max(rightVV, Number(tgSafe?.right ?? 0));
 
   root.style.setProperty('--safe-top', `${top}px`);
   root.style.setProperty('--safe-right', `${right}px`);
@@ -63,6 +66,22 @@ function updateSafeAreaFromViewport() {
   root.style.setProperty('--tg-safe-area-inset-right', `${right}px`);
   root.style.setProperty('--tg-safe-area-inset-bottom', `${bottom}px`);
   root.style.setProperty('--tg-safe-area-inset-left', `${left}px`);
+  root.style.setProperty(
+    '--tg-content-safe-area-inset-top',
+    `${Math.max(Number(tgContentSafe?.top ?? 0), top)}px`,
+  );
+  root.style.setProperty(
+    '--tg-content-safe-area-inset-right',
+    `${Math.max(Number(tgContentSafe?.right ?? 0), right)}px`,
+  );
+  root.style.setProperty(
+    '--tg-content-safe-area-inset-bottom',
+    `${Math.max(Number(tgContentSafe?.bottom ?? 0), bottom)}px`,
+  );
+  root.style.setProperty(
+    '--tg-content-safe-area-inset-left',
+    `${Math.max(Number(tgContentSafe?.left ?? 0), left)}px`,
+  );
 }
 
 export function TelegramProvider({ children }: { children: ReactNode }) {
@@ -118,10 +137,14 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
 
     WebApp.onEvent('themeChanged', handleThemeChange);
     WebApp.onEvent('viewportChanged', handleViewportChange);
+    WebApp.onEvent?.('safeAreaChanged', handleViewportChange);
+    WebApp.onEvent?.('contentSafeAreaChanged', handleViewportChange);
 
     return () => {
       WebApp.offEvent('themeChanged', handleThemeChange);
       WebApp.offEvent('viewportChanged', handleViewportChange);
+      WebApp.offEvent?.('safeAreaChanged', handleViewportChange);
+      WebApp.offEvent?.('contentSafeAreaChanged', handleViewportChange);
     };
   }, []);
 
