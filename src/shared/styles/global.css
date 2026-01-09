@@ -71,8 +71,6 @@ button {
   width: 100vw;
   margin: 0 auto;
   padding: 0;
-  padding-top: var(--tg-content-safe-area-inset-top);
-  /* padding-bottom: var(--tg-safe-area-inset-bottom); */
 }
 
 .section {

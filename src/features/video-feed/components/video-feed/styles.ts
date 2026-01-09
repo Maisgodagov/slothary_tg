@@ -1,7 +1,9 @@
 import styled from "styled-components";
 
 export const FeedContainer = styled.div<{ $navOffset: number }>`
-  height: 100vh;
+  height: calc(
+    100vh - var(--tg-content-safe-area-inset-top) - var(--tg-content-safe-area-inset-bottom)
+  );
   padding: 0;
   overflow: hidden;
 `;
@@ -10,7 +12,8 @@ export const FeedScroll = styled.div<{ $navOffset: number; $locked?: boolean }>`
   display: grid;
   gap: 0;
   height: calc(
-    100vh - var(--safe-bottom) - ${({ $navOffset }) => $navOffset}px
+    100vh - var(--tg-content-safe-area-inset-top) - var(--tg-content-safe-area-inset-bottom) -
+      ${({ $navOffset }) => $navOffset}px
   );
   overflow-y: ${({ $locked }) => ($locked ? "hidden" : "auto")};
   padding: 0;
@@ -178,7 +181,7 @@ export const TopRightStack = styled.div<{ $withSheet?: boolean }>`
 export const SettingsButton = styled.button`
   position: absolute;
   right: calc(8px + var(--safe-right));
-  top: calc(var(--safe-top));
+  top: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -209,7 +212,7 @@ export const ExerciseWrapper = styled.div`
 
 export const TagsRow = styled.div`
   position: absolute;
-  top: calc(var(--safe-top) + 0px);
+  top: 6px;
   left: calc(12px + var(--safe-left));
   display: flex;
   gap: 6px;

@@ -58,7 +58,7 @@ export default function HomePage() {
       style={{
         minHeight: "100vh",
         width: "100vw",
-        padding: "24px 16px",
+        padding: "16px 16px 24px",
         boxSizing: "border-box",
         color: "var(--tg-text)",
         background: "var(--tg-bg)",
