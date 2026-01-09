@@ -425,12 +425,6 @@ export function VideoCard({
         </S.TapOverlay>
       )}
 
-      {!showExercises && (
-        <S.SettingsButton onClick={onOpenSettings}>
-          <Icon name="more" size={20} />
-        </S.SettingsButton>
-      )}
-
       {!showSpinner && !showExercises && (
         <S.TopRightStack $withSheet={showExercises}>
           <S.LikeButton onClick={() => onLike(item.id)}>
