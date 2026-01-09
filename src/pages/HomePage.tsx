@@ -70,6 +70,11 @@ export default function HomePage() {
           alignItems: "center",
           justifyContent: "space-between",
           marginBottom: 12,
+          position: "sticky",
+          top: "var(--tg-content-safe-area-inset-top)",
+          paddingTop: "var(--tg-content-safe-area-inset-top)",
+          zIndex: 20,
+          background: "var(--tg-bg)",
         }}
       >
         <button
