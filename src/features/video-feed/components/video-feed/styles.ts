@@ -219,10 +219,8 @@ export const TagsRow = styled.div`
   display: flex;
   gap: 6px;
   flex-wrap: nowrap;
-  max-width: 85%;
   overflow-x: auto;
   white-space: nowrap;
-  padding-right: 8px;
   scrollbar-width: none;
   -ms-overflow-style: none;
   &::-webkit-scrollbar {
