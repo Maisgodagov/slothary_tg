@@ -181,7 +181,7 @@ export const TopRightStack = styled.div<{ $withSheet?: boolean }>`
 export const SettingsButton = styled.button`
   position: absolute;
   right: calc(8px + var(--safe-right));
-  top: calc(var(--safe-top) + 18px);
+  top: calc(var(--safe-top) + 10px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -212,7 +212,7 @@ export const ExerciseWrapper = styled.div`
 
 export const TagsRow = styled.div`
   position: absolute;
-  top: calc(var(--safe-top) + 20px);
+  top: calc(var(--safe-top) + 12px);
   left: calc(12px + var(--safe-left));
   display: flex;
   gap: 6px;
