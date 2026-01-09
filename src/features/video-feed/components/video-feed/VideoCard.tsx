@@ -21,7 +21,7 @@ export function VideoCard({
   isActive,
   onVisibleChange,
   shouldLoad,
-  onOpenSettings,
+  // onOpenSettings,
   onExercisesToggle,
 }: VideoCardProps) {
   const content = contentState.data;
