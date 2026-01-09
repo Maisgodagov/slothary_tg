@@ -86,6 +86,9 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
 
     WebApp.ready();
     WebApp.expand();
+    if (typeof WebApp.requestFullscreen === 'function') {
+      WebApp.requestFullscreen();
+    }
     WebApp.disableVerticalSwipes();
     WebApp.setHeaderColor('bg_color');
     WebApp.setBackgroundColor('#0f111a');
@@ -104,6 +107,12 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
     };
 
     const handleViewportChange = () => {
+      if (!WebApp.isExpanded) {
+        WebApp.expand();
+      }
+      if (typeof WebApp.requestFullscreen === 'function') {
+        WebApp.requestFullscreen();
+      }
       updateSafeAreaFromViewport();
     };
 
