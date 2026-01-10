@@ -139,8 +139,8 @@ export const Card = styled.div<{ $cardHeight: string; $maxHeight: string }>`
   border: 6px solid green;
   border-radius: 0;
   overflow: hidden;
-  height: calc(100% - 54px);
-  max-height: calc(100% - 54px);
+  height: 100%;
+  max-height: 100%;
   width: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
