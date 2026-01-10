@@ -134,6 +134,8 @@ export const Sentinel = styled.div`
 `;
 
 export const Card = styled.div<{ $cardHeight: string; $maxHeight: string }>`
+  flex: 1;
+  min-height: 0;
   position: relative;
   background: #000;
   border: 6px solid green;
