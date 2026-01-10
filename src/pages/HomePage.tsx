@@ -91,7 +91,8 @@ export default function HomePage() {
           display: "flex",
           flexDirection: "column",
           gap: 16,
-          padding: "0, 6px",
+          paddingRight: 6,
+          paddingLeft: 6,
         }}
       >
         <div
