@@ -295,12 +295,10 @@ export const Controls = styled.div`
 `;
 
 export const SeekContainer = styled.div`
-  position: fixed;
-  left: 0;
-  right: 0;
+  position: absolute;
+  bottom: 0;
   margin: 0 auto;
   max-width: 960px;
-  bottom: 54px;
   padding: 0 0px;
   border-radius: 0;
   display: flex;
@@ -325,7 +323,7 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   width: 100%;
   height: ${({ $thin }) => ($thin ? "4px" : "10px")};
   appearance: none;
-  background: #ffffff33;
+  background: #b1b1b1;
   border-radius: 999px;
   border: none;
   padding: 0;
