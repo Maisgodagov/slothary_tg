@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const FeedContainer = styled.div<{ $navOffset: number }>`
-  height: 100%;
+  height: calc(100% - 54px);
   padding: 0;
   overflow: hidden;
   border: 5px solid #000000;
@@ -10,7 +10,7 @@ export const FeedContainer = styled.div<{ $navOffset: number }>`
 export const FeedScroll = styled.div<{ $navOffset: number; $locked?: boolean }>`
   display: grid;
   gap: 0;
-  height: calc(100% - ${({ $navOffset }) => $navOffset}px);
+  height: 100%;
   overflow-y: ${({ $locked }) => ($locked ? "hidden" : "auto")};
   padding: 0;
   scroll-snap-type: y mandatory;
