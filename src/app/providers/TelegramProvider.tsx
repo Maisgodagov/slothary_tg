@@ -32,6 +32,7 @@ function updateSafeAreaFromViewport() {
   const vv = window.visualViewport;
   const innerW = window.innerWidth || 0;
   const innerH = window.innerHeight || 0;
+  const visualHeight = vv?.height || 0;
 
   const webApp = (window as any).Telegram?.WebApp;
   const vh = webApp?.viewportHeight || 0;
@@ -82,6 +83,11 @@ function updateSafeAreaFromViewport() {
     '--tg-content-safe-area-inset-left',
     `${Math.max(Number(tgContentSafe?.left ?? 0), left)}px`,
   );
+
+  const appHeight = vsh || vh || visualHeight || innerH || 0;
+  if (appHeight > 0) {
+    root.style.setProperty('--app-height', `${appHeight}px`);
+  }
 }
 
 export function TelegramProvider({ children }: { children: ReactNode }) {
