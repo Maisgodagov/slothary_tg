@@ -66,6 +66,8 @@ button {
 
 /* PageShell uses these variables to size content and is the only place that applies safe-area offsets. */
 .page-shell {
+  display: flex;
+  flex-direction: column;
   width: 100vw;
   margin-top: calc(
     var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top)
