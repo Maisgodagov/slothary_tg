@@ -60,8 +60,8 @@ export default function UserAdminPage() {
 
   if (!isAdmin) {
     return (
-      <div style={wrapperStyle}>
-        <div style={headerRow}>
+      <div className="page page--content" style={wrapperStyle}>
+        <div className="page-header" style={headerRow}>
           <Button variant="ghost" onClick={() => navigate("/profile")}>
             Назад
           </Button>
@@ -77,8 +77,8 @@ export default function UserAdminPage() {
   }
 
   return (
-    <div style={wrapperStyle}>
-      <div style={headerRow}>
+    <div className="page page--content" style={wrapperStyle}>
+      <div className="page-header" style={headerRow}>
         <Button variant="ghost" onClick={() => navigate("/profile")}>
           Назад
         </Button>
@@ -254,14 +254,10 @@ const formatLastSeen = (value?: string | null) => {
 };
 
 const wrapperStyle: React.CSSProperties = {
-  padding: "20px 16px 32px",
-  paddingBottom: 55,
-  minHeight: "100vh",
-  color: "var(--tg-text)",
-  background: "var(--tg-bg)",
   display: "flex",
   flexDirection: "column",
   gap: 16,
+  paddingBottom: "calc(55px + var(--safe-bottom))",
 };
 
 const headerRow: React.CSSProperties = {

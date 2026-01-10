@@ -154,7 +154,8 @@ export default function ModerationPage() {
 
   if (!isAdmin) {
     return (
-      <div className="section">
+      <div className="page page--content">
+        <div className="section">
         <div className="section-header">
           <h2 style={{ margin: 0 }}>Модерация упражнений</h2>
         </div>
@@ -162,19 +163,24 @@ export default function ModerationPage() {
         <Button variant="ghost" onClick={() => navigate('/')}>
           На главную
         </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div
+      className="page page--content"
       style={{
-        padding: '16px',
-        minHeight: '100vh',
-        color: 'var(--tg-text)',
+        display: 'grid',
+        gap: 16,
+        paddingBottom: 'calc(55px + var(--safe-bottom))',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+      <div
+        className="page-header"
+        style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}
+      >
         <h2 style={{ margin: 0, flex: 1 }}>Модерация упражнений</h2>
         <Button variant="ghost" onClick={() => navigate('/')}>
           На главную

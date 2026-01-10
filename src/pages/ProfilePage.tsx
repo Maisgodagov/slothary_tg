@@ -125,11 +125,16 @@ export default function ProfilePage() {
           <div style={{ display: "flex", gap: 8 }}>
             <Button
               variant="primary"
+              style={{ flex: 1 }}
               onClick={() => navigate("/admin/moderation")}
             >
               Модерация упражнений
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/admin/users")}>
+            <Button
+              variant="primary"
+              style={{ flex: 1 }}
+              onClick={() => navigate("/admin/users")}
+            >
               Администрирование пользователей
             </Button>
           </div>
