@@ -59,7 +59,7 @@ export default function ProfilePage() {
 
   return (
     <div className="page page--content" style={wrapperStyle}>
-      <div className="page-header" style={headerRow} />
+      {/* <div className="page-header" style={headerRow} /> */}
 
       <div style={{ width: "100%", maxWidth: 560, display: "grid", gap: 12 }}>
         <div
@@ -231,6 +231,7 @@ const headerRow: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
+  minHeight: 40,
 };
 
 const cardStyle: React.CSSProperties = {
