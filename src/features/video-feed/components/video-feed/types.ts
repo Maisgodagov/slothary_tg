@@ -20,4 +20,5 @@ export interface VideoCardProps {
   shouldLoad: boolean;
   onOpenSettings: () => void;
   onExercisesToggle?: (open: boolean) => void;
+  registerRef?: (node: HTMLDivElement | null) => void;
 }

@@ -23,6 +23,7 @@ export function VideoCard({
   shouldLoad,
   // onOpenSettings,
   onExercisesToggle,
+  registerRef,
 }: VideoCardProps) {
   const content = contentState.data;
   const [currentTime, setCurrentTime] = useState(0);
@@ -378,7 +379,14 @@ export function VideoCard({
   }, [showExercises, onExercisesToggle]);
 
   return (
-    <S.Card ref={cardRef} $cardHeight={cardHeight} $maxHeight={maxHeight}>
+    <S.Card
+      ref={(node) => {
+        cardRef.current = node;
+        if (registerRef) registerRef(node);
+      }}
+      $cardHeight={cardHeight}
+      $maxHeight={maxHeight}
+    >
       <S.Player
         ref={videoRef}
         src={shouldLoad ? item.videoUrl : undefined}

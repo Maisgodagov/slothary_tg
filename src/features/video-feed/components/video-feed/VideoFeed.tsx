@@ -265,31 +265,28 @@ export function VideoFeed({ initialContentId }: { initialContentId?: string | nu
             const shouldLoad = isActive || isNext;
 
             return (
-              <div
+              <VideoCard
                 key={item.id}
-                ref={(node) => {
+                registerRef={(node) => {
                   cardRefs.current[item.id] = node;
                 }}
-              >
-                <VideoCard
-                  item={item}
-                  contentState={contentMap[item.id] ?? {}}
-                  onLoadContent={() => loadContent(item.id)}
-                  onLike={toggleLikeHandler}
-                  showOriginal={showOriginal}
-                  showTranslation={showTranslation}
-                  cardHeight={cardHeight}
-                  maxHeight={maxHeight}
-                  isActive={isActive}
-                  onVisibleChange={handleVisibleChange}
-                  shouldLoad={shouldLoad}
-                  onOpenSettings={() => {
-                    setTempFilters(feed.filters);
-                    setSettingsOpen(true);
-                  }}
-                  onExercisesToggle={(open) => setExercisesOpen(open)}
-                />
-              </div>
+                item={item}
+                contentState={contentMap[item.id] ?? {}}
+                onLoadContent={() => loadContent(item.id)}
+                onLike={toggleLikeHandler}
+                showOriginal={showOriginal}
+                showTranslation={showTranslation}
+                cardHeight={cardHeight}
+                maxHeight={maxHeight}
+                isActive={isActive}
+                onVisibleChange={handleVisibleChange}
+                shouldLoad={shouldLoad}
+                onOpenSettings={() => {
+                  setTempFilters(feed.filters);
+                  setSettingsOpen(true);
+                }}
+                onExercisesToggle={(open) => setExercisesOpen(open)}
+              />
             );
           })}
 
