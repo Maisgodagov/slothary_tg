@@ -239,7 +239,7 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
   left: 0;
   right: 0;
-  bottom: ${({ $withSheet }) => ($withSheet ? "39vh" : "0")};
+  bottom: ${({ $withSheet }) => ($withSheet ? "300px" : "0")};
   padding: 12px 16px 18px;
   color: #fff;
   display: grid;
