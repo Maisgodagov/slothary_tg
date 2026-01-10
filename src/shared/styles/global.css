@@ -85,14 +85,14 @@ button {
   overflow: hidden;
 }
 
-.page-shell__content {
+/* .page-shell__content {
   height: 100%;
   width: 100%;
   background: var(--tg-bg);
   color: var(--tg-text);
-}
+} */
 
-.page-shell__content--scroll {
+/* .page-shell__content--scroll {
   overflow-y: auto;
   overscroll-behavior-y: contain;
 }
@@ -107,7 +107,7 @@ button {
 
 .page-shell__content--no-pad {
   padding: 0;
-}
+} */
 
 .page-header {
   margin-top: 0;
