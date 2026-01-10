@@ -296,7 +296,7 @@ export const Controls = styled.div`
 
 export const SeekContainer = styled.div`
   position: absolute;
-  bottom: -2px;
+  bottom: -1px;
   margin: 0 auto;
   max-width: 960px;
   width: 100%;
