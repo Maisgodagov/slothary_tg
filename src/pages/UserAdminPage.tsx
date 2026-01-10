@@ -5,6 +5,7 @@ import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
 import { usersAdminApi, type AdminUser } from "../features/admin/usersApi";
 import { Button } from "../shared/ui/Button";
+import { PageShell } from "../shared/ui/PageShell";
 
 const PAGE_SIZE = 50;
 
@@ -60,7 +61,8 @@ export default function UserAdminPage() {
 
   if (!isAdmin) {
     return (
-      <div className="page page--content" style={wrapperStyle}>
+      <PageShell>
+        <div style={wrapperStyle}>
         <div className="page-header" style={headerRow}>
           <Button variant="ghost" onClick={() => navigate("/profile")}>
             Назад
@@ -72,12 +74,14 @@ export default function UserAdminPage() {
             Только администратор может просматривать список пользователей.
           </div>
         </div>
-      </div>
+        </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="page page--content" style={wrapperStyle}>
+    <PageShell>
+      <div style={wrapperStyle}>
       <div className="page-header" style={headerRow}>
         <Button variant="ghost" onClick={() => navigate("/profile")}>
           Назад
@@ -183,7 +187,8 @@ export default function UserAdminPage() {
 
         {loading && <div style={loadingText}>Загрузка...</div>}
       </div>
-    </div>
+      </div>
+    </PageShell>
   );
 }
 
@@ -257,7 +262,7 @@ const wrapperStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: 16,
-  paddingBottom: "calc(55px + var(--safe-bottom))",
+  paddingBottom: "55px",
 };
 
 const headerRow: React.CSSProperties = {

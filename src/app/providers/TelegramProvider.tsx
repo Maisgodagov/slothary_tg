@@ -46,16 +46,16 @@ function updateSafeAreaFromViewport() {
   const rightVV = vv ? Math.max(0, innerW - (vv.width + vv.offsetLeft)) : 0;
   const bottomVV = vv ? Math.max(0, innerH - (vv.height + vv.offsetTop)) : 0;
 
-  // Insets that Telegram сообщает: разница между stable и текущей высотой
+  // Insets reported by Telegram or visual viewport fallback.
   const top = Number(tgContentSafe?.top ?? tgSafe?.top ?? topVV ?? 0);
   const bottom = Number(tgContentSafe?.bottom ?? tgSafe?.bottom ?? bottomVV ?? 0);
   const left = Number(tgContentSafe?.left ?? tgSafe?.left ?? leftVV ?? 0);
   const right = Number(tgContentSafe?.right ?? tgSafe?.right ?? rightVV ?? 0);
 
-  root.style.setProperty('--safe-top', `${top}px`);
-  root.style.setProperty('--safe-right', `${right}px`);
-  root.style.setProperty('--safe-bottom', `${bottom}px`);
-  root.style.setProperty('--safe-left', `${left}px`);
+  root.style.setProperty('--app-safe-top', `${top}px`);
+  root.style.setProperty('--app-safe-right', `${right}px`);
+  root.style.setProperty('--app-safe-bottom', `${bottom}px`);
+  root.style.setProperty('--app-safe-left', `${left}px`);
 
   const appHeight = vsh || vh || visualHeight || innerH || 0;
   if (appHeight > 0) {

@@ -8,6 +8,7 @@ import {
 } from "../features/video-dictionary/api";
 import { Loader } from "../shared/ui/Loader";
 import { Icon } from "../shared/ui/Icon";
+import { PageShell } from "../shared/ui/PageShell";
 
 const PAGE_SIZE = 6;
 const CARD_GAP = 16;
@@ -599,15 +600,15 @@ export default function DictionaryPage() {
   );
 
   return (
-    <div
-      className="page page--content"
-      style={{
-        display: "grid",
-        gap: 16,
-        alignContent: "start",
-        justifyItems: "stretch",
-      }}
-    >
+    <PageShell>
+      <div
+        style={{
+          display: "grid",
+          gap: 16,
+          alignContent: "start",
+          justifyItems: "stretch",
+        }}
+      >
       <div
         style={{
           background: "var(--tg-surface)",
@@ -769,6 +770,7 @@ export default function DictionaryPage() {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </PageShell>
   );
 }

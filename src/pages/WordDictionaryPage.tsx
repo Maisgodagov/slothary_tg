@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { muellerApi, type MuellerEntry } from '../features/mueller/api';
 import { Icon } from '../shared/ui/Icon';
 import { Loader } from '../shared/ui/Loader';
+import { PageShell } from '../shared/ui/PageShell';
 
 type LookupLang = 'en' | 'ru';
 
@@ -46,14 +47,14 @@ export default function WordDictionaryPage() {
     lang === 'ru' ? 'Введите слово по-русски' : 'Введите слово по-английски';
 
   return (
-    <div
-      className="page page--content"
-      style={{
-        display: 'grid',
-        gap: 16,
-        alignContent: 'start',
-      }}
-    >
+    <PageShell>
+      <div
+        style={{
+          display: 'grid',
+          gap: 16,
+          alignContent: 'start',
+        }}
+      >
       <div
         className="page-header"
         style={{
@@ -230,6 +231,7 @@ export default function WordDictionaryPage() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </PageShell>
   );
 }

@@ -176,7 +176,7 @@ export function VideoFeed({ initialContentId }: { initialContentId?: string | nu
     [dispatch]
   );
 
-  const cardHeight = `calc(var(--app-height, 100vh) - var(--safe-top) - var(--safe-bottom) - ${NAV_OFFSET}px)`;
+  const cardHeight = "100%";
   const maxHeight = cardHeight;
 
   const handleVisibleChange = useCallback((id: string, ratio: number) => {

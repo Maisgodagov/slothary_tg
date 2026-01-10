@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import { Icon } from "../shared/ui/Icon";
+import { PageShell } from "../shared/ui/PageShell";
 import { selectAuth } from "../features/auth/slice";
 import { useTelegram } from "../app/providers/TelegramProvider";
 
@@ -84,14 +85,14 @@ export default function HomePage() {
   };
 
   return (
-    <div
-      className="page page--content"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 16,
-      }}
-    >
+    <PageShell>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
       <div
         className="page-header"
         style={{
@@ -291,6 +292,7 @@ export default function HomePage() {
           {webAppState}
         </pre>
       )}
-    </div>
+      </div>
+    </PageShell>
   );
 }

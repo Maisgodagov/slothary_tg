@@ -1,9 +1,7 @@
 import styled from "styled-components";
 
 export const FeedContainer = styled.div<{ $navOffset: number }>`
-  height: calc(
-    var(--app-height, 100vh) - var(--safe-top) - var(--safe-bottom)
-  );
+  height: 100%;
   padding: 0;
   overflow: hidden;
 `;
@@ -11,10 +9,7 @@ export const FeedContainer = styled.div<{ $navOffset: number }>`
 export const FeedScroll = styled.div<{ $navOffset: number; $locked?: boolean }>`
   display: grid;
   gap: 0;
-  height: calc(
-    var(--app-height, 100vh) - var(--safe-top) - var(--safe-bottom) -
-      ${({ $navOffset }) => $navOffset}px
-  );
+  height: calc(100% - ${({ $navOffset }) => $navOffset}px);
   overflow-y: ${({ $locked }) => ($locked ? "hidden" : "auto")};
   padding: 0;
   scroll-snap-type: y mandatory;
@@ -169,7 +164,7 @@ export const Player = styled.video<{ $shrink?: boolean }>`
 
 export const TopRightStack = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
-  right: calc(var(--safe-right) + 10px);
+  right: 10px;
   top: ${({ $withSheet }) => ($withSheet ? "18%" : "45%")};
   display: flex;
   flex-direction: column;
@@ -180,8 +175,8 @@ export const TopRightStack = styled.div<{ $withSheet?: boolean }>`
 
 export const SettingsButton = styled.button`
   position: absolute;
-  right: calc(8px + var(--safe-right));
-  top: calc(var(--safe-top) + 10px);
+  right: 8px;
+  top: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -198,22 +193,22 @@ export const SettingsButton = styled.button`
 
 export const LikeWrapper = styled.div`
   position: absolute;
-  right: calc(12px + var(--safe-right));
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
 `;
 
 export const ExerciseWrapper = styled.div`
   position: absolute;
-  right: calc(12px + var(--safe-right));
+  right: 12px;
   top: calc(50% + 90px);
   transform: translateY(-50%);
 `;
 
 export const TagsRow = styled.div`
   position: absolute;
-  top: calc(var(--safe-top) - 18px);
-  left: calc(12px + var(--safe-left));
+  top: -18px;
+  left: 12px;
   display: flex;
   gap: 6px;
   max-width: 95%;
@@ -245,7 +240,7 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
   left: 0;
   right: 0;
   bottom: ${({ $withSheet }) => ($withSheet ? "39vh" : "-40px")};
-  padding: 12px 16px calc(18px + var(--safe-bottom));
+  padding: 12px 16px 18px;
   color: #fff;
   display: grid;
   gap: 10px;
@@ -277,7 +272,7 @@ export const SubtitleLoading = styled.div`
 export const EditSubtitleButton = styled.button`
   position: absolute;
   top: -10px;
-  left: calc(18px + var(--safe-left));
+  left: 18px;
   border: none;
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
@@ -305,7 +300,7 @@ export const SeekContainer = styled.div`
   right: 0;
   margin: 0 auto;
   max-width: 960px;
-  bottom: calc(var(--safe-bottom) + var(--nav-height) - 22px);
+  bottom: calc(var(--nav-height) - 22px);
   padding: 0 0px;
   border-radius: 0;
   display: flex;
@@ -482,7 +477,7 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(53px + var(--safe-bottom));
+  bottom: 53px;
   margin: 0 auto;
   max-width: 960px;
   height: 300px;

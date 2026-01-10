@@ -6,6 +6,7 @@ import { selectAuth } from '../features/auth/slice';
 import { adminApi, type PrecomputedExercise } from '../features/admin/api';
 import { Button } from '../shared/ui/Button';
 import { Input } from '../shared/ui/Input';
+import { PageShell } from '../shared/ui/PageShell';
 
 type Filter = 'all' | 'moderated' | 'pending';
 
@@ -154,7 +155,7 @@ export default function ModerationPage() {
 
   if (!isAdmin) {
     return (
-      <div className="page page--content">
+      <PageShell>
         <div className="section">
         <div className="section-header">
           <h2 style={{ margin: 0 }}>Модерация упражнений</h2>
@@ -164,19 +165,19 @@ export default function ModerationPage() {
           На главную
         </Button>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div
-      className="page page--content"
-      style={{
-        display: 'grid',
-        gap: 16,
-        paddingBottom: 'calc(55px + var(--safe-bottom))',
-      }}
-    >
+    <PageShell>
+      <div
+        style={{
+          display: 'grid',
+          gap: 16,
+          paddingBottom: '55px',
+        }}
+      >
       <div
         className="page-header"
         style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}
@@ -507,7 +508,8 @@ export default function ModerationPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PageShell>
   );
 }
 
