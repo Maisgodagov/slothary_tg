@@ -211,8 +211,8 @@ export const TagsRow = styled.div`
   left: 12px;
   display: flex;
   gap: 6px;
-  max-width: 90%;
-  padding-right: 6px;
+  max-width: 100%;
+  padding-right: 12px;
   flex-wrap: nowrap;
   overflow-x: auto;
   white-space: nowrap;
@@ -239,7 +239,7 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
   position: absolute;
   left: 0;
   right: 0;
-  bottom: ${({ $withSheet }) => ($withSheet ? "39vh" : "-40px")};
+  bottom: ${({ $withSheet }) => ($withSheet ? "39vh" : "64px")};
   padding: 12px 16px 18px;
   color: #fff;
   display: grid;
