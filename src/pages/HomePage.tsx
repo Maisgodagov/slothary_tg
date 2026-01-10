@@ -243,6 +243,8 @@ export default function HomePage() {
             wordBreak: "break-all",
           }}
         >
+          {`window.screen.width: ${window.screen.width}px\n`}
+          {`window.screen.height: ${window.screen.height}px\n`}
           {`window.innerWidth: ${window.innerWidth}px\n`}
           {`window.innerHeight: ${window.innerHeight}px\n`}
           {`visualViewport.height: ${window.visualViewport?.height ?? "n/a"}px\n`}
