@@ -139,13 +139,7 @@ export const Card = styled.div<{ $cardHeight: string; $maxHeight: string }>`
   border: 6px solid green;
   border-radius: 0;
   overflow: hidden;
-  height: calc(
-    100vh -
-      (
-        var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top) +
-          var(--tg-safe-area-inset-bottom) - 54px
-      )
-  );
+  height: 100%;
   width: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
