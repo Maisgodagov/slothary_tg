@@ -47,6 +47,7 @@ export function NavBar() {
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",
         zIndex: 20,
+        opacity: 0.2,
       }}
     >
       {items.map((item) => (
