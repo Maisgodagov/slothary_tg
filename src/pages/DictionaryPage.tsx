@@ -812,12 +812,15 @@ export default function DictionaryPage() {
           >
             {(() => {
               const isRuQuery = detectLanguage(query);
-              const ruTranslations = filterPureTranslations(
-                uniqueTranslations(dictEntries, showMoreTranslations ? 6 : 1)
+              const ruTranslationsAll = filterPureTranslations(
+                uniqueTranslations(dictEntries, 8)
               );
+              const ruTranslationsShown = showMoreTranslations
+                ? ruTranslationsAll.slice(0, 5)
+                : ruTranslationsAll.slice(0, 1);
               const enEntries = dictEntries.slice(0, showMoreTranslations ? 5 : 1);
               const hasMore =
-                (isRuQuery ? dictEntries.length : ruTranslations.length) > 1;
+                (isRuQuery ? dictEntries.length : ruTranslationsAll.length) > 1;
 
               return (
                 <>
@@ -836,19 +839,12 @@ export default function DictionaryPage() {
                           }}
                         >
                           <div style={{ fontWeight: 700 }}>{entry.word}</div>
-                          {entry.partOfSpeech && (
-                            <div
-                              style={{ fontSize: 12, color: "var(--tg-subtle)" }}
-                            >
-                              {entry.partOfSpeech}
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div style={{ display: "grid", gap: 8 }}>
-                      {ruTranslations.map((translation, index) => (
+                      {ruTranslationsShown.map((translation, index) => (
                         <div
                           key={`${translation}-${index}`}
                           style={{
