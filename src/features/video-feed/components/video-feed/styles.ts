@@ -307,6 +307,7 @@ export const SeekContainer = styled.div`
   gap: 6px;
   z-index: 2000;
   pointer-events: auto;
+  overflow-y: visible;
 `;
 
 export const SeekTimes = styled.div`
