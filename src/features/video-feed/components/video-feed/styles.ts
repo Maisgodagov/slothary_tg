@@ -325,7 +325,7 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   height: ${({ $thin }) => ($thin ? "4px" : "10px")};
   appearance: none;
   background: #b1b1b1;
-  border-radius: 999px;
+  /* border-radius: 999px; */
   border: none;
   padding: 0;
   margin: 0;
