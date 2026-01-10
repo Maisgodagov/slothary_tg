@@ -48,8 +48,8 @@ export default function ProfilePage() {
             </div>
             <LoginForm mode={mode} />
             <div style={hintText}>
-              Если вы открыли приложение вне Telegram, используйте вход по логину
-              и паролю. В Telegram авторизация происходит автоматически.
+              Если вы открыли приложение вне Telegram, используйте вход по
+              логину и паролю. В Telegram авторизация происходит автоматически.
             </div>
           </div>
         </div>
@@ -63,7 +63,16 @@ export default function ProfilePage() {
   return (
     <PageShell>
       <div style={wrapperStyle}>
-        <div style={{ width: "100%", maxWidth: 560, display: "grid", gap: 12 }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 560,
+            display: "grid",
+            gap: 12,
+            paddingRight: 12,
+            paddingLeft: 12,
+          }}
+        >
           <div
             style={{
               ...cardStyle,
@@ -73,55 +82,55 @@ export default function ProfilePage() {
               flexWrap: "wrap",
             }}
           >
-          <div
-            style={{
-              ...avatarStyle,
-              border: role === "admin" ? "2px solid #f2c45a" : "none",
-            }}
-          >
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={fullName}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            <div
+              style={{
+                ...avatarStyle,
+                border: role === "admin" ? "2px solid #f2c45a" : "none",
+              }}
+            >
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={fullName}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                initials || "U"
+              )}
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 20, fontWeight: 700 }}>{fullName}</div>
+            </div>
+
+            <div
+              style={{
+                marginLeft: "auto",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                gap: 8,
+              }}
+            >
+              {!isTelegramUser && (
+                <button
+                  type="button"
+                  onClick={() => dispatch(logout())}
+                  style={iconButtonStyle}
+                  aria-label="Выйти"
+                  title="Выйти"
+                >
+                  <Icon name="logout" size={18} />
+                </button>
+              )}
+
+              <ThemeToggle
+                themeMode={themeMode}
+                systemTheme={theme}
+                setThemeMode={setThemeMode}
               />
-            ) : (
-              initials || "U"
-            )}
+            </div>
           </div>
-
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>{fullName}</div>
-          </div>
-
-          <div
-            style={{
-              marginLeft: "auto",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              gap: 8,
-            }}
-          >
-            {!isTelegramUser && (
-              <button
-                type="button"
-                onClick={() => dispatch(logout())}
-                style={iconButtonStyle}
-                aria-label="Выйти"
-                title="Выйти"
-              >
-                <Icon name="logout" size={18} />
-              </button>
-            )}
-
-            <ThemeToggle
-              themeMode={themeMode}
-              systemTheme={theme}
-              setThemeMode={setThemeMode}
-            />
-          </div>
-        </div>
 
           {role === "admin" && (
             <div style={{ display: "flex", gap: 8 }}>
