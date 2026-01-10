@@ -299,6 +299,7 @@ export const SeekContainer = styled.div`
   bottom: 0;
   margin: 0 auto;
   max-width: 960px;
+  width: 100%;
   padding: 0 0px;
   border-radius: 0;
   display: flex;
