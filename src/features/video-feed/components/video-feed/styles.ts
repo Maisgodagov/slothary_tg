@@ -298,7 +298,7 @@ export const SeekContainer = styled.div`
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--tg-safe-area-inset-bottom) + 52px);
+  bottom: calc(var(--tg-safe-area-inset-bottom) + 54px);
   margin: 0 auto;
   max-width: 960px;
   width: 100%;
