@@ -305,7 +305,7 @@ export const SeekContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
-  z-index: 520;
+  z-index: 2000;
   pointer-events: auto;
 `;
 
@@ -331,6 +331,8 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   margin: 0;
   outline: none;
   pointer-events: auto;
+  position: relative;
+  z-index: 2001;
 
   &::-webkit-slider-runnable-track {
     height: ${({ $thin }) => ($thin ? "4px" : "10px")};
