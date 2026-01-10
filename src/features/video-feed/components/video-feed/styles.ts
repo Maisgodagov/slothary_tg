@@ -214,10 +214,12 @@ export const ExerciseWrapper = styled.div`
 
 export const TagsRow = styled.div`
   position: absolute;
-  top: calc(var(--safe-top) - 20px);
+  top: calc(var(--safe-top) - 18px);
   left: calc(12px + var(--safe-left));
   display: flex;
   gap: 6px;
+  max-width: 95%;
+  padding-right: 6px;
   flex-wrap: nowrap;
   overflow-x: auto;
   white-space: nowrap;
