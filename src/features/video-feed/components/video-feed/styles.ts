@@ -478,10 +478,10 @@ export const ModerationButton = styled.button<{ $approved?: boolean }>`
 `;
 
 export const ExerciseSheet = styled.div<{ $open: boolean }>`
-  position: fixed;
+  position: absolute;
   left: 0;
   right: 0;
-  bottom: 53px;
+  bottom: 0;
   margin: 0 auto;
   max-width: 960px;
   height: 300px;
