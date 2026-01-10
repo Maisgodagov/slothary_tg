@@ -151,7 +151,7 @@ export const Player = styled.video<{ $shrink?: boolean }>`
   max-width: ${({ $shrink }) => ($shrink ? "430px" : "100%")};
   height: ${({ $shrink }) => ($shrink ? "calc(100% - 296px)" : "100%")};
   max-height: ${({ $shrink }) => ($shrink ? "calc(100% - 296px)" : "100%")};
-  object-fit: cover;
+  object-fit: contain;
   aspect-ratio: 9 / 16;
   border-radius: ${({ $shrink }) => ($shrink ? "18px" : "0px")};
   overflow: hidden;
