@@ -136,10 +136,11 @@ export const Sentinel = styled.div`
 export const Card = styled.div<{ $cardHeight: string; $maxHeight: string }>`
   position: relative;
   background: #000;
+  border: 6px solid green;
   border-radius: 0;
   overflow: hidden;
-  height: ${({ $cardHeight }) => $cardHeight};
-  max-height: ${({ $maxHeight }) => $maxHeight};
+  height: calc(100% - 54px);
+  max-height: calc(100% - 54px);
   width: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
@@ -152,6 +153,7 @@ export const Player = styled.video<{ $shrink?: boolean }>`
   height: ${({ $shrink }) => ($shrink ? "calc(100% - 296px)" : "100%")};
   max-height: ${({ $shrink }) => ($shrink ? "calc(100% - 296px)" : "100%")};
   object-fit: cover;
+  border: 6px solid blue;
   aspect-ratio: 9 / 16;
   border-radius: ${({ $shrink }) => ($shrink ? "18px" : "0px")};
   overflow: hidden;
