@@ -4,6 +4,7 @@ export const FeedContainer = styled.div<{ $navOffset: number }>`
   height: 100%;
   padding: 0;
   overflow: hidden;
+  border: 5px solid #000000;
 `;
 
 export const FeedScroll = styled.div<{ $navOffset: number; $locked?: boolean }>`
