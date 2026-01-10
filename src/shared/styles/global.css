@@ -90,6 +90,7 @@ button {
   width: 100%;
   background: var(--tg-bg);
   color: var(--tg-text);
+  border: 4px solid yellow;
 }
 
 .page-shell__content--scroll {

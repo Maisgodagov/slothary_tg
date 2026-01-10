@@ -134,13 +134,18 @@ export const Sentinel = styled.div`
 `;
 
 export const Card = styled.div<{ $cardHeight: string; $maxHeight: string }>`
-  flex: 1;
-  min-height: 0;
   position: relative;
   background: #000;
   border: 6px solid green;
   border-radius: 0;
   overflow: hidden;
+  height: calc(
+    100vh -
+      (
+        var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top) +
+          var(--tg-safe-area-inset-bottom) - 54px
+      )
+  );
   width: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
