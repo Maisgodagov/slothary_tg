@@ -9,6 +9,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
+import { muellerApi, type MuellerEntry } from "../features/mueller/api";
 import {
   type PhraseSnippet,
   videoDictionaryApi,
@@ -100,6 +101,25 @@ const mergeSnippets = (base: PhraseSnippet[], next: PhraseSnippet[]) => {
   });
   return merged;
 };
+
+const detectLanguage = (value: string) => /[а-яё]/i.test(value);
+
+const uniqueTranslations = (entries: MuellerEntry[], limit = 10) => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  entries.forEach((entry) => {
+    entry.translations.forEach((item) => {
+      const trimmed = item.trim();
+      if (!trimmed || seen.has(trimmed)) return;
+      seen.add(trimmed);
+      result.push(trimmed);
+    });
+  });
+  return result.slice(0, limit);
+};
+
+const filterPureTranslations = (list: string[]) =>
+  list.filter((value) => !/[a-z]/i.test(value));
 
 function SnippetCard({
   snippet,
@@ -342,6 +362,11 @@ export default function DictionaryPage() {
   const auth = useAppSelector(selectAuth);
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [dictEntries, setDictEntries] = useState<MuellerEntry[]>([]);
+  const [dictStatus, setDictStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [dictError, setDictError] = useState<string | null>(null);
+  const [videoQuery, setVideoQuery] = useState("");
+  const [showMoreTranslations, setShowMoreTranslations] = useState(false);
   const [items, setItems] = useState<PhraseSnippet[]>([]);
   const [highlight, setHighlight] = useState("");
   const [hasMore, setHasMore] = useState(false);
@@ -370,6 +395,8 @@ export default function DictionaryPage() {
       if (!raw) return;
       const saved = JSON.parse(raw) as {
         query?: string;
+        videoQuery?: string;
+        dictEntries?: MuellerEntry[];
         items?: PhraseSnippet[];
         total?: number;
         nextCursor?: string | null;
@@ -378,6 +405,11 @@ export default function DictionaryPage() {
         hasSearched?: boolean;
       };
       if (saved.query) setQuery(saved.query);
+      if (saved.videoQuery) setVideoQuery(saved.videoQuery);
+      if (saved.dictEntries && Array.isArray(saved.dictEntries)) {
+        setDictEntries(saved.dictEntries);
+        setDictStatus(saved.dictEntries.length ? "ready" : "idle");
+      }
       if (saved.items && Array.isArray(saved.items)) {
         setItems(saved.items);
         setStatus(saved.items.length ? "ready" : "idle");
@@ -397,6 +429,8 @@ export default function DictionaryPage() {
     try {
       const payload = {
         query,
+        videoQuery,
+        dictEntries,
         items,
         total,
         nextCursor,
@@ -408,7 +442,7 @@ export default function DictionaryPage() {
     } catch {
       // ignore persist errors
     }
-  }, [activeIndex, hasMore, hasSearched, items, nextCursor, query, total]);
+  }, [activeIndex, dictEntries, hasMore, hasSearched, items, nextCursor, query, total, videoQuery]);
 
   const updateCardWidth = useCallback(() => {
     if (!firstCardRef.current) return;
@@ -427,6 +461,11 @@ export default function DictionaryPage() {
 
   const handleClear = useCallback(() => {
     setQuery("");
+    setVideoQuery("");
+    setDictEntries([]);
+    setDictStatus("idle");
+    setDictError(null);
+    setShowMoreTranslations(false);
     setItems([]);
     setHighlight("");
     setHasMore(false);
@@ -453,6 +492,8 @@ export default function DictionaryPage() {
 
     setStatus("loading");
     setError(null);
+    setDictStatus("loading");
+    setDictError(null);
     setHasSearched(true);
     setItems([]);
     setHasMore(false);
@@ -460,13 +501,36 @@ export default function DictionaryPage() {
     setTotal(0);
     setActiveIndex(0);
     setHighlight(trimmed);
+    setShowMoreTranslations(false);
 
     try {
+      const isRu = detectLanguage(trimmed);
+      const dictionaryResults = await muellerApi.lookup({
+        word: trimmed,
+        lang: isRu ? "ru" : "en",
+      });
+
+      setDictEntries(dictionaryResults);
+      setDictStatus("ready");
+
+      const nextVideoQuery = isRu ? dictionaryResults[0]?.word?.trim() ?? "" : trimmed;
+      setVideoQuery(nextVideoQuery);
+      setHighlight(nextVideoQuery || trimmed);
+
+      if (!nextVideoQuery) {
+        setItems([]);
+        setHasMore(false);
+        setNextCursor(null);
+        setTotal(0);
+        setStatus("ready");
+        return;
+      }
+
       const response = await videoDictionaryApi.searchPhrase({
-        phrase: trimmed,
+        phrase: nextVideoQuery,
         limit: PAGE_SIZE,
         cursor: null,
-        paddingSeconds: computePaddingSeconds(trimmed),
+        paddingSeconds: computePaddingSeconds(nextVideoQuery),
         userId: auth.profile?.id ?? null,
         signal: controller.signal,
       });
@@ -478,8 +542,11 @@ export default function DictionaryPage() {
       setStatus("ready");
     } catch (err: any) {
       if (err?.name === "AbortError") return;
-      setError(err?.message ?? "Не удалось выполнить поиск");
+      const message = err?.message ?? "Не удалось выполнить поиск";
+      setError(message);
+      setDictError(message);
       setStatus("error");
+      setDictStatus("error");
     }
   }, [auth.profile?.id, query]);
 
@@ -490,10 +557,10 @@ export default function DictionaryPage() {
 
     try {
       const response = await videoDictionaryApi.searchPhrase({
-        phrase: query.trim(),
+        phrase: videoQuery.trim(),
         limit: PAGE_SIZE,
         cursor: nextCursor,
-        paddingSeconds: computePaddingSeconds(query),
+        paddingSeconds: computePaddingSeconds(videoQuery),
         userId: auth.profile?.id ?? null,
       });
 
@@ -506,7 +573,7 @@ export default function DictionaryPage() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [auth.profile?.id, hasMore, isLoadingMore, nextCursor, query]);
+  }, [auth.profile?.id, hasMore, isLoadingMore, nextCursor, videoQuery]);
 
   useEffect(() => {
     if (!hasMore || isLoadingMore) return;
@@ -596,13 +663,17 @@ export default function DictionaryPage() {
   }, [activeIndex, items.length]);
 
   const helperText = useMemo(() => {
-    if (!hasSearched) return "Введите слово или фразу на английском.";
+    if (!hasSearched) return "Введите слово или фразу.";
     if (status === "loading") return "Ищем совпадения в видео...";
     if (status === "error") return error ?? "Произошла ошибка";
+    if (dictStatus === "error") return dictError ?? "Произошла ошибка";
+    if (dictStatus === "ready" && dictEntries.length === 0) {
+      return "Перевод не найден. Попробуйте другой запрос.";
+    }
     if (status === "ready" && items.length === 0)
       return "Ничего не найдено. Попробуйте другой запрос.";
     return null;
-  }, [error, hasSearched, items.length, status]);
+  }, [dictEntries.length, dictError, dictStatus, error, hasSearched, items.length, status]);
 
   const handleOpenFullVideo = useCallback(
     (snippet: PhraseSnippet) => {
@@ -722,6 +793,104 @@ export default function DictionaryPage() {
           </div>
         )}
 
+        {dictStatus === "loading" && (
+          <div style={{ display: "grid", placeItems: "center" }}>
+            <Loader />
+          </div>
+        )}
+
+        {dictStatus === "ready" && dictEntries.length > 0 && (
+          <div
+            style={{
+              background: "var(--tg-surface)",
+              border: "1px solid var(--tg-border)",
+              borderRadius: 16,
+              padding: 16,
+              display: "grid",
+              gap: 10,
+            }}
+          >
+            {(() => {
+              const isRuQuery = detectLanguage(query);
+              const ruTranslations = filterPureTranslations(
+                uniqueTranslations(dictEntries, showMoreTranslations ? 6 : 1)
+              );
+              const enEntries = dictEntries.slice(0, showMoreTranslations ? 5 : 1);
+              const hasMore =
+                (isRuQuery ? dictEntries.length : ruTranslations.length) > 1;
+
+              return (
+                <>
+                  {isRuQuery ? (
+                    <div style={{ display: "grid", gap: 8 }}>
+                      {enEntries.map((entry) => (
+                        <div
+                          key={entry.id}
+                          style={{
+                            padding: "8px 10px",
+                            borderRadius: 12,
+                            background: "var(--tg-card)",
+                            border: "1px solid var(--tg-border)",
+                            display: "grid",
+                            gap: 4,
+                          }}
+                        >
+                          <div style={{ fontWeight: 700 }}>{entry.word}</div>
+                          {entry.partOfSpeech && (
+                            <div
+                              style={{ fontSize: 12, color: "var(--tg-subtle)" }}
+                            >
+                              {entry.partOfSpeech}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gap: 8 }}>
+                      {ruTranslations.map((translation, index) => (
+                        <div
+                          key={`${translation}-${index}`}
+                          style={{
+                            padding: "8px 10px",
+                            borderRadius: 12,
+                            background: "var(--tg-card)",
+                            border: "1px solid var(--tg-border)",
+                          }}
+                        >
+                          {translation}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {hasMore && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowMoreTranslations((prev) => !prev)
+                      }
+                      style={{
+                        border: "none",
+                        background: "transparent",
+                        color: "var(--tg-accent)",
+                        fontWeight: 600,
+                        fontSize: 13,
+                        cursor: "pointer",
+                        justifySelf: "start",
+                      }}
+                    >
+                      {showMoreTranslations
+                        ? "Скрыть переводы"
+                        : "Показать другие переводы"}
+                    </button>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
+
         {status === "loading" && (
           <div style={{ display: "grid", placeItems: "center" }}>
             <Loader />
@@ -730,6 +899,16 @@ export default function DictionaryPage() {
 
         {items.length > 0 && (
           <>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: "var(--tg-subtle)",
+                textAlign: "center",
+              }}
+            >
+              Примеры использования
+            </div>
             <div
               ref={sliderRef}
               className="video-dict-slider"
