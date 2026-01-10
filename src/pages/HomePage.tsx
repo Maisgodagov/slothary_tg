@@ -71,8 +71,8 @@ export default function HomePage() {
           justifyContent: "space-between",
           marginBottom: 12,
           position: "sticky",
-          top: "var(--tg-content-safe-area-inset-top)",
-          paddingTop: "var(--tg-content-safe-area-inset-top)",
+          top: "calc(var(--safe-top) - 18px)",
+          // paddingTop: "var(--tg-content-safe-area-inset-top)",
           zIndex: 20,
           background: "var(--tg-bg)",
         }}
