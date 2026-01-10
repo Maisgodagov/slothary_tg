@@ -26,7 +26,7 @@
   --tg-content-safe-area-inset-bottom: var(--tg-safe-area-inset-bottom);
   --tg-content-safe-area-inset-left: var(--tg-safe-area-inset-left);
   --nav-height: 56px;
-  --page-top-offset: -12px;
+  --page-top-padding: max(calc(var(--safe-top) - 12px), 0px);
 }
 
 *,
@@ -76,13 +76,13 @@ button {
 
 .page--content {
   min-height: 100vh;
-  padding: 0 16px calc(24px + var(--safe-bottom));
+  padding: var(--page-top-padding) 16px calc(24px + var(--safe-bottom));
   background: var(--tg-bg);
   color: var(--tg-text);
 }
 
 .page-header {
-  margin-top: var(--page-top-offset);
+  margin-top: 0;
 }
 
 .section {
