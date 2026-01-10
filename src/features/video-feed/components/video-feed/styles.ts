@@ -4,7 +4,6 @@ export const FeedContainer = styled.div<{ $navOffset: number }>`
   height: calc(100% - 54px);
   padding: 0;
   overflow: hidden;
-  border: 5px solid #000000;
 `;
 
 export const FeedScroll = styled.div<{ $navOffset: number; $locked?: boolean }>`
@@ -138,7 +137,6 @@ export const Sentinel = styled.div`
 export const Card = styled.div<{ $cardHeight: string; $maxHeight: string }>`
   position: relative;
   background: #000;
-  border: 6px solid green;
   border-radius: 0;
   overflow: hidden;
   height: 100%;
@@ -154,7 +152,6 @@ export const Player = styled.video<{ $shrink?: boolean }>`
   height: ${({ $shrink }) => ($shrink ? "calc(100% - 296px)" : "100%")};
   max-height: ${({ $shrink }) => ($shrink ? "calc(100% - 296px)" : "100%")};
   object-fit: contain;
-  border: 6px solid blue;
   aspect-ratio: 9 / 16;
   border-radius: ${({ $shrink }) => ($shrink ? "18px" : "0px")};
   overflow: hidden;
