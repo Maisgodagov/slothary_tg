@@ -91,207 +91,210 @@ export default function HomePage() {
           display: "flex",
           flexDirection: "column",
           gap: 16,
+          padding: "0, 6px",
         }}
       >
-      <div
-        className="page-header"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 12,
-          position: "sticky",
-          top: 0,
-          zIndex: 20,
-          background: "var(--tg-bg)",
-        }}
-      >
-        <button
-          onClick={() => setShowStreakModal(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "0 10px",
-            borderRadius: 999,
-            border: "1px solid var(--tg-border)",
-            background: "var(--tg-card)",
-            color: "var(--tg-text)",
-            height: 40,
-            justifyContent: "center",
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          <Icon name="flame" size={24} color="#ff9f45" />
-          <span>{streakDays} дн.</span>
-        </button>
-        <button
-          onClick={() => navigate("/profile")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            borderRadius: 999,
-            height: 40,
-            border: "1px solid var(--tg-border)",
-            padding: "0 10px",
-            background: "var(--tg-card)",
-            color: "var(--tg-text)",
-            cursor: "pointer",
-          }}
-        >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={displayName}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "1px solid var(--tg-border)",
-              }}
-            />
-          ) : (
-            <span
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #2ea3ff55, #6dd3ff44)",
-                display: "grid",
-                placeItems: "center",
-                fontWeight: 700,
-                fontSize: 14,
-                color: "#0c1021",
-              }}
-            >
-              {initial}
-            </span>
-          )}
-          <span style={{ fontWeight: 600 }}>{displayName}</span>
-        </button>
-      </div>
-
-      {showStreakModal && (
         <div
-          onClick={() => setShowStreakModal(false)}
+          className="page-header"
           style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.45)",
-            display: "grid",
-            placeItems: "center",
-            zIndex: 50,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+            position: "sticky",
+            top: 0,
+            zIndex: 20,
+            background: "var(--tg-bg)",
           }}
         >
-          <div
-            onClick={(event) => event.stopPropagation()}
+          <button
+            onClick={() => setShowStreakModal(true)}
             style={{
-              width: "min(360px, 92vw)",
-              background: "var(--tg-card)",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "0 10px",
+              borderRadius: 999,
               border: "1px solid var(--tg-border)",
-              borderRadius: 16,
-              padding: 16,
+              background: "var(--tg-card)",
               color: "var(--tg-text)",
+              height: 40,
+              justifyContent: "center",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <Icon name="flame" size={24} color="#ff9f45" />
+            <span>{streakDays} дн.</span>
+          </button>
+          <button
+            onClick={() => navigate("/profile")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              borderRadius: 999,
+              height: 40,
+              border: "1px solid var(--tg-border)",
+              padding: "0 10px",
+              background: "var(--tg-card)",
+              color: "var(--tg-text)",
+              cursor: "pointer",
+            }}
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={displayName}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "1px solid var(--tg-border)",
+                }}
+              />
+            ) : (
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #2ea3ff55, #6dd3ff44)",
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  color: "#0c1021",
+                }}
+              >
+                {initial}
+              </span>
+            )}
+            <span style={{ fontWeight: 600 }}>{displayName}</span>
+          </button>
+        </div>
+
+        {showStreakModal && (
+          <div
+            onClick={() => setShowStreakModal(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.45)",
               display: "grid",
-              gap: 10,
+              placeItems: "center",
+              zIndex: 50,
             }}
           >
             <div
+              onClick={(event) => event.stopPropagation()}
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                width: "min(360px, 92vw)",
+                background: "var(--tg-card)",
+                border: "1px solid var(--tg-border)",
+                borderRadius: 16,
+                padding: 16,
+                color: "var(--tg-text)",
+                display: "grid",
+                gap: 10,
               }}
             >
-              <div style={{ fontWeight: 700 }}>Серия дней</div>
-              <button
-                onClick={() => setShowStreakModal(false)}
+              <div
                 style={{
-                  border: "none",
-                  background: "transparent",
-                  color: "var(--tg-text)",
-                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
-                aria-label="Закрыть"
               >
-                <Icon name="close" size={18} />
-              </button>
-            </div>
-            <div style={{ color: "var(--tg-subtle)", fontSize: 14 }}>
-              {getStreakMessage(streakDays)}
+                <div style={{ fontWeight: 700 }}>Серия дней</div>
+                <button
+                  onClick={() => setShowStreakModal(false)}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    color: "var(--tg-text)",
+                    cursor: "pointer",
+                  }}
+                  aria-label="Закрыть"
+                >
+                  <Icon name="close" size={18} />
+                </button>
+              </div>
+              <div style={{ color: "var(--tg-subtle)", fontSize: 14 }}>
+                {getStreakMessage(streakDays)}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isAdmin && (
-        <pre
-          style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            background: "var(--tg-card)",
-            border: "1px solid var(--tg-border)",
-            color: "var(--tg-text)",
-            fontSize: 12,
-            lineHeight: 1.5,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-all",
-          }}
-        >
-          {`window.screen.width: ${window.screen.width}px\n`}
-          {`window.screen.height: ${window.screen.height}px\n`}
-          {`window.innerWidth: ${window.innerWidth}px\n`}
-          {`window.innerHeight: ${window.innerHeight}px\n`}
-          {`visualViewport.height: ${window.visualViewport?.height ?? "n/a"}px\n`}
-          {`1vh: ${window.innerHeight / 100}px\n`}
-          {`1dvh: ${window.innerHeight / 100}px\n`}
-          {`1vw: ${window.innerWidth / 100}px\n`}
-        </pre>
-      )}
+        {isAdmin && (
+          <pre
+            style={{
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 12,
+              background: "var(--tg-card)",
+              border: "1px solid var(--tg-border)",
+              color: "var(--tg-text)",
+              fontSize: 12,
+              lineHeight: 1.5,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-all",
+            }}
+          >
+            {`window.screen.width: ${window.screen.width}px\n`}
+            {`window.screen.height: ${window.screen.height}px\n`}
+            {`window.innerWidth: ${window.innerWidth}px\n`}
+            {`window.innerHeight: ${window.innerHeight}px\n`}
+            {`visualViewport.height: ${
+              window.visualViewport?.height ?? "n/a"
+            }px\n`}
+            {`1vh: ${window.innerHeight / 100}px\n`}
+            {`1dvh: ${window.innerHeight / 100}px\n`}
+            {`1vw: ${window.innerWidth / 100}px\n`}
+          </pre>
+        )}
 
-      {isAdmin && initData && (
-        <pre
-          style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            background: "var(--tg-card)",
-            border: "1px solid var(--tg-border)",
-            color: "var(--tg-text)",
-            fontSize: 12,
-            lineHeight: 1.5,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-all",
-          }}
-        >
-          {initData}
-        </pre>
-      )}
+        {isAdmin && initData && (
+          <pre
+            style={{
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 12,
+              background: "var(--tg-card)",
+              border: "1px solid var(--tg-border)",
+              color: "var(--tg-text)",
+              fontSize: 12,
+              lineHeight: 1.5,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-all",
+            }}
+          >
+            {initData}
+          </pre>
+        )}
 
-      {isAdmin && webAppState && (
-        <pre
-          style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            background: "var(--tg-card)",
-            border: "1px solid var(--tg-border)",
-            color: "var(--tg-text)",
-            fontSize: 12,
-            lineHeight: 1.5,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-all",
-          }}
-        >
-          {webAppState}
-        </pre>
-      )}
+        {isAdmin && webAppState && (
+          <pre
+            style={{
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 12,
+              background: "var(--tg-card)",
+              border: "1px solid var(--tg-border)",
+              color: "var(--tg-text)",
+              fontSize: 12,
+              lineHeight: 1.5,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-all",
+            }}
+          >
+            {webAppState}
+          </pre>
+        )}
       </div>
     </PageShell>
   );
