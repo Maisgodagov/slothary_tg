@@ -6,7 +6,7 @@ export default function VideoPage() {
   const contentId = params.get("contentId");
 
   return (
-    <div style={{ height: "100vh", width: "100vw", padding: 0, margin: 0 }}>
+    <div style={{ width: "100vw", padding: 0, margin: 0 }}>
       <VideoFeed initialContentId={contentId} />
     </div>
   );
