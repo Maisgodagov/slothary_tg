@@ -47,42 +47,15 @@ function updateSafeAreaFromViewport() {
   const bottomVV = vv ? Math.max(0, innerH - (vv.height + vv.offsetTop)) : 0;
 
   // Insets that Telegram сообщает: разница между stable и текущей высотой
-  const bottomFromTelegram = vsh && vh ? Math.max(0, vsh - vh) : 0;
-  const topFromTelegram = Math.max(0, innerH - Math.max(vh, vsh));
-
-  const extraTop = 5;
-  const extraBottom = 20;
-
-  const top = Math.max(topVV, topFromTelegram, Number(tgSafe?.top ?? 0)) + extraTop;
-  const bottom =
-    Math.max(bottomVV, bottomFromTelegram, Number(tgSafe?.bottom ?? 0)) + extraBottom;
-  const left = Math.max(leftVV, Number(tgSafe?.left ?? 0));
-  const right = Math.max(rightVV, Number(tgSafe?.right ?? 0));
+  const top = Number(tgContentSafe?.top ?? tgSafe?.top ?? topVV ?? 0);
+  const bottom = Number(tgContentSafe?.bottom ?? tgSafe?.bottom ?? bottomVV ?? 0);
+  const left = Number(tgContentSafe?.left ?? tgSafe?.left ?? leftVV ?? 0);
+  const right = Number(tgContentSafe?.right ?? tgSafe?.right ?? rightVV ?? 0);
 
   root.style.setProperty('--safe-top', `${top}px`);
   root.style.setProperty('--safe-right', `${right}px`);
   root.style.setProperty('--safe-bottom', `${bottom}px`);
   root.style.setProperty('--safe-left', `${left}px`);
-  root.style.setProperty('--tg-safe-area-inset-top', `${top}px`);
-  root.style.setProperty('--tg-safe-area-inset-right', `${right}px`);
-  root.style.setProperty('--tg-safe-area-inset-bottom', `${bottom}px`);
-  root.style.setProperty('--tg-safe-area-inset-left', `${left}px`);
-  root.style.setProperty(
-    '--tg-content-safe-area-inset-top',
-    `${Math.max(Number(tgContentSafe?.top ?? 0), top)}px`,
-  );
-  root.style.setProperty(
-    '--tg-content-safe-area-inset-right',
-    `${Math.max(Number(tgContentSafe?.right ?? 0), right)}px`,
-  );
-  root.style.setProperty(
-    '--tg-content-safe-area-inset-bottom',
-    `${Math.max(Number(tgContentSafe?.bottom ?? 0), bottom)}px`,
-  );
-  root.style.setProperty(
-    '--tg-content-safe-area-inset-left',
-    `${Math.max(Number(tgContentSafe?.left ?? 0), left)}px`,
-  );
 
   const appHeight = vsh || vh || visualHeight || innerH || 0;
   if (appHeight > 0) {
