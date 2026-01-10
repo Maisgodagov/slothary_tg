@@ -228,6 +228,30 @@ export default function HomePage() {
         </div>
       )}
 
+      {isAdmin && (
+        <pre
+          style={{
+            marginTop: 12,
+            padding: 12,
+            borderRadius: 12,
+            background: "var(--tg-card)",
+            border: "1px solid var(--tg-border)",
+            color: "var(--tg-text)",
+            fontSize: 12,
+            lineHeight: 1.5,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-all",
+          }}
+        >
+          {`window.innerWidth: ${window.innerWidth}px\n`}
+          {`window.innerHeight: ${window.innerHeight}px\n`}
+          {`visualViewport.height: ${window.visualViewport?.height ?? "n/a"}px\n`}
+          {`1vh: ${window.innerHeight / 100}px\n`}
+          {`1dvh: ${window.innerHeight / 100}px\n`}
+          {`1vw: ${window.innerWidth / 100}px\n`}
+        </pre>
+      )}
+
       {isAdmin && initData && (
         <pre
           style={{
