@@ -55,24 +55,22 @@ export default function HomePage() {
 
   return (
     <div
+      className="page page--content"
       style={{
-        minHeight: "100vh",
-        width: "100vw",
-        padding: "16px 16px 24px",
-        boxSizing: "border-box",
-        color: "var(--tg-text)",
-        background: "var(--tg-bg)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
       }}
     >
       <div
+        className="page-header"
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           marginBottom: 12,
           position: "sticky",
-          top: "calc(var(--safe-top) - 18px)",
-          paddingTop: "calc(var(--safe-top) - 18px)",
+          top: 0,
           zIndex: 20,
           background: "var(--tg-bg)",
         }}

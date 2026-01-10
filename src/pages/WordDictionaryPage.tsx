@@ -47,17 +47,15 @@ export default function WordDictionaryPage() {
 
   return (
     <div
+      className="page page--content"
       style={{
-        minHeight: '100vh',
-        padding: '24px 16px 40px',
-        color: 'var(--tg-text)',
-        background: 'var(--tg-bg)',
         display: 'grid',
         gap: 16,
         alignContent: 'start',
       }}
     >
       <div
+        className="page-header"
         style={{
           background: 'var(--tg-surface)',
           border: '1px solid var(--tg-border)',

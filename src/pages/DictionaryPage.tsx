@@ -187,6 +187,7 @@ function SnippetCard({
   if (!shouldRender) {
     return (
       <div
+        className="page-header"
         style={{
           width: "clamp(220px, 72vw, 360px)",
           height: "clamp(340px, 64vh, 520px)",
@@ -599,11 +600,8 @@ export default function DictionaryPage() {
 
   return (
     <div
+      className="page page--content"
       style={{
-        minHeight: "100vh",
-        padding: "24px 16px 40px",
-        color: "var(--tg-text)",
-        background: "var(--tg-bg)",
         display: "grid",
         gap: 16,
         alignContent: "start",

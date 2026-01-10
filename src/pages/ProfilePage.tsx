@@ -24,16 +24,8 @@ export default function ProfilePage() {
 
   if (!auth.profile) {
     return (
-      <div style={wrapperStyle}>
-        <div style={headerRow}>
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            style={iconButtonStyle}
-            aria-label="Назад"
-          >
-            <Icon name="back" size={20} />
-          </button>
+      <div className="page page--content" style={wrapperStyle}>
+        <div className="page-header" style={headerRow}>
           <h2 style={{ margin: 0 }}>Профиль</h2>
         </div>
 
@@ -66,17 +58,8 @@ export default function ProfilePage() {
   const isTelegramUser = email?.endsWith("@telegram.local");
 
   return (
-    <div style={wrapperStyle}>
-      <div style={headerRow}>
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          style={iconButtonStyle}
-          aria-label="Назад"
-        >
-          <Icon name="back" size={20} />
-        </button>
-      </div>
+    <div className="page page--content" style={wrapperStyle}>
+      <div className="page-header" style={headerRow} />
 
       <div style={{ width: "100%", maxWidth: 560, display: "grid", gap: 12 }}>
         <div
@@ -236,10 +219,6 @@ function ThemeToggle({
 }
 
 const wrapperStyle: React.CSSProperties = {
-  padding: "20px 16px 32px",
-  minHeight: "100vh",
-  color: "var(--tg-text)",
-  background: "var(--tg-bg)",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
