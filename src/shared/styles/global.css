@@ -70,6 +70,7 @@ button {
   margin-top: calc(
     var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top)
   );
+  margin-bottom: var(--tg-safe-area-inset-bottom);
   height: calc(
     var(--app-height, 100vh) -
       (var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top))
