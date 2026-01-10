@@ -72,7 +72,7 @@ export default function HomePage() {
           marginBottom: 12,
           position: "sticky",
           top: "calc(var(--safe-top) - 18px)",
-          // paddingTop: "var(--tg-content-safe-area-inset-top)",
+          paddingTop: "var(--tg-content-safe-area-inset-top)",
           zIndex: 20,
           background: "var(--tg-bg)",
         }}
