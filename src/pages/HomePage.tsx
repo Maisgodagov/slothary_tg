@@ -10,6 +10,33 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [showStreakModal, setShowStreakModal] = useState(false);
   const { initData } = useTelegram();
+  const webAppState = useMemo(() => {
+    const webApp = (window as any)?.Telegram?.WebApp;
+    if (!webApp) return null;
+    try {
+      return JSON.stringify(
+        {
+          platform: webApp.platform,
+          version: webApp.version,
+          colorScheme: webApp.colorScheme,
+          isExpanded: webApp.isExpanded,
+          headerColor: webApp.headerColor,
+          backgroundColor: webApp.backgroundColor,
+          initData: webApp.initData,
+          initDataUnsafe: webApp.initDataUnsafe,
+          viewportHeight: webApp.viewportHeight,
+          viewportStableHeight: webApp.viewportStableHeight,
+          safeAreaInset: webApp.safeAreaInset,
+          contentSafeAreaInset: webApp.contentSafeAreaInset,
+          isClosingConfirmationEnabled: webApp.isClosingConfirmationEnabled,
+        },
+        null,
+        2
+      );
+    } catch {
+      return null;
+    }
+  }, []);
 
   const initial = (
     auth.profile?.fullName?.[0] ??
@@ -217,6 +244,25 @@ export default function HomePage() {
           }}
         >
           {initData}
+        </pre>
+      )}
+
+      {isAdmin && webAppState && (
+        <pre
+          style={{
+            marginTop: 12,
+            padding: 12,
+            borderRadius: 12,
+            background: "var(--tg-card)",
+            border: "1px solid var(--tg-border)",
+            color: "var(--tg-text)",
+            fontSize: 12,
+            lineHeight: 1.5,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-all",
+          }}
+        >
+          {webAppState}
         </pre>
       )}
     </div>
