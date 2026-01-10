@@ -75,7 +75,7 @@ button {
 }
 
 .page--content {
-  min-height: 100vh;
+  /* min-height: 100vh; */
   padding: var(--page-top-padding) 16px calc(24px + var(--safe-bottom));
   background: var(--tg-bg);
   color: var(--tg-text);
