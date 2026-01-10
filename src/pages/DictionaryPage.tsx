@@ -1,4 +1,11 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+﻿import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
@@ -137,7 +144,13 @@ function SnippetCard({
         .then(() => setIsPlaying(true))
         .catch(() => setIsPlaying(false));
     }
-  }, [isActive, isReady, shouldRender, snippet.endSeconds, snippet.startSeconds]);
+  }, [
+    isActive,
+    isReady,
+    shouldRender,
+    snippet.endSeconds,
+    snippet.startSeconds,
+  ]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -526,7 +539,11 @@ export default function DictionaryPage() {
   const snapToIndex = useCallback((index: number) => {
     const card = cardRefs.current[index];
     if (!card) return;
-    card.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    card.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
   }, []);
 
   useEffect(() => {
@@ -607,169 +624,171 @@ export default function DictionaryPage() {
           gap: 16,
           alignContent: "start",
           justifyItems: "stretch",
-        }}
-      >
-      <div
-        style={{
-          background: "var(--tg-surface)",
-          border: "1px solid var(--tg-border)",
-          borderRadius: 18,
-          padding: 16,
-          display: "grid",
-          gap: 12,
+          paddingRight: 12,
+          paddingLeft: 12,
         }}
       >
         <div
           style={{
+            background: "var(--tg-surface)",
+            border: "1px solid var(--tg-border)",
+            borderRadius: 18,
+            padding: 16,
             display: "grid",
-            gap: 10,
-            gridTemplateColumns: "1fr auto",
-            alignItems: "center",
+            gap: 12,
           }}
         >
-          <div style={{ position: "relative" }}>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Введите слово или фразу"
-              style={{
-                width: "100%",
-                borderRadius: 12,
-                border: "1px solid var(--tg-border)",
-                padding: "10px 36px 10px 12px",
-                background: "var(--tg-card)",
-                color: "var(--tg-text)",
-                fontSize: 14,
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handleSearch();
-              }}
-            />
-            {query.trim().length > 0 && (
-              <button
-                onClick={handleClear}
-                style={{
-                  position: "absolute",
-                  right: 8,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
-                  border: "none",
-                  background: "transparent",
-                  color: "var(--tg-subtle)",
-                  display: "grid",
-                  placeItems: "center",
-                  cursor: "pointer",
-                }}
-                aria-label="Очистить"
-              >
-                <Icon name="close" size={16} />
-              </button>
-            )}
-          </div>
-          <button
-            onClick={handleSearch}
-            disabled={status === "loading"}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              border: "none",
-              background: "var(--tg-accent-strong)",
-              color: "#fff",
-              display: "grid",
-              placeItems: "center",
-              cursor: "pointer",
-              opacity: status === "loading" ? 0.7 : 1,
-            }}
-            aria-label="Найти фрагменты"
-          >
-            <Icon name="search" size={20} color="#fff" />
-          </button>
-        </div>
-      </div>
-
-      {helperText && (
-        <div
-          style={{
-            textAlign: "center",
-            color: "var(--tg-subtle)",
-            fontSize: 14,
-          }}
-        >
-          {helperText}
-        </div>
-      )}
-
-      {status === "loading" && (
-        <div style={{ display: "grid", placeItems: "center" }}>
-          <Loader />
-        </div>
-      )}
-
-      {items.length > 0 && (
-        <>
           <div
-            ref={sliderRef}
-            className="video-dict-slider"
             style={{
-              display: "flex",
-              gap: CARD_GAP,
-              overflowX: "auto",
-              paddingTop: 4,
-              paddingBottom: 14,
-              paddingLeft: "calc((100% - var(--card-width, 320px)) / 2)",
-              paddingRight: "calc((100% - var(--card-width, 320px)) / 2)",
-              scrollSnapType: "x mandatory",
-              scrollBehavior: "smooth",
-              WebkitOverflowScrolling: "touch",
+              display: "grid",
+              gap: 10,
+              gridTemplateColumns: "1fr auto",
+              alignItems: "center",
             }}
           >
-            {items.map((snippet, index) => {
-              const isActive = index === activeIndex;
-              const shouldRender = Math.abs(index - activeIndex) <= 1;
-
-              return (
-                <div
-                  key={snippet.id}
-                  ref={(node) => {
-                    cardRefs.current[index] = node;
-                    if (index === 0) firstCardRef.current = node;
-                  }}
+            <div style={{ position: "relative" }}>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Введите слово или фразу"
+                style={{
+                  width: "100%",
+                  borderRadius: 12,
+                  border: "1px solid var(--tg-border)",
+                  padding: "10px 36px 10px 12px",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                  fontSize: 14,
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleSearch();
+                }}
+              />
+              {query.trim().length > 0 && (
+                <button
+                  onClick={handleClear}
                   style={{
-                    flex: "0 0 auto",
-                    scrollSnapStop: "always",
-                    opacity: isActive ? 1 : 0.55,
-                    transform: isActive ? "scale(1)" : "scale(0.92)",
-                    transition: "opacity 0.2s ease, transform 0.2s ease",
-                    transformOrigin: "center",
+                    position: "absolute",
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    width: 24,
+                    height: 24,
+                    borderRadius: "50%",
+                    border: "none",
+                    background: "transparent",
+                    color: "var(--tg-subtle)",
+                    display: "grid",
+                    placeItems: "center",
+                    cursor: "pointer",
                   }}
+                  aria-label="Очистить"
                 >
-                  <SnippetCard
-                    snippet={snippet}
-                    isActive={isActive}
-                    shouldRender={shouldRender}
-                    highlight={highlight}
-                    onOpenFullVideo={handleOpenFullVideo}
-                  />
-                </div>
-              );
-            })}
+                  <Icon name="close" size={16} />
+                </button>
+              )}
+            </div>
+            <button
+              onClick={handleSearch}
+              disabled={status === "loading"}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                border: "none",
+                background: "var(--tg-accent-strong)",
+                color: "#fff",
+                display: "grid",
+                placeItems: "center",
+                cursor: "pointer",
+                opacity: status === "loading" ? 0.7 : 1,
+              }}
+              aria-label="Найти фрагменты"
+            >
+              <Icon name="search" size={20} color="#fff" />
+            </button>
           </div>
+        </div>
+
+        {helperText && (
           <div
             style={{
               textAlign: "center",
-              fontSize: 13,
               color: "var(--tg-subtle)",
+              fontSize: 14,
             }}
           >
-            {Math.min(activeIndex + 1, total || items.length)}/
-            {total || items.length}
+            {helperText}
           </div>
-        </>
-      )}
+        )}
+
+        {status === "loading" && (
+          <div style={{ display: "grid", placeItems: "center" }}>
+            <Loader />
+          </div>
+        )}
+
+        {items.length > 0 && (
+          <>
+            <div
+              ref={sliderRef}
+              className="video-dict-slider"
+              style={{
+                display: "flex",
+                gap: CARD_GAP,
+                overflowX: "auto",
+                paddingTop: 4,
+                paddingBottom: 14,
+                paddingLeft: "calc((100% - var(--card-width, 320px)) / 2)",
+                paddingRight: "calc((100% - var(--card-width, 320px)) / 2)",
+                scrollSnapType: "x mandatory",
+                scrollBehavior: "smooth",
+                WebkitOverflowScrolling: "touch",
+              }}
+            >
+              {items.map((snippet, index) => {
+                const isActive = index === activeIndex;
+                const shouldRender = Math.abs(index - activeIndex) <= 1;
+
+                return (
+                  <div
+                    key={snippet.id}
+                    ref={(node) => {
+                      cardRefs.current[index] = node;
+                      if (index === 0) firstCardRef.current = node;
+                    }}
+                    style={{
+                      flex: "0 0 auto",
+                      scrollSnapStop: "always",
+                      opacity: isActive ? 1 : 0.55,
+                      transform: isActive ? "scale(1)" : "scale(0.92)",
+                      transition: "opacity 0.2s ease, transform 0.2s ease",
+                      transformOrigin: "center",
+                    }}
+                  >
+                    <SnippetCard
+                      snippet={snippet}
+                      isActive={isActive}
+                      shouldRender={shouldRender}
+                      highlight={highlight}
+                      onOpenFullVideo={handleOpenFullVideo}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div
+              style={{
+                textAlign: "center",
+                fontSize: 13,
+                color: "var(--tg-subtle)",
+              }}
+            >
+              {Math.min(activeIndex + 1, total || items.length)}/
+              {total || items.length}
+            </div>
+          </>
+        )}
       </div>
     </PageShell>
   );
