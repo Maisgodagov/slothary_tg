@@ -37,7 +37,7 @@ export function NavBar() {
         left: 0,
         right: 0,
         margin: "0 auto",
-        maxHeight: "56px",
+        maxHeight: "54px",
         maxWidth: 960,
         width: "100%",
         background: "var(--tg-surface)",
