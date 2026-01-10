@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import { Icon } from "../shared/ui/Icon";
 import { selectAuth } from "../features/auth/slice";
+import { useTelegram } from "../app/providers/TelegramProvider";
 
 export default function HomePage() {
   const auth = useAppSelector(selectAuth);
   const navigate = useNavigate();
   const [showStreakModal, setShowStreakModal] = useState(false);
+  const { initData } = useTelegram();
 
   const initial = (
     auth.profile?.fullName?.[0] ??
@@ -22,6 +24,7 @@ export default function HomePage() {
     "Профиль";
 
   const streakDays = auth.profile?.streakDays ?? 0;
+  const isAdmin = auth.profile?.role === "admin";
 
   const avatarUrl =
     auth.profile?.avatarUrl ||
@@ -196,6 +199,25 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {isAdmin && initData && (
+        <pre
+          style={{
+            marginTop: 12,
+            padding: 12,
+            borderRadius: 12,
+            background: "var(--tg-card)",
+            border: "1px solid var(--tg-border)",
+            color: "var(--tg-text)",
+            fontSize: 12,
+            lineHeight: 1.5,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-all",
+          }}
+        >
+          {initData}
+        </pre>
       )}
     </div>
   );
