@@ -32,7 +32,7 @@ export function NavBar() {
   return (
     <nav
       style={{
-        position: "fixed",
+        position: "absolute",
         bottom: 0,
         left: 0,
         right: 0,
@@ -46,6 +46,7 @@ export function NavBar() {
         padding: 2,
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",
+        zIndex: 20,
       }}
     >
       {items.map((item) => (

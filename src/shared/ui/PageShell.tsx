@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { NavBar } from "./NavBar";
 
 type PageShellProps = {
   children: ReactNode;
   scroll?: boolean;
   padding?: boolean;
+  withNav?: boolean;
   className?: string;
 };
 
@@ -11,6 +13,7 @@ export function PageShell({
   children,
   scroll = true,
   padding = true,
+  withNav = true,
   className,
 }: PageShellProps) {
   const contentClasses = [
@@ -24,6 +27,7 @@ export function PageShell({
   return (
     <div className={["page-shell", className].filter(Boolean).join(" ")}>
       <div className={contentClasses}>{children}</div>
+      {withNav && <NavBar />}
     </div>
   );
 }

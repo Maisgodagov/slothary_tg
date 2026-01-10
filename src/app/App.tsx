@@ -13,7 +13,6 @@ import ModerationPage from '../pages/ModerationPage';
 import UserAdminPage from '../pages/UserAdminPage';
 import ProfilePage from '../pages/ProfilePage';
 import { Loader } from '../shared/ui/Loader';
-import { NavBar } from '../shared/ui/NavBar';
 import '../shared/styles/global.css';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { selectAuth, setProfile, telegramAuth } from '../features/auth/slice';
@@ -186,7 +185,6 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
-            <NavBar />
             <BackHandler />
           </HashRouter>
         </PersistGate>

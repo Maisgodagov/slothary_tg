@@ -70,7 +70,12 @@ button {
   margin-top: calc(
     var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top)
   );
+  height: calc(
+    var(--app-height, 100vh) -
+      (var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top))
+  );
   border: 1px solid red;
+  position: relative;
   overflow: hidden;
 }
 
