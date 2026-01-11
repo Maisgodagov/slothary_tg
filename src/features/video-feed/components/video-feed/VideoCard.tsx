@@ -24,9 +24,9 @@ export function VideoCard({
   shouldLoad,
   // onOpenSettings,
   onOpenLevelFilter,
-  selectedLevelFilters,
+  // selectedLevelFilters,
   onOpenSpeedFilter,
-  selectedSpeedFilters,
+  // selectedSpeedFilters,
   onExercisesToggle,
   registerRef,
 }: VideoCardProps) {
