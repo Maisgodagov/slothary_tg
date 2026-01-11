@@ -211,7 +211,7 @@ export const TagsRow = styled.div`
   left: 12px;
   display: flex;
   gap: 6px;
-  max-width: 100%;
+  max-width: 95%;
   padding-right: 12px;
   flex-wrap: nowrap;
   overflow-x: auto;

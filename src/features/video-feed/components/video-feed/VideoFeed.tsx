@@ -29,6 +29,11 @@ export function VideoFeed({ initialContentId }: { initialContentId?: string | nu
   const lastUserId = useRef<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState(feed.filters);
+  const [levelModalOpen, setLevelModalOpen] = useState(false);
+  const [levelModalCurrent, setLevelModalCurrent] = useState<string | null>(null);
+  const [tempLevelFilters, setTempLevelFilters] = useState<string[] | null>(
+    feed.filters.cefrLevels ?? null
+  );
   const [showEndModal, setShowEndModal] = useState(false);
   const [exercisesOpen, setExercisesOpen] = useState(false);
   const pendingFocusId = useRef<string | null>(null);
@@ -89,14 +94,14 @@ export function VideoFeed({ initialContentId }: { initialContentId?: string | nu
   }, [auth.profile?.role, dispatch, feed.items, initialContentId, resolveUserId]);
 
   useEffect(() => {
-    if (settingsOpen) {
+    if (settingsOpen || levelModalOpen) {
       const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = prevOverflow;
       };
     }
-  }, [settingsOpen]);
+  }, [settingsOpen, levelModalOpen]);
 
   useEffect(() => {
     if (feed.items.length === 0) {
@@ -285,6 +290,12 @@ export function VideoFeed({ initialContentId }: { initialContentId?: string | nu
                   setTempFilters(feed.filters);
                   setSettingsOpen(true);
                 }}
+                onOpenLevelFilter={(level) => {
+                  setTempLevelFilters(feed.filters.cefrLevels ?? null);
+                  setLevelModalCurrent(level);
+                  setLevelModalOpen(true);
+                }}
+                selectedLevelFilters={feed.filters.cefrLevels ?? null}
                 onExercisesToggle={(open) => setExercisesOpen(open)}
               />
             );
@@ -343,6 +354,28 @@ export function VideoFeed({ initialContentId }: { initialContentId?: string | nu
             dispatch(loadFeed({ reset: true }));
           }}
           isAdmin={auth.profile?.role === "admin"}
+        />
+      )}
+
+      {levelModalOpen && (
+        <LevelFilterModal
+          currentLevel={levelModalCurrent}
+          selected={tempLevelFilters}
+          onClose={() => setLevelModalOpen(false)}
+          onChange={setTempLevelFilters}
+          onSave={() => {
+            setLevelModalOpen(false);
+            setContentMap({});
+            setActiveId(null);
+            lastCursorRequested.current = null;
+            dispatch(
+              setFilters({
+                ...feed.filters,
+                cefrLevels: tempLevelFilters ?? null,
+              })
+            );
+            dispatch(loadFeed({ reset: true }));
+          }}
         />
       )}
     </S.FeedContainer>
@@ -543,20 +576,6 @@ function SettingsModal({
         />
 
         <Section
-          title="Уровень языка"
-          options={[
-            { label: "Все уровни", value: null },
-            { label: "Начальный — A1", value: ["A1"] },
-            { label: "Средний — A2, B1", value: ["A2", "B1"] },
-            { label: "Высокий — B2, C1", value: ["B2", "C1"] },
-          ]}
-          selected={filters.cefrLevels}
-          onSelect={(val) =>
-            onChangeFilters((p: any) => ({ ...p, cefrLevels: val }))
-          }
-        />
-
-        <Section
           title="Скорость речи"
           options={[
             { label: "Любая скорость", value: null },
@@ -639,5 +658,107 @@ function SettingsModal({
         </button>
       </div>
     </div>
+  );
+}
+
+function LevelFilterModal({
+  currentLevel,
+  selected,
+  onClose,
+  onChange,
+  onSave,
+}: {
+  currentLevel: string | null;
+  selected: string[] | null;
+  onClose: () => void;
+  onChange: (next: string[] | null) => void;
+  onSave: () => void;
+}) {
+  const levels = ["A1", "A2", "B1", "B2", "C1"];
+
+  const toggleLevel = (level: string) => {
+    if (!selected) {
+      onChange([level]);
+      return;
+    }
+    if (selected.includes(level)) {
+      const next = selected.filter((item) => item !== level);
+      onChange(next.length ? next : null);
+      return;
+    }
+    onChange([...selected, level]);
+  };
+
+  return (
+    <S.ModalBackdrop onClick={onClose}>
+      <S.ModalCard onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          aria-label="Закрыть"
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            width: 32,
+            height: 32,
+            borderRadius: 12,
+            border: "1px solid var(--tg-border, #2b3245)",
+            background: "var(--tg-card, #1f273b)",
+            color: "var(--tg-text, #e9edf7)",
+            cursor: "pointer",
+          }}
+        >
+          <Icon name="close" size={18} />
+        </button>
+        <S.ModalTitle style={{ textAlign: "center" }}>Уровень языка</S.ModalTitle>
+        <S.ModalText>
+          {currentLevel
+            ? `У текущего видео уровень ${currentLevel}.`
+            : "У текущего видео уровень не определен."}
+        </S.ModalText>
+        <S.ModalText>
+          Выберите, какие уровни показывать в ленте.
+        </S.ModalText>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12 }}>
+          {levels.map((level) => {
+            const isActive = selected?.includes(level) ?? false;
+            return (
+              <button
+                key={level}
+                onClick={() => toggleLevel(level)}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 14,
+                  border: "none",
+                  background: isActive ? "#3c4f70" : "var(--tg-card, #1f273b)",
+                  color: "var(--tg-text, #e9edf7)",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                {level}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => onChange(null)}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 14,
+              border: "none",
+              background: selected === null ? "#3c4f70" : "var(--tg-card, #1f273b)",
+              color: "var(--tg-text, #e9edf7)",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Все уровни
+          </button>
+        </div>
+        <S.ModalActions style={{ justifyContent: "flex-end" }}>
+          <S.ModalButton $primary onClick={onSave}>Применить</S.ModalButton>
+        </S.ModalActions>
+      </S.ModalCard>
+    </S.ModalBackdrop>
   );
 }

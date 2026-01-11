@@ -88,6 +88,7 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
       WebApp.requestFullscreen();
     }
     WebApp.disableVerticalSwipes();
+    WebApp.disableClosingConfirmation?.();
     WebApp.setHeaderColor('bg_color');
     WebApp.setBackgroundColor('#0f111a');
 

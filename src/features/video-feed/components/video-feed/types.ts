@@ -19,6 +19,8 @@ export interface VideoCardProps {
   onVisibleChange: (id: string, ratio: number) => void;
   shouldLoad: boolean;
   onOpenSettings: () => void;
+  onOpenLevelFilter?: (level: string | null) => void;
+  selectedLevelFilters?: string[] | null;
   onExercisesToggle?: (open: boolean) => void;
   registerRef?: (node: HTMLDivElement | null) => void;
 }

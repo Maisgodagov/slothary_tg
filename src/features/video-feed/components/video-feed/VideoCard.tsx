@@ -22,6 +22,8 @@ export function VideoCard({
   onVisibleChange,
   shouldLoad,
   // onOpenSettings,
+  onOpenLevelFilter,
+  selectedLevelFilters,
   onExercisesToggle,
   registerRef,
 }: VideoCardProps) {
@@ -231,8 +233,18 @@ export function VideoCard({
   const subtitlesVisible = enSub || ruSub || contentState.loading;
   const likesCount = item.likesCount ?? content?.likesCount ?? 0;
 
-  const tags: { label: string; type?: "author" }[] = [];
-  if (item.analysis?.cefrLevel) tags.push({ label: item.analysis.cefrLevel });
+  const contentAnalysis = content?.analysis ?? item.analysis;
+  const tags: { label: string; type?: "author" | "level" }[] = [];
+  const currentLevel = contentAnalysis?.cefrLevel ?? item.analysis?.cefrLevel ?? null;
+  if (currentLevel || selectedLevelFilters) {
+    const filterLabel = selectedLevelFilters?.length
+      ? selectedLevelFilters.join(", ")
+      : "Все";
+    const levelLabel = currentLevel
+      ? `${currentLevel} · Лента: ${filterLabel}`
+      : `Лента: ${filterLabel}`;
+    tags.push({ label: levelLabel, type: "level" });
+  }
   if (item.analysis?.speechSpeed) {
     const speed =
       item.analysis.speechSpeed === "slow"
@@ -258,7 +270,6 @@ export function VideoCard({
   };
   const exercisesCount = exercises?.length ?? 0;
   const isAdmin = auth.profile?.role === "admin";
-  const contentAnalysis = content?.analysis ?? item.analysis;
   const initialCefr = contentAnalysis?.cefrLevel ?? "A2";
   const initialSpeech = contentAnalysis?.speechSpeed ?? "normal";
   const initialAuthor = content?.author ?? item.author ?? "";
@@ -489,6 +500,21 @@ export function VideoCard({
                 as="button"
                 type="button"
                 onClick={() => setAuthorModal(tag.label)}
+                style={{
+                  cursor: "pointer",
+                  border: "none",
+                  outline: "none",
+                  padding: "8px 12px",
+                }}
+              >
+                {tag.label}
+              </S.Badge>
+            ) : tag.type === "level" ? (
+              <S.Badge
+                key={tag.label}
+                as="button"
+                type="button"
+                onClick={() => onOpenLevelFilter?.(currentLevel)}
                 style={{
                   cursor: "pointer",
                   border: "none",
