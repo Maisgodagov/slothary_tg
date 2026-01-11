@@ -1,4 +1,5 @@
 import type { VideoContent, VideoFeedItem } from "../../types";
+import type { SpeechSpeedFilter } from "../../slice";
 
 export type ContentState = {
   data?: VideoContent;
@@ -21,6 +22,8 @@ export interface VideoCardProps {
   onOpenSettings: () => void;
   onOpenLevelFilter?: (level: string | null) => void;
   selectedLevelFilters?: string[] | null;
+  onOpenSpeedFilter?: (speed: SpeechSpeedFilter | null) => void;
+  selectedSpeedFilters?: SpeechSpeedFilter[] | null;
   onExercisesToggle?: (open: boolean) => void;
   registerRef?: (node: HTMLDivElement | null) => void;
 }

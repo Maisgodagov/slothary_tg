@@ -233,6 +233,9 @@ export const Badge = styled.span`
   background: rgba(0, 0, 0, 0.75);
   color: #ffffff;
   font-weight: 700;
+  svg {
+    display: block;
+  }
 `;
 
 export const Subtitles = styled.div<{ $withSheet?: boolean }>`

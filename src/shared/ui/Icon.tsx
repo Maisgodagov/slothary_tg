@@ -17,6 +17,7 @@ import {
   Edit3,
   Search,
   ArrowLeft,
+  ChevronDown,
   Sun,
   Moon,
   Flame,
@@ -45,6 +46,7 @@ type IconName =
   | "edit"
   | "search"
   | "back"
+  | "chevron-down"
   | "sun"
   | "moon"
   | "flame";
@@ -81,6 +83,7 @@ const ICON_MAP: Record<
   edit: Edit3,
   search: Search,
   back: ArrowLeft,
+  "chevron-down": ChevronDown,
   sun: Sun,
   moon: Moon,
   flame: Flame,

@@ -3,7 +3,7 @@ import { videoFeedApi } from "./api";
 import type { VideoFeedItem, VideoFeedResponse } from "./types";
 import type { RootState } from "../../app/store";
 
-type SpeechSpeedFilter = "slow" | "normal" | "fast";
+export type SpeechSpeedFilter = "slow" | "normal" | "fast";
 
 interface FeedFilters {
   cefrLevels: string[] | null;

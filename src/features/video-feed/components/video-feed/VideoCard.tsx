@@ -3,6 +3,7 @@ import { useAppSelector } from "../../../../app/hooks";
 import { selectAuth } from "../../../auth/slice";
 import { wordIdsFromSubtitles } from "../../../exercises/lib/wordIds";
 import { exercisesApi, type ExerciseItem } from "../../../exercises/api";
+import type { SpeechSpeedFilter } from "../../slice";
 import { moderationApi } from "../../moderationApi";
 import type { VideoCardProps } from "./types";
 import * as S from "./styles";
@@ -24,6 +25,8 @@ export function VideoCard({
   // onOpenSettings,
   onOpenLevelFilter,
   selectedLevelFilters,
+  onOpenSpeedFilter,
+  selectedSpeedFilters,
   onExercisesToggle,
   registerRef,
 }: VideoCardProps) {
@@ -234,28 +237,33 @@ export function VideoCard({
   const likesCount = item.likesCount ?? content?.likesCount ?? 0;
 
   const contentAnalysis = content?.analysis ?? item.analysis;
-  const tags: { label: string; type?: "author" | "level" }[] = [];
-  const currentLevel = contentAnalysis?.cefrLevel ?? item.analysis?.cefrLevel ?? null;
-  if (currentLevel || selectedLevelFilters) {
-    const filterLabel = selectedLevelFilters?.length
-      ? selectedLevelFilters.join(", ")
-      : "Все";
-    const levelLabel = currentLevel
-      ? `${currentLevel} · Лента: ${filterLabel}`
-      : `Лента: ${filterLabel}`;
-    tags.push({ label: levelLabel, type: "level" });
+  const speedLabel = (value: SpeechSpeedFilter | null | undefined) => {
+    if (!value) return null;
+    if (value === "slow") return "Медленная речь";
+    if (value === "fast") return "Быстрая речь";
+    return "Обычная скорость речи";
+  };
+
+  const tags: {
+    label: string;
+    type: "author" | "level" | "speed" | "plain";
+  }[] = [];
+  const currentLevel =
+    contentAnalysis?.cefrLevel ?? item.analysis?.cefrLevel ?? null;
+  if (currentLevel) {
+    tags.push({ label: currentLevel, type: "level" });
   }
-  if (item.analysis?.speechSpeed) {
-    const speed =
-      item.analysis.speechSpeed === "slow"
-        ? "Медленная речь"
-        : item.analysis.speechSpeed === "fast"
-        ? "Быстрая речь"
-        : "Обычная скорость речи";
-    tags.push({ label: speed });
+  const currentSpeed = (contentAnalysis?.speechSpeed ??
+    item.analysis?.speechSpeed ??
+    null) as SpeechSpeedFilter | null;
+  if (currentSpeed) {
+    const speedText = speedLabel(currentSpeed);
+    if (speedText) {
+      tags.push({ label: speedText, type: "speed" });
+    }
   }
   if (item.author) tags.push({ label: item.author, type: "author" });
-  if (item.isAdultContent) tags.push({ label: "18+" });
+  if (item.isAdultContent) tags.push({ label: "18+", type: "plain" });
 
   const subtitlesSource = localTranscription;
   const isContentLoading =
@@ -493,41 +501,81 @@ export function VideoCard({
       )}
       {!showSpinner && !showExercises && (
         <S.TagsRow>
-          {tags.map((tag) =>
-            tag.type === "author" ? (
-              <S.Badge
-                key={tag.label}
-                as="button"
-                type="button"
-                onClick={() => setAuthorModal(tag.label)}
-                style={{
-                  cursor: "pointer",
-                  border: "none",
-                  outline: "none",
-                  padding: "8px 12px",
-                }}
-              >
-                {tag.label}
-              </S.Badge>
-            ) : tag.type === "level" ? (
-              <S.Badge
-                key={tag.label}
-                as="button"
-                type="button"
-                onClick={() => onOpenLevelFilter?.(currentLevel)}
-                style={{
-                  cursor: "pointer",
-                  border: "none",
-                  outline: "none",
-                  padding: "8px 12px",
-                }}
-              >
-                {tag.label}
-              </S.Badge>
-            ) : (
-              <S.Badge key={tag.label}>{tag.label}</S.Badge>
-            )
-          )}
+          {tags.map((tag) => {
+            if (tag.type === "author") {
+              return (
+                <S.Badge
+                  key={tag.label}
+                  as="button"
+                  type="button"
+                  onClick={() => setAuthorModal(tag.label)}
+                  style={{
+                    cursor: "pointer",
+                    border: "none",
+                    outline: "none",
+                    padding: "8px 12px",
+                  }}
+                >
+                  {tag.label}
+                </S.Badge>
+              );
+            }
+            if (tag.type === "level") {
+              return (
+                <S.Badge
+                  key={tag.label}
+                  as="button"
+                  type="button"
+                  onClick={() => onOpenLevelFilter?.(currentLevel)}
+                  style={{
+                    cursor: "pointer",
+                    border: "none",
+                    outline: "none",
+                    padding: "8px 12px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span>{tag.label}</span>
+                  <Icon
+                    name="chevron-down"
+                    size={18}
+                    color="#fff"
+                    style={{ flexShrink: 0 }}
+                  />
+                </S.Badge>
+              );
+            }
+            if (tag.type === "speed") {
+              return (
+                <S.Badge
+                  key={tag.label}
+                  as="button"
+                  type="button"
+                  onClick={() => onOpenSpeedFilter?.(currentSpeed)}
+                  style={{
+                    cursor: "pointer",
+                    border: "none",
+                    outline: "none",
+                    padding: "8px 12px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span>{tag.label}</span>
+                  <Icon
+                    name="chevron-down"
+                    size={18}
+                    color="#fff"
+                    style={{ flexShrink: 0 }}
+                  />
+                </S.Badge>
+              );
+            }
+            return <S.Badge key={tag.label}>{tag.label}</S.Badge>;
+          })}
         </S.TagsRow>
       )}
 
