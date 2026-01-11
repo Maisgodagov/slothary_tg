@@ -1,21 +1,28 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { HashRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useRef } from "react";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import {
+  HashRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 
-import { TelegramProvider, useTelegram } from './providers/TelegramProvider';
-import { store, persistor } from './store';
-import HomePage from '../pages/HomePage';
-import DictionaryPage from '../pages/DictionaryPage';
-import VideoPage from '../pages/VideoPage';
-import ModerationPage from '../pages/ModerationPage';
-import UserAdminPage from '../pages/UserAdminPage';
-import ProfilePage from '../pages/ProfilePage';
-import { Loader } from '../shared/ui/Loader';
-import '../shared/styles/global.css';
-import { useAppDispatch, useAppSelector } from './hooks';
-import { selectAuth, setProfile, telegramAuth } from '../features/auth/slice';
-import { usersApi } from '../features/users/api';
+import { TelegramProvider, useTelegram } from "./providers/TelegramProvider";
+import { store, persistor } from "./store";
+import HomePage from "../pages/HomePage";
+import DictionaryPage from "../pages/DictionaryPage";
+import VideoPage from "../pages/VideoPage";
+import ModerationPage from "../pages/ModerationPage";
+import UserAdminPage from "../pages/UserAdminPage";
+import ProfilePage from "../pages/ProfilePage";
+import { Loader } from "../shared/ui/Loader";
+import "../shared/styles/global.css";
+import { useAppDispatch, useAppSelector } from "./hooks";
+import { selectAuth, setProfile, telegramAuth } from "../features/auth/slice";
+import { usersApi } from "../features/users/api";
 
 function AutoTelegramAuth() {
   const { initData } = useTelegram();
@@ -45,7 +52,9 @@ function StreakRefresher() {
       .refreshStreak(userId)
       .then((result) => {
         if (!auth.profile) return;
-        dispatch(setProfile({ ...auth.profile, streakDays: result.streakDays }));
+        dispatch(
+          setProfile({ ...auth.profile, streakDays: result.streakDays })
+        );
       })
       .catch(() => {
         // ignore streak refresh failures
@@ -61,7 +70,7 @@ function BackHandler() {
   const navigate = useNavigate();
 
   const handleBack = useCallback(() => {
-    if (location.pathname === '/') {
+    if (location.pathname === "/") {
       if (webApp) {
         webApp.close();
       } else {
@@ -75,9 +84,9 @@ function BackHandler() {
   useEffect(() => {
     if (!webApp) return;
     webApp.BackButton.show();
-    webApp.onEvent('backButtonClicked', handleBack);
+    webApp.onEvent("backButtonClicked", handleBack);
     return () => {
-      webApp.offEvent('backButtonClicked', handleBack);
+      webApp.offEvent("backButtonClicked", handleBack);
     };
   }, [webApp, handleBack]);
   return null;
@@ -97,7 +106,10 @@ function App() {
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/video" element={<VideoPage />} />
                 <Route path="/dictionary" element={<DictionaryPage />} />
-                <Route path="/video-dictionary" element={<Navigate to="/dictionary" replace />} />
+                <Route
+                  path="/video-dictionary"
+                  element={<Navigate to="/dictionary" replace />}
+                />
                 <Route path="/admin/moderation" element={<ModerationPage />} />
                 <Route path="/admin/users" element={<UserAdminPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
