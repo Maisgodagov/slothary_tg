@@ -38,7 +38,7 @@ const createHighlightRegex = (value: string): RegExp | null => {
   const trimmed = value.trim();
   if (!trimmed) return null;
   const parts = trimmed.split(/\s+/).map(escapeRegExp);
-  const pattern = parts.join("\\s+");
+  const pattern = parts.map((part) => `\\b${part}\\b`).join("\\s+");
   return new RegExp(pattern, "gi");
 };
 
@@ -224,7 +224,7 @@ function SnippetCard({
         className="page-header"
         style={{
           width: "clamp(220px, 72vw, 360px)",
-          height: "clamp(340px, 64vh, 520px)",
+          height: "clamp(260px, 52vh, 420px)",
           borderRadius: 22,
           background: "var(--tg-card)",
           border: "1px solid var(--tg-border)",
@@ -237,7 +237,7 @@ function SnippetCard({
     <div
       style={{
         width: "clamp(220px, 72vw, 360px)",
-        height: "clamp(340px, 64vh, 520px)",
+        height: "clamp(260px, 52vh, 420px)",
         borderRadius: 22,
         overflow: "hidden",
         background: "#000",
@@ -366,7 +366,8 @@ export default function DictionaryPage() {
   const [dictStatus, setDictStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [dictError, setDictError] = useState<string | null>(null);
   const [videoQuery, setVideoQuery] = useState("");
-  const [showMoreTranslations, setShowMoreTranslations] = useState(false);
+  const showExamples = true;
+  const [examplesOpen, setExamplesOpen] = useState(true);
   const [items, setItems] = useState<PhraseSnippet[]>([]);
   const [highlight, setHighlight] = useState("");
   const [hasMore, setHasMore] = useState(false);
@@ -403,6 +404,7 @@ export default function DictionaryPage() {
         hasMore?: boolean;
         activeIndex?: number;
         hasSearched?: boolean;
+        examplesOpen?: boolean;
       };
       if (saved.query) setQuery(saved.query);
       if (saved.videoQuery) setVideoQuery(saved.videoQuery);
@@ -419,6 +421,9 @@ export default function DictionaryPage() {
       setHasMore(Boolean(saved.hasMore));
       setActiveIndex(saved.activeIndex ?? 0);
       setHasSearched(Boolean(saved.hasSearched));
+      if (typeof saved.examplesOpen === "boolean") {
+        setExamplesOpen(saved.examplesOpen);
+      }
       if (saved.query) setHighlight(saved.query);
     } catch {
       // ignore restore errors
@@ -437,6 +442,7 @@ export default function DictionaryPage() {
         hasMore,
         activeIndex,
         hasSearched,
+        examplesOpen,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch {
@@ -465,7 +471,7 @@ export default function DictionaryPage() {
     setDictEntries([]);
     setDictStatus("idle");
     setDictError(null);
-    setShowMoreTranslations(false);
+    setExamplesOpen(true);
     setItems([]);
     setHighlight("");
     setHasMore(false);
@@ -501,7 +507,6 @@ export default function DictionaryPage() {
     setTotal(0);
     setActiveIndex(0);
     setHighlight(trimmed);
-    setShowMoreTranslations(false);
 
     try {
       const isRu = detectLanguage(trimmed);
@@ -812,74 +817,187 @@ export default function DictionaryPage() {
           >
             {(() => {
               const isRuQuery = detectLanguage(query);
+              const primaryEntry = dictEntries[0];
               const ruTranslationsAll = filterPureTranslations(
-                uniqueTranslations(dictEntries, 8)
+                uniqueTranslations(dictEntries, 10)
               );
-              const ruTranslationsShown = showMoreTranslations
-                ? ruTranslationsAll.slice(0, 5)
-                : ruTranslationsAll.slice(0, 1);
-              const enEntries = dictEntries.slice(0, showMoreTranslations ? 5 : 1);
-              const hasMore =
-                (isRuQuery ? dictEntries.length : ruTranslationsAll.length) > 1;
+              const primaryEnglish =
+                primaryEntry?.word?.trim() || query.trim();
+              const primaryRussian = isRuQuery
+                ? query.trim()
+                : ruTranslationsAll[0] ?? "";
+              const otherTranslations = isRuQuery
+                ? Array.from(
+                    new Set(
+                      dictEntries
+                        .map((entry) => entry.word?.trim())
+                        .filter(
+                          (word): word is string =>
+                            Boolean(word) && word !== primaryEnglish
+                        )
+                    )
+                  ).slice(0, 4)
+                : ruTranslationsAll.slice(1, 5);
+              const showOther = otherTranslations.length > 0;
+              const showSnippets =
+                showExamples && examplesOpen && items.length > 0;
 
               return (
                 <>
-                  {isRuQuery ? (
-                    <div style={{ display: "grid", gap: 8 }}>
-                      {enEntries.map((entry) => (
-                        <div
-                          key={entry.id}
-                          style={{
-                            padding: "8px 10px",
-                            borderRadius: 12,
-                            background: "var(--tg-card)",
-                            border: "1px solid var(--tg-border)",
-                            display: "grid",
-                            gap: 4,
-                          }}
-                        >
-                          <div style={{ fontWeight: 700 }}>{entry.word}</div>
-                        </div>
-                      ))}
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: 8,
+                      textAlign: "center",
+                      color: "var(--tg-text)",
+                    }}
+                  >
+                    <div style={{ fontSize: 26, fontWeight: 800 }}>
+                      <span>{primaryEnglish}</span>
+                      {primaryRussian && (
+                        <span style={{ fontWeight: 400 }}>
+                          {" "}
+                          - {primaryRussian}
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <div style={{ display: "grid", gap: 8 }}>
-                      {ruTranslationsShown.map((translation, index) => (
-                        <div
-                          key={`${translation}-${index}`}
-                          style={{
-                            padding: "8px 10px",
-                            borderRadius: 12,
-                            background: "var(--tg-card)",
-                            border: "1px solid var(--tg-border)",
-                          }}
-                        >
-                          {translation}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    {showOther && (
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: "var(--tg-subtle)",
+                        }}
+                      >
+                        др. переводы: {otherTranslations.join(", ")}
+                      </div>
+                    )}
+                  </div>
 
-                  {hasMore && (
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {showExamples && (
+                      <button
+                        type="button"
+                        onClick={() => setExamplesOpen((prev) => !prev)}
+                        style={{
+                          border: "1px solid var(--tg-border)",
+                          background: "var(--tg-card)",
+                          color: "var(--tg-text)",
+                          fontWeight: 700,
+                          fontSize: 15,
+                          borderRadius: 999,
+                          padding: "8px 14px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Примеры
+                        <Icon
+                          name="chevron-down"
+                          size={16}
+                          style={{
+                            transform: examplesOpen
+                              ? "rotate(180deg)"
+                              : "rotate(0deg)",
+                            transition: "transform 0.15s ease",
+                          }}
+                        />
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() =>
-                        setShowMoreTranslations((prev) => !prev)
-                      }
+                      onClick={() => {
+                        // TODO: подключить добавление в словарь
+                      }}
                       style={{
-                        border: "none",
-                        background: "transparent",
-                        color: "var(--tg-accent)",
-                        fontWeight: 600,
-                        fontSize: 13,
+                        border: "1px solid var(--tg-border)",
+                        background: "var(--tg-card)",
+                        color: "var(--tg-text)",
+                        fontWeight: 700,
+                        fontSize: 15,
+                        borderRadius: 999,
+                        padding: "8px 14px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
                         cursor: "pointer",
-                        justifySelf: "start",
                       }}
                     >
-                      {showMoreTranslations
-                        ? "Скрыть переводы"
-                        : "Показать другие переводы"}
+                      + В словарь
                     </button>
+                  </div>
+
+                  {showSnippets && (
+                    <>
+                      <div
+                        ref={sliderRef}
+                        className="video-dict-slider"
+                        style={{
+                          display: "flex",
+                          gap: CARD_GAP,
+                          overflowX: "auto",
+                          paddingTop: 4,
+                          paddingBottom: 10,
+                          paddingLeft:
+                            "calc((100% - var(--card-width, 320px)) / 2)",
+                          paddingRight:
+                            "calc((100% - var(--card-width, 320px)) / 2)",
+                          scrollSnapType: "x mandatory",
+                          scrollBehavior: "smooth",
+                          WebkitOverflowScrolling: "touch",
+                        }}
+                      >
+                        {items.map((snippet, index) => {
+                          const isActive = index === activeIndex;
+                          const shouldRender = Math.abs(index - activeIndex) <= 1;
+
+                          return (
+                            <div
+                              key={snippet.id}
+                              ref={(node) => {
+                                cardRefs.current[index] = node;
+                                if (index === 0) firstCardRef.current = node;
+                              }}
+                              style={{
+                                flex: "0 0 auto",
+                                scrollSnapStop: "always",
+                                opacity: isActive ? 1 : 0.55,
+                                transform: isActive ? "scale(1)" : "scale(0.92)",
+                                transition: "opacity 0.2s ease, transform 0.2s ease",
+                                transformOrigin: "center",
+                              }}
+                            >
+                              <SnippetCard
+                                snippet={snippet}
+                                isActive={isActive}
+                                shouldRender={shouldRender}
+                                highlight={highlight}
+                                onOpenFullVideo={handleOpenFullVideo}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div
+                        style={{
+                          textAlign: "center",
+                          fontSize: 13,
+                          color: "var(--tg-subtle)",
+                        }}
+                      >
+                        {Math.min(activeIndex + 1, total || items.length)}/
+                        {total || items.length}
+                      </div>
+                    </>
                   )}
                 </>
               );
@@ -893,77 +1011,6 @@ export default function DictionaryPage() {
           </div>
         )}
 
-        {items.length > 0 && (
-          <>
-            <div
-              style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: "var(--tg-subtle)",
-                textAlign: "center",
-              }}
-            >
-              Примеры использования
-            </div>
-            <div
-              ref={sliderRef}
-              className="video-dict-slider"
-              style={{
-                display: "flex",
-                gap: CARD_GAP,
-                overflowX: "auto",
-                paddingTop: 4,
-                paddingBottom: 14,
-                paddingLeft: "calc((100% - var(--card-width, 320px)) / 2)",
-                paddingRight: "calc((100% - var(--card-width, 320px)) / 2)",
-                scrollSnapType: "x mandatory",
-                scrollBehavior: "smooth",
-                WebkitOverflowScrolling: "touch",
-              }}
-            >
-              {items.map((snippet, index) => {
-                const isActive = index === activeIndex;
-                const shouldRender = Math.abs(index - activeIndex) <= 1;
-
-                return (
-                  <div
-                    key={snippet.id}
-                    ref={(node) => {
-                      cardRefs.current[index] = node;
-                      if (index === 0) firstCardRef.current = node;
-                    }}
-                    style={{
-                      flex: "0 0 auto",
-                      scrollSnapStop: "always",
-                      opacity: isActive ? 1 : 0.55,
-                      transform: isActive ? "scale(1)" : "scale(0.92)",
-                      transition: "opacity 0.2s ease, transform 0.2s ease",
-                      transformOrigin: "center",
-                    }}
-                  >
-                    <SnippetCard
-                      snippet={snippet}
-                      isActive={isActive}
-                      shouldRender={shouldRender}
-                      highlight={highlight}
-                      onOpenFullVideo={handleOpenFullVideo}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            <div
-              style={{
-                textAlign: "center",
-                fontSize: 13,
-                color: "var(--tg-subtle)",
-              }}
-            >
-              {Math.min(activeIndex + 1, total || items.length)}/
-              {total || items.length}
-            </div>
-          </>
-        )}
       </div>
     </PageShell>
   );
