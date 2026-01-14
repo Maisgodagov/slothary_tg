@@ -86,6 +86,7 @@ button {
     var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top)
   );
   bottom: var(--tg-safe-area-inset-bottom);
+  z-index: 5;
 }
 
 /* PageShell uses these variables to size content and is the only place that applies safe-area offsets. */
