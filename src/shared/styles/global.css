@@ -40,7 +40,7 @@ body {
     sans-serif;
   background: var(--tg-bg);
   color: var(--tg-text);
-  min-height: 100vh;
+  /* min-height: 100vh; */
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   height: var(--app-height, 100vh);
