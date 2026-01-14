@@ -110,7 +110,8 @@ button {
 }
 
 .page-shell__content--pad {
-  padding: 0 16px calc(24px + var(--page-safe-bottom));
+  /* padding: 0 16px calc(24px + var(--page-safe-bottom)); */
+  padding: 0 16px var(--page-safe-bottom);
 }
 
 .page-shell__content--no-pad {
