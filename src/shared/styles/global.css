@@ -43,16 +43,14 @@ body {
   /* min-height: 100vh; */
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
-  height: var(
-    --app-height,
-    calc(
-      100vh -
-        (
-          var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top) +
-            var(--tg-safe-area-inset-bottom)
-        )
-    )
+  height: calc(
+    100vh -
+      (
+        var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top) +
+          var(--tg-safe-area-inset-bottom)
+      )
   );
+
   border-top: 3px solid green;
   border-bottom: 3px solid green;
   overflow: hidden;
