@@ -78,10 +78,10 @@ button {
   display: flex;
   flex-direction: column;
   width: 100vw;
-  margin-top: calc(
+  top: calc(
     var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top)
   );
-  margin-bottom: var(--tg-safe-area-inset-bottom);
+  bottom: var(--tg-safe-area-inset-bottom);
   height: calc(
     100vh -
       (
