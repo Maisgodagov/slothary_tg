@@ -53,7 +53,8 @@ body {
         )
     )
   );
-  border: 3px solid green;
+  border-top: 3px solid green;
+  border-bottom: 3px solid green;
   overflow: hidden;
 }
 
@@ -81,7 +82,8 @@ button {
   width: 100vw;
   margin: 0 auto;
   padding: 0;
-  border: 3px solid blueviolet;
+  border-top: 3px solid blueviolet;
+  border-bottom: 3px solid blueviolet;
   top: calc(
     var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top)
   );
@@ -106,7 +108,9 @@ button {
       )
   );
   position: relative;
-  border: 1px solid red;
+  border-top: 1px solid red;
+  border-bottom: 1px solid red;
+
   overflow: hidden;
 }
 
