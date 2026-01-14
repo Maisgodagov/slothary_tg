@@ -7,7 +7,7 @@ export default function VideoPage() {
   const contentId = params.get("contentId");
 
   return (
-    <PageShell scroll={false} padding={false}>
+    <PageShell scroll={false}>
       <VideoFeed initialContentId={contentId} />
     </PageShell>
   );
