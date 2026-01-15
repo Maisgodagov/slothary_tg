@@ -439,12 +439,18 @@ export default function DictionaryPage() {
     }
   }, []);
 
+  const lastUserIdRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!auth.profile?.id) return;
-    if (dictionary.status === "idle" && dictionary.items.length === 0) {
-      dispatch(fetchDictionary());
+    const userId = auth.profile?.id ?? null;
+    if (!userId) {
+      lastUserIdRef.current = null;
+      return;
     }
-  }, [auth.profile?.id, dictionary.items.length, dictionary.status, dispatch]);
+    if (lastUserIdRef.current === userId) return;
+    lastUserIdRef.current = userId;
+    dispatch(fetchDictionary());
+  }, [auth.profile?.id, dispatch]);
 
   useEffect(() => {
     try {
