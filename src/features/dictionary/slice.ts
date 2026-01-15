@@ -24,13 +24,13 @@ export const fetchDictionary = createAsyncThunk<
 >("dictionary/fetch", async (_, { getState, rejectWithValue }) => {
   const { auth } = getState();
   if (!auth.profile?.id) {
-    return rejectWithValue("Р’РѕР№РґРёС‚Рµ, С‡С‚РѕР±С‹ РІРёРґРµС‚СЊ СЃР»РѕРІР°СЂСЊ");
+    return rejectWithValue("Нужно войти, чтобы открыть словарь.");
   }
   try {
     return await dictionaryApi.getUserDictionary(auth.profile.id);
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃР»РѕРІР°СЂСЊ";
+      error instanceof Error ? error.message : "Не удалось загрузить словарь.";
     return rejectWithValue(message);
   }
 });
@@ -42,13 +42,13 @@ export const addWord = createAsyncThunk<
 >("dictionary/add", async (payload, { getState, rejectWithValue }) => {
   const { auth } = getState();
   if (!auth.profile?.id) {
-    return rejectWithValue("Р’РѕР№РґРёС‚Рµ, С‡С‚РѕР±С‹ СЃРѕС…СЂР°РЅСЏС‚СЊ СЃР»РѕРІР°");
+    return rejectWithValue("Нужно войти, чтобы добавить слово.");
   }
   try {
     return await dictionaryApi.addUserDictionaryEntry(auth.profile.id, payload);
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "РќРµ СѓРґР°Р»РѕСЃСЊ РґРѕР±Р°РІРёС‚СЊ СЃР»РѕРІРѕ";
+      error instanceof Error ? error.message : "Не удалось добавить слово.";
     return rejectWithValue(message);
   }
 });
@@ -58,14 +58,14 @@ export const removeWord = createAsyncThunk<string, string, { state: RootState }>
   async (id, { getState, rejectWithValue }) => {
     const { auth } = getState();
     if (!auth.profile?.id) {
-      return rejectWithValue("Р’РѕР№РґРёС‚Рµ, С‡С‚РѕР±С‹ СѓРґР°Р»СЏС‚СЊ СЃР»РѕРІР°");
+      return rejectWithValue("Нужно войти, чтобы удалить слово.");
     }
     try {
       await dictionaryApi.deleteUserDictionaryEntry(auth.profile.id, id);
       return id;
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ СЃР»РѕРІРѕ";
+        error instanceof Error ? error.message : "Не удалось удалить слово.";
       return rejectWithValue(message);
     }
   }
@@ -90,7 +90,8 @@ const dictionarySlice = createSlice({
       )
       .addCase(fetchDictionary.rejected, (state, action) => {
         state.status = "failed";
-        state.error = (action.payload as string) ?? "РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё СЃР»РѕРІР°СЂСЏ";
+        state.error =
+          (action.payload as string) ?? "Не удалось загрузить словарь.";
       })
       .addCase(addWord.fulfilled, (state, action: PayloadAction<UserDictionaryEntry>) => {
         state.items = [action.payload, ...state.items];

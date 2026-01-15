@@ -1,4 +1,4 @@
-import {
+﻿import {
   useCallback,
   useEffect,
   useRef,
@@ -434,10 +434,22 @@ export default function UserDictionaryPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [examplesOpen, setExamplesOpen] = useState<Record<string, boolean>>({});
+  const [expandedTranslations, setExpandedTranslations] = useState<
+    Record<string, boolean>
+  >({});
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    word: string;
+    translation: string;
+  } | null>(null);
   const [exampleState, setExampleState] = useState<
     Record<
       string,
-      { status: "idle" | "loading" | "ready" | "error"; items: PhraseSnippet[]; error?: string }
+      {
+        status: "idle" | "loading" | "ready" | "error";
+        items: PhraseSnippet[];
+        error?: string;
+      }
     >
   >({});
   const lastUserIdRef = useRef<string | null>(null);
@@ -492,7 +504,7 @@ export default function UserDictionaryPage() {
           [entryId]: {
             status: "error",
             items: [],
-            error: err?.message ?? "Не удалось загрузить примеры",
+            error: err?.message ?? "Не удалось загрузить примеры.",
           },
         }));
       }
@@ -513,6 +525,13 @@ export default function UserDictionaryPage() {
     [exampleState, loadExamples]
   );
 
+  const toggleTranslations = useCallback((entryId: string) => {
+    setExpandedTranslations((prev) => ({
+      ...prev,
+      [entryId]: !prev[entryId],
+    }));
+  }, []);
+
   if (!auth.profile) {
     return (
       <PageShell>
@@ -523,7 +542,7 @@ export default function UserDictionaryPage() {
             textAlign: "center",
           }}
         >
-          Войдите, чтобы увидеть свой словарь.
+          Войдите, чтобы открыть словарь.
         </div>
       </PageShell>
     );
@@ -552,49 +571,178 @@ export default function UserDictionaryPage() {
             status: "idle",
             items: [],
           };
+          const translationsOpen = expandedTranslations[entry.id] ?? false;
+          const otherTranslations = translationsOpen
+            ? entry.otherTranslations
+            : undefined;
 
           return (
-            <WordCard
+            <div
               key={entry.id}
-              word={entry.word}
-              translation={entry.translation}
-              otherTranslations={entry.otherTranslations}
-              showExamplesButton={true}
-              examplesOpen={open}
-              onToggleExamples={() => toggleExamples(entry.id, entry.word)}
-              dictionaryActionLabel="Удалить"
-              onDictionaryAction={() => dispatch(removeWord(entry.id))}
+              style={{
+                position: "relative",
+                overflow: "hidden",
+                borderRadius: 16,
+              }}
             >
-              {open && (
-                <>
-                  {state.status === "loading" && (
-                    <div style={{ display: "grid", placeItems: "center" }}>
-                      <Loader />
-                    </div>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setDeleteTarget({
+                    id: entry.id,
+                    word: entry.word,
+                    translation: entry.translation,
+                  });
+                }}
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: "pointer",
+                  zIndex: 2,
+                }}
+                aria-label="Удалить"
+              >
+                ✕
+              </button>
+              <div
+                style={{
+                  position: "relative",
+                  zIndex: 1,
+                }}
+                onClick={(event) => {
+                  if ((event.target as HTMLElement).closest("button")) return;
+                  toggleTranslations(entry.id);
+                }}
+              >
+                <WordCard
+                  word={entry.word}
+                  translation={entry.translation}
+                  otherTranslations={otherTranslations}
+                  showExamplesButton={true}
+                  examplesOpen={open}
+                  onToggleExamples={() => toggleExamples(entry.id, entry.word)}
+                  dictionaryActionMode="none"
+                  variant="compact"
+                >
+                  {open && (
+                    <>
+                      {state.status === "loading" && (
+                        <div style={{ display: "grid", placeItems: "center" }}>
+                          <Loader />
+                        </div>
+                      )}
+                      {state.status === "error" && (
+                        <div style={{ color: "var(--tg-danger)", fontSize: 13 }}>
+                          {state.error}
+                        </div>
+                      )}
+                      {state.status === "ready" && state.items.length === 0 && (
+                        <div style={{ color: "var(--tg-subtle)", fontSize: 13 }}>
+                          Примеры не найдены.
+                        </div>
+                      )}
+                      {state.items.length > 0 && (
+                        <SnippetCarousel
+                          items={state.items}
+                          highlight={entry.word}
+                          onOpenFullVideo={handleOpenFullVideo}
+                        />
+                      )}
+                    </>
                   )}
-                  {state.status === "error" && (
-                    <div style={{ color: "var(--tg-danger)", fontSize: 13 }}>
-                      {state.error}
-                    </div>
-                  )}
-                  {state.status === "ready" && state.items.length === 0 && (
-                    <div style={{ color: "var(--tg-subtle)", fontSize: 13 }}>
-                      Примеры не найдены.
-                    </div>
-                  )}
-                  {state.items.length > 0 && (
-                    <SnippetCarousel
-                      items={state.items}
-                      highlight={entry.word}
-                      onOpenFullVideo={handleOpenFullVideo}
-                    />
-                  )}
-                </>
-              )}
-            </WordCard>
+                </WordCard>
+              </div>
+            </div>
           );
         })}
       </div>
+
+      {deleteTarget && (
+        <div
+          onClick={() => setDeleteTarget(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "grid",
+            placeItems: "center",
+            zIndex: 50,
+            padding: 16,
+          }}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: "min(360px, 92vw)",
+              background: "var(--tg-surface)",
+              border: "1px solid var(--tg-border)",
+              borderRadius: 16,
+              padding: 16,
+              display: "grid",
+              gap: 12,
+              color: "var(--tg-text)",
+            }}
+          >
+            <div style={{ fontWeight: 700, fontSize: 16 }}>
+              Удалить слово?
+            </div>
+            <div style={{ color: "var(--tg-subtle)", fontSize: 13 }}>
+              {deleteTarget.word} - {deleteTarget.translation}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 8,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                style={{
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                  fontWeight: 600,
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                }}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  dispatch(removeWord(deleteTarget.id));
+                  setDeleteTarget(null);
+                }}
+                style={{
+                  border: "none",
+                  background: "var(--tg-danger)",
+                  color: "#fff",
+                  fontWeight: 700,
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                }}
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageShell>
   );
 }
