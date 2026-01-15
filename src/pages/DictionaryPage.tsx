@@ -457,14 +457,6 @@ export default function DictionaryPage() {
     sliderRef.current?.style.setProperty("--card-width", `${width}px`);
   }, []);
 
-  useEffect(() => {
-    if (!firstCardRef.current) return;
-    updateCardWidth();
-    const observer = new ResizeObserver(() => updateCardWidth());
-    observer.observe(firstCardRef.current);
-    return () => observer.disconnect();
-  }, [items.length, updateCardWidth]);
-
   const handleClear = useCallback(() => {
     setQuery("");
     setVideoQuery("");
@@ -619,7 +611,23 @@ export default function DictionaryPage() {
   }, []);
 
   useEffect(() => {
-    if (!sliderRef.current || cardWidthRef.current === 0) return;
+    if (!examplesOpen || !firstCardRef.current) return;
+    updateCardWidth();
+    const observer = new ResizeObserver(() => updateCardWidth());
+    observer.observe(firstCardRef.current);
+    return () => observer.disconnect();
+  }, [examplesOpen, items.length, updateCardWidth]);
+
+  useEffect(() => {
+    if (!examplesOpen || !sliderRef.current || items.length === 0) return;
+    requestAnimationFrame(() => {
+      updateCardWidth();
+      snapToIndex(Math.min(activeIndex, items.length - 1));
+    });
+  }, [examplesOpen, activeIndex, items.length, snapToIndex, updateCardWidth]);
+
+  useEffect(() => {
+    if (!examplesOpen || !sliderRef.current || cardWidthRef.current === 0) return;
 
     const handleScroll = () => {
       if (!sliderRef.current || cardWidthRef.current === 0) return;
@@ -654,7 +662,7 @@ export default function DictionaryPage() {
     const node = sliderRef.current;
     node.addEventListener("scroll", handleScroll, { passive: true });
     return () => node.removeEventListener("scroll", handleScroll);
-  }, [getCenteredIndex, items.length, snapToIndex]);
+  }, [examplesOpen, getCenteredIndex, items.length, snapToIndex]);
 
   useEffect(() => {
     if (activeIndex >= items.length && items.length > 0) {
