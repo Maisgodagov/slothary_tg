@@ -677,7 +677,6 @@ export default function DictionaryPage() {
 
   const helperText = useMemo(() => {
     if (!hasSearched) return "Введите слово или фразу.";
-    if (status === "loading") return "Ищем совпадения в видео...";
     if (status === "error") return error ?? "Произошла ошибка";
     if (dictStatus === "error") return dictError ?? "Произошла ошибка";
     if (dictStatus === "ready" && dictEntries.length === 0) {
@@ -806,7 +805,7 @@ export default function DictionaryPage() {
           </div>
         )}
 
-        {dictStatus === "loading" && (
+        {(status === "loading" || dictStatus === "loading") && (
           <div style={{ display: "grid", placeItems: "center" }}>
             <Loader />
           </div>
@@ -847,8 +846,8 @@ export default function DictionaryPage() {
                   ).slice(0, 4)
                 : ruTranslationsAll.slice(1, 5);
               const showOther = otherTranslations.length > 0;
-              const showSnippets =
-                showExamples && examplesOpen && items.length > 0;
+              const hasSnippets = items.length > 0;
+              const showSnippets = showExamples && examplesOpen && hasSnippets;
 
               return (
                 <>
@@ -890,7 +889,7 @@ export default function DictionaryPage() {
                       flexWrap: "wrap",
                     }}
                   >
-                    {showExamples && (
+                    {showExamples && hasSnippets && (
                       <button
                         type="button"
                         onClick={() => setExamplesOpen((prev) => !prev)}
@@ -1002,20 +1001,17 @@ export default function DictionaryPage() {
                           color: "var(--tg-subtle)",
                         }}
                       >
-                        {Math.min(activeIndex + 1, total || items.length)}/
-                        {total || items.length}
+                        {Math.min(
+                          activeIndex + 1,
+                          hasMore ? total || items.length : items.length
+                        )}
+                        /{hasMore ? total || items.length : items.length}
                       </div>
                     </>
                   )}
                 </>
               );
             })()}
-          </div>
-        )}
-
-        {status === "loading" && (
-          <div style={{ display: "grid", placeItems: "center" }}>
-            <Loader />
           </div>
         )}
 
