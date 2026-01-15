@@ -18,6 +18,7 @@ import VideoPage from "../pages/VideoPage";
 import ModerationPage from "../pages/ModerationPage";
 import UserAdminPage from "../pages/UserAdminPage";
 import ProfilePage from "../pages/ProfilePage";
+import UserDictionaryPage from "../pages/UserDictionaryPage";
 import { Loader } from "../shared/ui/Loader";
 import "../shared/styles/global.css";
 import { useAppDispatch, useAppSelector } from "./hooks";
@@ -106,6 +107,7 @@ function App() {
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/video" element={<VideoPage />} />
                 <Route path="/dictionary" element={<DictionaryPage />} />
+                <Route path="/user-dictionary" element={<UserDictionaryPage />} />
                 <Route
                   path="/video-dictionary"
                   element={<Navigate to="/dictionary" replace />}

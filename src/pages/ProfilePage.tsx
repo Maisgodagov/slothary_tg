@@ -132,6 +132,16 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          <div style={{ display: "flex", gap: 8 }}>
+            <Button
+              variant="primary"
+              style={{ flex: 1 }}
+              onClick={() => navigate("/user-dictionary")}
+            >
+              Мой словарь
+            </Button>
+          </div>
+
           {role === "admin" && (
             <div style={{ display: "flex", gap: 8 }}>
               <Button

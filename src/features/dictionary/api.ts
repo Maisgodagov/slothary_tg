@@ -4,23 +4,14 @@ export interface UserDictionaryEntry {
   id: string;
   word: string;
   translation: string;
-  transcription?: string;
-  partOfSpeech?: string;
-  audioUrl?: string;
-  sourceLang: string;
-  targetLang: string;
+  otherTranslations?: string[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateUserDictionaryEntry {
-  word: string;
-  translation: string;
-  transcription?: string;
-  partOfSpeech?: string;
-  audioUrl?: string;
-  sourceLang?: string;
-  targetLang?: string;
+  query: string;
+  lang: 'en' | 'ru';
 }
 
 const headersWithUser = (userId?: string | null) => (userId ? { 'x-user-id': userId } : undefined);
