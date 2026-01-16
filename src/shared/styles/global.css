@@ -140,7 +140,8 @@ button {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28);
   }
 
-  .keyboard-open .app-navbar {
+  .keyboard-open .app-navbar,
+  .nav-hidden .app-navbar {
     display: none !important;
   }
 

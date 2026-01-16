@@ -631,6 +631,12 @@ export default function DictionaryPage() {
   }, [dictionary.items, userExpandedTranslationsId]);
 
   useEffect(() => {
+    return () => {
+      document.documentElement.classList.remove("nav-hidden");
+    };
+  }, []);
+
+  useEffect(() => {
     try {
       const payload = {
         query,
@@ -1075,8 +1081,12 @@ export default function DictionaryPage() {
                 }}
                 onFocus={() => {
                   if (searchHistory.length > 0) setHistoryOpen(true);
+                  document.documentElement.classList.add("nav-hidden");
                 }}
-                onBlur={() => setHistoryOpen(false)}
+                onBlur={() => {
+                  setHistoryOpen(false);
+                  document.documentElement.classList.remove("nav-hidden");
+                }}
               />
               {query.trim().length > 0 && (
                 <button
