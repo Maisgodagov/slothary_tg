@@ -520,12 +520,12 @@ export default function DictionaryPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [userExamplesOpen, setUserExamplesOpen] = useState<Record<string, boolean>>(
-    {}
+  const [userExamplesOpenId, setUserExamplesOpenId] = useState<string | null>(
+    null
   );
-  const [userExpandedTranslations, setUserExpandedTranslations] = useState<
-    Record<string, boolean>
-  >({});
+  const [userExpandedTranslationsId, setUserExpandedTranslationsId] = useState<
+    string | null
+  >(null);
   const [userExampleState, setUserExampleState] = useState<
     Record<
       string,
@@ -926,22 +926,20 @@ export default function DictionaryPage() {
 
   const toggleUserExamples = useCallback(
     (entryId: string, phrase: string) => {
-      setUserExamplesOpen((prev) => {
-        const nextValue = !prev[entryId];
+      setUserExamplesOpenId((prev) => {
+        const nextValue = prev === entryId ? null : entryId;
         if (nextValue && userExampleState[entryId]?.status !== "ready") {
           loadUserExamples(entryId, phrase);
         }
-        return { ...prev, [entryId]: nextValue };
+        return nextValue;
       });
     },
     [loadUserExamples, userExampleState]
   );
 
   const toggleUserTranslations = useCallback((entryId: string) => {
-    setUserExpandedTranslations((prev) => ({
-      ...prev,
-      [entryId]: !prev[entryId],
-    }));
+    setUserExpandedTranslationsId((prev) => (prev === entryId ? null : entryId));
+    setUserExamplesOpenId(null);
   }, []);
 
   return (
@@ -1203,12 +1201,12 @@ export default function DictionaryPage() {
               Мой словарь
             </div>
             {dictionary.items.map((entry) => {
-              const open = userExamplesOpen[entry.id] ?? false;
+              const open = userExamplesOpenId === entry.id;
               const state = userExampleState[entry.id] ?? {
                 status: "idle",
                 items: [],
               };
-                const expanded = userExpandedTranslations[entry.id] ?? false;
+                const expanded = userExpandedTranslationsId === entry.id;
                 const otherTranslations = expanded
                   ? entry.otherTranslations
                   : undefined;
