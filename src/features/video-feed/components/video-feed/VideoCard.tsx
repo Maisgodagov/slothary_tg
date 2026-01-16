@@ -325,14 +325,11 @@ export function VideoCard({
     }));
   }, [enSub]);
 
-  const handleSubtitleWordClick = async (
-    word: string,
-    rect: DOMRect
-  ) => {
+  const handleSubtitleWordClick = async (word: string, rect: DOMRect) => {
     const normalized = word.toLowerCase();
     const viewportWidth = window.innerWidth || 0;
     const viewportHeight = window.innerHeight || 0;
-    const minWidth = 160;
+    // const minWidth = 160;
     const popoverWidth = Math.min(280, viewportWidth * 0.88);
     const margin = 12;
     const centeredLeft = rect.left + rect.width / 2;
@@ -343,7 +340,10 @@ export function VideoCard({
     const estimatedHeight = 200;
     let placement: "top" | "bottom" = "top";
     if (rect.top < estimatedHeight + margin) placement = "bottom";
-    if (placement === "bottom" && rect.bottom + estimatedHeight + margin > viewportHeight) {
+    if (
+      placement === "bottom" &&
+      rect.bottom + estimatedHeight + margin > viewportHeight
+    ) {
       placement = "top";
     }
     const top = placement === "top" ? rect.top - 8 : rect.bottom + 8;
@@ -367,11 +367,11 @@ export function VideoCard({
         entry: entries[0],
       });
     } catch (err: any) {
-        setSubtitleLookup({
-          word: normalized,
-          status: "error",
-          error: err?.message ?? "Не удалось загрузить перевод.",
-        });
+      setSubtitleLookup({
+        word: normalized,
+        status: "error",
+        error: err?.message ?? "Не удалось загрузить перевод.",
+      });
     }
   };
 
@@ -723,49 +723,49 @@ export function VideoCard({
       {!showSpinner && (
         <S.Subtitles $withSheet={showExercises}>
           {subtitlesVisible && (
-              <div
-                style={{
-                  display: "grid",
-                  gap: 3,
-                  marginBottom: 4,
-                  pointerEvents: "auto",
-                }}
-              >
+            <div
+              style={{
+                display: "grid",
+                gap: 3,
+                marginBottom: 4,
+                pointerEvents: "auto",
+              }}
+            >
               {contentState.loading && (
                 <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
               )}
               {enSub && (
-                  <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 18 }}>
-                    {englishTokens.map((token) =>
-                      token.isWord ? (
-                        <button
-                          key={token.key}
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            const rect = (
-                              event.currentTarget as HTMLElement
-                            ).getBoundingClientRect();
-                            handleSubtitleWordClick(token.value, rect);
-                          }}
-                          style={{
-                            border: "none",
-                            background: "transparent",
-                            padding: 0,
-                            margin: 0,
-                            color: "inherit",
-                            font: "inherit",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {token.value}
-                        </button>
-                      ) : (
-                        <span key={token.key}>{token.value}</span>
-                      )
-                    )}
-                  </S.SubtitleLine>
-                )}
+                <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 18 }}>
+                  {englishTokens.map((token) =>
+                    token.isWord ? (
+                      <button
+                        key={token.key}
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          const rect = (
+                            event.currentTarget as HTMLElement
+                          ).getBoundingClientRect();
+                          handleSubtitleWordClick(token.value, rect);
+                        }}
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          padding: 0,
+                          margin: 0,
+                          color: "inherit",
+                          font: "inherit",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {token.value}
+                      </button>
+                    ) : (
+                      <span key={token.key}>{token.value}</span>
+                    )
+                  )}
+                </S.SubtitleLine>
+              )}
               {!showExercises && ruSub && (
                 <S.SubtitleLine $secondary>{ruSub}</S.SubtitleLine>
               )}
@@ -798,13 +798,13 @@ export function VideoCard({
               subtitlePopover.placement === "top"
                 ? "translate(-50%, -100%)"
                 : "translate(-50%, 0)",
-              zIndex: 10000,
-              width: "max-content",
-              maxWidth: `${subtitlePopover.width}px`,
-              minWidth: "160px",
-              pointerEvents: "auto",
-              fontFamily: "inherit",
-            }}
+            zIndex: 10000,
+            width: "max-content",
+            maxWidth: `${subtitlePopover.width}px`,
+            minWidth: "160px",
+            pointerEvents: "auto",
+            fontFamily: "inherit",
+          }}
           onClick={(event) => event.stopPropagation()}
         >
           {subtitleLookup?.status === "loading" && (
@@ -835,56 +835,59 @@ export function VideoCard({
               {subtitleLookup.error}
             </div>
           )}
-          {subtitleLookup?.status === "ready" && subtitleLookup.entry && (() => {
-            const entry = subtitleLookup.entry;
-            const translation =
-              entry.translations.find((value) => value.trim().length > 0) ?? "";
-            const otherTranslations = entry.translations
-              .filter((value) => value && value !== translation)
-              .slice(0, 4);
-            const normalizedWord = entry.word.toLowerCase();
-            const normalizedTranslation = translation.toLowerCase();
-            const existingEntry = dictionary.items.find(
-              (item) =>
-                item.word.toLowerCase() === normalizedWord &&
-                item.translation.toLowerCase() === normalizedTranslation
-            );
-            const isInDictionary = Boolean(existingEntry);
+          {subtitleLookup?.status === "ready" &&
+            subtitleLookup.entry &&
+            (() => {
+              const entry = subtitleLookup.entry;
+              const translation =
+                entry.translations.find((value) => value.trim().length > 0) ??
+                "";
+              const otherTranslations = entry.translations
+                .filter((value) => value && value !== translation)
+                .slice(0, 4);
+              const normalizedWord = entry.word.toLowerCase();
+              const normalizedTranslation = translation.toLowerCase();
+              const existingEntry = dictionary.items.find(
+                (item) =>
+                  item.word.toLowerCase() === normalizedWord &&
+                  item.translation.toLowerCase() === normalizedTranslation
+              );
+              const isInDictionary = Boolean(existingEntry);
               const dictionaryActionLabel = isInDictionary
                 ? "В словаре"
                 : "+ В словарь";
 
-            return (
-              <WordCard
-                word={entry.word}
-                translation={translation}
-                otherTranslationsRu={otherTranslations}
-                showExamplesButton={false}
-                examplesOpen={false}
-                onToggleExamples={() => undefined}
-                dictionaryActionLabel={dictionaryActionLabel}
-                dictionaryActionMode={isInDictionary ? "tag" : "button"}
-                dictionaryActionDisabled={isInDictionary}
-                onDictionaryAction={() => {
-                  if (!auth.profile?.id) return;
-                  if (isInDictionary && existingEntry) {
-                    dispatch(removeWord(existingEntry.id));
-                    return;
-                  }
-                  dispatch(
-                    addWord({
-                      query: normalizedWord,
-                      lang: "en",
-                      word: entry.word,
-                      translation,
-                    })
-                  );
-                }}
-                variant="compact"
-                size="subtitle"
-              />
-            );
-          })()}
+              return (
+                <WordCard
+                  word={entry.word}
+                  translation={translation}
+                  otherTranslationsRu={otherTranslations}
+                  showExamplesButton={false}
+                  examplesOpen={false}
+                  onToggleExamples={() => undefined}
+                  dictionaryActionLabel={dictionaryActionLabel}
+                  dictionaryActionMode={isInDictionary ? "tag" : "button"}
+                  dictionaryActionDisabled={isInDictionary}
+                  onDictionaryAction={() => {
+                    if (!auth.profile?.id) return;
+                    if (isInDictionary && existingEntry) {
+                      dispatch(removeWord(existingEntry.id));
+                      return;
+                    }
+                    dispatch(
+                      addWord({
+                        query: normalizedWord,
+                        lang: "en",
+                        word: entry.word,
+                        translation,
+                      })
+                    );
+                  }}
+                  variant="compact"
+                  size="subtitle"
+                />
+              );
+            })()}
         </div>
       )}
 
