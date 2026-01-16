@@ -141,7 +141,7 @@ button {
   }
 
   .keyboard-open .app-navbar {
-    display: none;
+    display: none !important;
   }
 
 .section-header {
