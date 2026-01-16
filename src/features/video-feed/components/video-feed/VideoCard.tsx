@@ -1,6 +1,12 @@
-﻿import { useEffect, useRef, useState } from "react";
-import { useAppSelector } from "../../../../app/hooks";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 import { selectAuth } from "../../../auth/slice";
+import {
+  addWord,
+  removeWord,
+  selectDictionary,
+} from "../../../dictionary/slice";
+import { muellerApi, type MuellerEntry } from "../../../mueller/api";
 import { wordIdsFromSubtitles } from "../../../exercises/lib/wordIds";
 import { exercisesApi, type ExerciseItem } from "../../../exercises/api";
 import type { SpeechSpeedFilter } from "../../slice";
@@ -9,6 +15,7 @@ import type { VideoCardProps } from "./types";
 import * as S from "./styles";
 import { Icon } from "../../../../shared/ui/Icon";
 import { Loader } from "../../../../shared/ui/Loader";
+import { WordCard } from "../../../dictionary/components/WordCard";
 
 export function VideoCard({
   item,
@@ -55,6 +62,18 @@ export function VideoCard({
     null
   );
   const [authorModal, setAuthorModal] = useState<string | null>(null);
+  const [subtitleLookup, setSubtitleLookup] = useState<{
+    word: string;
+    status: "idle" | "loading" | "ready" | "error";
+    entry?: MuellerEntry;
+    error?: string;
+  } | null>(null);
+  const [subtitlePopover, setSubtitlePopover] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    placement: "top" | "bottom";
+  } | null>(null);
   const [localTranscription, setLocalTranscription] = useState(
     content?.transcription?.chunks ?? []
   );
@@ -63,11 +82,15 @@ export function VideoCard({
   );
   const wordChunks = content?.transcription?.wordChunks ?? [];
   const auth = useAppSelector(selectAuth);
+  const dictionary = useAppSelector(selectDictionary);
+  const dispatch = useAppDispatch();
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const tapTimeoutRef = useRef<number | null>(null);
   const exercisesRequested = useRef(false);
+  const subtitleWasPlayingRef = useRef(false);
+  const subtitleForcePlayRef = useRef(false);
   const resolveUserId = () => {
     if (auth.profile?.id) return auth.profile.id;
     try {
@@ -201,6 +224,7 @@ export function VideoCard({
   };
 
   const handleTap = () => {
+    if (subtitlePopover) return;
     if (showExercises) {
       setShowExercises(false);
       return;
@@ -234,6 +258,123 @@ export function VideoCard({
   };
 
   const subtitlesVisible = enSub || ruSub || contentState.loading;
+
+  useEffect(() => {
+    setSubtitleLookup(null);
+    setSubtitlePopover(null);
+  }, [enSub, ruSub]);
+
+  useEffect(() => {
+    setSubtitlePopover(null);
+    setSubtitleLookup(null);
+    subtitleWasPlayingRef.current = false;
+    subtitleForcePlayRef.current = false;
+  }, [item.id]);
+
+  useEffect(() => {
+    if (subtitlePopover) return;
+    const shouldResume = subtitleWasPlayingRef.current;
+    const forcePlay = subtitleForcePlayRef.current;
+    subtitleWasPlayingRef.current = false;
+    subtitleForcePlayRef.current = false;
+    if (!shouldResume && !forcePlay) return;
+    const video = videoRef.current;
+    if (video && video.paused) {
+      video.play().catch(() => undefined);
+    }
+  }, [subtitlePopover]);
+
+  useEffect(() => {
+    if (!subtitlePopover) return;
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest("[data-subtitle-popover]")) return;
+      const video = videoRef.current;
+      if (video && target.closest("video")) {
+        subtitleForcePlayRef.current = true;
+      }
+      setSubtitlePopover(null);
+      setSubtitleLookup(null);
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [subtitlePopover]);
+
+  useEffect(() => {
+    if (!subtitlePopover) return;
+    const handleScroll = () => {
+      setSubtitlePopover(null);
+      setSubtitleLookup(null);
+    };
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("touchmove", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("touchmove", handleScroll);
+    };
+  }, [subtitlePopover]);
+
+  const englishTokens = useMemo(() => {
+    if (!enSub) return [];
+    const parts = enSub.match(/([A-Za-z']+|[^A-Za-z']+)/g) ?? [];
+    return parts.map((part, index) => ({
+      value: part,
+      isWord: /^[A-Za-z']+$/.test(part),
+      key: `${part}-${index}`,
+    }));
+  }, [enSub]);
+
+  const handleSubtitleWordClick = async (
+    word: string,
+    rect: DOMRect
+  ) => {
+    const normalized = word.toLowerCase();
+    const viewportWidth = window.innerWidth || 0;
+    const viewportHeight = window.innerHeight || 0;
+    const minWidth = 160;
+    const popoverWidth = Math.min(280, viewportWidth * 0.88);
+    const margin = 12;
+    const centeredLeft = rect.left + rect.width / 2;
+    const clampedLeft = Math.min(
+      viewportWidth - margin - popoverWidth / 2,
+      Math.max(margin + popoverWidth / 2, centeredLeft)
+    );
+    const estimatedHeight = 200;
+    let placement: "top" | "bottom" = "top";
+    if (rect.top < estimatedHeight + margin) placement = "bottom";
+    if (placement === "bottom" && rect.bottom + estimatedHeight + margin > viewportHeight) {
+      placement = "top";
+    }
+    const top = placement === "top" ? rect.top - 8 : rect.bottom + 8;
+    const video = videoRef.current;
+    if (video && !video.paused) {
+      subtitleWasPlayingRef.current = true;
+      video.pause();
+    }
+    setSubtitlePopover({
+      top,
+      left: clampedLeft,
+      width: popoverWidth,
+      placement,
+    });
+    setSubtitleLookup({ word: normalized, status: "loading" });
+    try {
+      const entries = await muellerApi.lookup({ word: normalized, lang: "en" });
+      setSubtitleLookup({
+        word: normalized,
+        status: "ready",
+        entry: entries[0],
+      });
+    } catch (err: any) {
+        setSubtitleLookup({
+          word: normalized,
+          status: "error",
+          error: err?.message ?? "Не удалось загрузить перевод.",
+        });
+    }
+  };
+
   const likesCount = item.likesCount ?? content?.likesCount ?? 0;
 
   const contentAnalysis = content?.analysis ?? item.analysis;
@@ -582,22 +723,49 @@ export function VideoCard({
       {!showSpinner && (
         <S.Subtitles $withSheet={showExercises}>
           {subtitlesVisible && (
-            <div
-              style={{
-                display: "grid",
-                gap: 3,
-                marginBottom: 4,
-                pointerEvents: "none",
-              }}
-            >
+              <div
+                style={{
+                  display: "grid",
+                  gap: 3,
+                  marginBottom: 4,
+                  pointerEvents: "auto",
+                }}
+              >
               {contentState.loading && (
                 <S.SubtitleLoading>Загружаем субтитры...</S.SubtitleLoading>
               )}
               {enSub && (
-                <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 18 }}>
-                  {enSub}
-                </S.SubtitleLine>
-              )}
+                  <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 18 }}>
+                    {englishTokens.map((token) =>
+                      token.isWord ? (
+                        <button
+                          key={token.key}
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            const rect = (
+                              event.currentTarget as HTMLElement
+                            ).getBoundingClientRect();
+                            handleSubtitleWordClick(token.value, rect);
+                          }}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            padding: 0,
+                            margin: 0,
+                            color: "inherit",
+                            font: "inherit",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {token.value}
+                        </button>
+                      ) : (
+                        <span key={token.key}>{token.value}</span>
+                      )
+                    )}
+                  </S.SubtitleLine>
+                )}
               {!showExercises && ruSub && (
                 <S.SubtitleLine $secondary>{ruSub}</S.SubtitleLine>
               )}
@@ -617,6 +785,107 @@ export function VideoCard({
             </S.EditSubtitleButton>
           )}
         </S.Subtitles>
+      )}
+
+      {subtitlePopover && (
+        <div
+          data-subtitle-popover
+          style={{
+            position: "fixed",
+            left: subtitlePopover.left,
+            top: subtitlePopover.top,
+            transform:
+              subtitlePopover.placement === "top"
+                ? "translate(-50%, -100%)"
+                : "translate(-50%, 0)",
+              zIndex: 10000,
+              width: "max-content",
+              maxWidth: `${subtitlePopover.width}px`,
+              minWidth: "160px",
+              pointerEvents: "auto",
+              fontFamily: "inherit",
+            }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {subtitleLookup?.status === "loading" && (
+            <div
+              style={{
+                background: "var(--tg-surface)",
+                border: "1px solid var(--tg-border)",
+                borderRadius: 14,
+                padding: 12,
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              <Loader />
+            </div>
+          )}
+          {subtitleLookup?.status === "error" && (
+            <div
+              style={{
+                background: "var(--tg-surface)",
+                border: "1px solid var(--tg-border)",
+                borderRadius: 14,
+                padding: 12,
+                color: "var(--tg-danger)",
+                fontSize: 13,
+              }}
+            >
+              {subtitleLookup.error}
+            </div>
+          )}
+          {subtitleLookup?.status === "ready" && subtitleLookup.entry && (() => {
+            const entry = subtitleLookup.entry;
+            const translation =
+              entry.translations.find((value) => value.trim().length > 0) ?? "";
+            const otherTranslations = entry.translations
+              .filter((value) => value && value !== translation)
+              .slice(0, 4);
+            const normalizedWord = entry.word.toLowerCase();
+            const normalizedTranslation = translation.toLowerCase();
+            const existingEntry = dictionary.items.find(
+              (item) =>
+                item.word.toLowerCase() === normalizedWord &&
+                item.translation.toLowerCase() === normalizedTranslation
+            );
+            const isInDictionary = Boolean(existingEntry);
+              const dictionaryActionLabel = isInDictionary
+                ? "В словаре"
+                : "+ В словарь";
+
+            return (
+              <WordCard
+                word={entry.word}
+                translation={translation}
+                otherTranslationsRu={otherTranslations}
+                showExamplesButton={false}
+                examplesOpen={false}
+                onToggleExamples={() => undefined}
+                dictionaryActionLabel={dictionaryActionLabel}
+                dictionaryActionMode={isInDictionary ? "tag" : "button"}
+                dictionaryActionDisabled={isInDictionary}
+                onDictionaryAction={() => {
+                  if (!auth.profile?.id) return;
+                  if (isInDictionary && existingEntry) {
+                    dispatch(removeWord(existingEntry.id));
+                    return;
+                  }
+                  dispatch(
+                    addWord({
+                      query: normalizedWord,
+                      lang: "en",
+                      word: entry.word,
+                      translation,
+                    })
+                  );
+                }}
+                variant="compact"
+                size="subtitle"
+              />
+            );
+          })()}
+        </div>
       )}
 
       {isActive && !showExercises && !showSpinner && (

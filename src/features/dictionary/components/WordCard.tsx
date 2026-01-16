@@ -8,6 +8,7 @@ type WordCardProps = {
   otherTranslationsRu?: string[];
   synonyms?: string[];
   onSynonymClick?: (value: string) => void;
+  size?: "default" | "subtitle";
   showExamplesButton: boolean;
   examplesOpen: boolean;
   onToggleExamples: () => void;
@@ -25,6 +26,7 @@ export function WordCard({
   otherTranslationsRu,
   synonyms,
   onSynonymClick,
+  size = "default",
   showExamplesButton,
   examplesOpen,
   onToggleExamples,
@@ -40,9 +42,20 @@ export function WordCard({
   );
   const showSynonyms = Boolean(synonyms && synonyms.length > 0);
   const isCompact = variant === "compact";
+  const isSubtitle = size === "subtitle";
   const showDictionaryAction =
     dictionaryActionMode !== "none" && Boolean(dictionaryActionLabel);
   const displayWord = word.toLowerCase();
+
+  const wordFontSize = isSubtitle ? 16 : isCompact ? 18 : 28;
+  const metaFontSize = isSubtitle ? 12 : isCompact ? 13 : 14;
+  const buttonFontSize = isSubtitle ? 12 : isCompact ? 12 : 14;
+  const actionsJustify =
+    isSubtitle && !showExamplesButton
+      ? "flex-end"
+      : isCompact
+      ? "flex-start"
+      : "space-between";
 
   return (
     <div
@@ -52,22 +65,22 @@ export function WordCard({
         borderRadius: 16,
         padding: 16,
         display: "grid",
-        gap: isCompact ? 10 : 14,
+        gap: isSubtitle ? 8 : isCompact ? 10 : 14,
       }}
     >
       <div
         style={{
           display: "grid",
-          gap: isCompact ? 8 : 12,
+          gap: isSubtitle ? 6 : isCompact ? 8 : 12,
           textAlign: "left",
           color: "var(--tg-text)",
         }}
       >
         <div
           style={{
-            fontSize: isCompact ? 18 : 28,
+            fontSize: wordFontSize,
             fontWeight: 800,
-            lineHeight: 1.25,
+            lineHeight: isSubtitle ? 1.2 : 1.25,
           }}
         >
           <span>{displayWord}</span>
@@ -78,18 +91,17 @@ export function WordCard({
         {showOtherTranslations && (
           <div
             style={{
-              fontSize: isCompact ? 13 : 14,
+              fontSize: metaFontSize,
               color: "var(--tg-subtle)",
             }}
           >
-            <span style={{ fontWeight: 700 }}>др. переводы:</span>{" "}
             {otherTranslationsRu!.join(", ")}
           </div>
         )}
         {showSynonyms && (
           <div
             style={{
-              fontSize: isCompact ? 13 : 14,
+              fontSize: metaFontSize,
               color: "var(--tg-subtle)",
             }}
           >
@@ -127,7 +139,7 @@ export function WordCard({
         style={{
           display: "flex",
           gap: isCompact ? 10 : 14,
-          justifyContent: isCompact ? "flex-start" : "space-between",
+          justifyContent: actionsJustify,
           alignItems: "center",
           flexWrap: "wrap",
           width: "100%",
@@ -142,7 +154,7 @@ export function WordCard({
               background: "var(--tg-card)",
               color: "var(--tg-text)",
               fontWeight: 700,
-              fontSize: isCompact ? 12 : 14,
+              fontSize: buttonFontSize,
               borderRadius: 999,
               padding: isCompact ? "6px 12px" : "8px 14px",
               display: "inline-flex",
@@ -170,7 +182,7 @@ export function WordCard({
                 background: "var(--tg-card)",
                 color: "var(--tg-text)",
                 fontWeight: 700,
-                fontSize: isCompact ? 12 : 14,
+                fontSize: buttonFontSize,
                 borderRadius: 999,
                 padding: isCompact ? "6px 12px" : "8px 14px",
                 display: "inline-flex",
@@ -191,7 +203,7 @@ export function WordCard({
                 background: "var(--tg-card)",
                 color: "var(--tg-text)",
                 fontWeight: 700,
-                fontSize: isCompact ? 12 : 14,
+                fontSize: buttonFontSize,
                 borderRadius: 999,
                 padding: isCompact ? "6px 12px" : "8px 14px",
                 display: "inline-flex",
