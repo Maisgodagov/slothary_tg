@@ -572,9 +572,9 @@ export default function UserDictionaryPage() {
             items: [],
           };
           const translationsOpen = expandedTranslations[entry.id] ?? false;
-          const otherTranslations = translationsOpen
-            ? entry.otherTranslations
-            : undefined;
+            const otherTranslations = translationsOpen
+              ? entry.otherTranslations
+              : undefined;
 
           return (
             <div
@@ -624,15 +624,15 @@ export default function UserDictionaryPage() {
                   toggleTranslations(entry.id);
                 }}
               >
-                <WordCard
-                  word={entry.word}
-                  translation={entry.translation}
-                  otherTranslations={otherTranslations}
-                  showExamplesButton={true}
-                  examplesOpen={open}
-                  onToggleExamples={() => toggleExamples(entry.id, entry.word)}
-                  dictionaryActionMode="none"
-                  variant="compact"
+                  <WordCard
+                    word={entry.word}
+                    translation={entry.translation}
+                    otherTranslationsRu={otherTranslations}
+                    showExamplesButton={true}
+                    examplesOpen={open}
+                    onToggleExamples={() => toggleExamples(entry.id, entry.word)}
+                    dictionaryActionMode="none"
+                    variant="compact"
                 >
                   {open && (
                     <>

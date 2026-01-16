@@ -5,7 +5,8 @@ import { Icon } from "../../../shared/ui/Icon";
 type WordCardProps = {
   word: string;
   translation: string;
-  otherTranslations?: string[];
+  otherTranslationsRu?: string[];
+  synonyms?: string[];
   showExamplesButton: boolean;
   examplesOpen: boolean;
   onToggleExamples: () => void;
@@ -20,7 +21,8 @@ type WordCardProps = {
 export function WordCard({
   word,
   translation,
-  otherTranslations,
+  otherTranslationsRu,
+  synonyms,
   showExamplesButton,
   examplesOpen,
   onToggleExamples,
@@ -31,7 +33,10 @@ export function WordCard({
   variant = "default",
   children,
 }: WordCardProps) {
-  const showOther = Boolean(otherTranslations && otherTranslations.length > 0);
+  const showOtherTranslations = Boolean(
+    otherTranslationsRu && otherTranslationsRu.length > 0
+  );
+  const showSynonyms = Boolean(synonyms && synonyms.length > 0);
   const isCompact = variant === "compact";
   const showDictionaryAction =
     dictionaryActionMode !== "none" && Boolean(dictionaryActionLabel);
@@ -67,14 +72,24 @@ export function WordCard({
             <span style={{ fontWeight: 400 }}> - {translation}</span>
           )}
         </div>
-        {showOther && (
+        {showOtherTranslations && (
           <div
             style={{
               fontSize: isCompact ? 12 : 13,
               color: "var(--tg-subtle)",
             }}
           >
-            др. переводы: {otherTranslations!.join(", ")}
+            др. переводы: {otherTranslationsRu!.join(", ")}
+          </div>
+        )}
+        {showSynonyms && (
+          <div
+            style={{
+              fontSize: isCompact ? 12 : 13,
+              color: "var(--tg-subtle)",
+            }}
+          >
+            синонимы: {synonyms!.join(", ")}
           </div>
         )}
       </div>

@@ -5,6 +5,7 @@ export type MuellerEntry = {
   word: string;
   partOfSpeech: string | null;
   translations: string[];
+  synonyms?: string[];
 };
 
 type LookupParams = {

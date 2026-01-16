@@ -111,20 +111,6 @@ const mergeSnippets = (base: PhraseSnippet[], next: PhraseSnippet[]) => {
 
 const detectLanguage = (value: string) => /[а-яё]/i.test(value);
 
-const uniqueTranslations = (entries: MuellerEntry[], limit = 10) => {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  entries.forEach((entry) => {
-    entry.translations.forEach((item) => {
-      const trimmed = item.trim();
-      if (!trimmed || seen.has(trimmed)) return;
-      seen.add(trimmed);
-      result.push(trimmed);
-    });
-  });
-  return result.slice(0, limit);
-};
-
 const filterPureTranslations = (list: string[]) =>
   list.filter((value) => !/[a-z]/i.test(value));
 
@@ -1059,24 +1045,21 @@ export default function DictionaryPage() {
             const isRuQuery = detectLanguage(query);
             const primaryEntry = dictEntries[0];
             const ruTranslationsAll = filterPureTranslations(
-              uniqueTranslations(dictEntries, 10)
+              primaryEntry?.translations ?? []
             );
             const primaryEnglish = primaryEntry?.word?.trim() || query.trim();
             const primaryRussian = isRuQuery
               ? query.trim()
               : ruTranslationsAll[0] ?? "";
-            const otherTranslations = isRuQuery
-              ? Array.from(
-                  new Set(
-                    dictEntries
-                      .map((entry) => entry.word?.trim())
-                      .filter(
-                        (word): word is string =>
-                          Boolean(word) && word !== primaryEnglish
-                      )
-                  )
-                ).slice(0, 4)
-              : ruTranslationsAll.slice(1, 5);
+            const otherTranslationsRu = ruTranslationsAll
+              .filter((value) => value && value !== primaryRussian)
+              .slice(0, 4);
+            const synonymsAll = (primaryEntry?.synonyms ?? []).filter(
+              (value) => value && /[a-z]/i.test(value)
+            );
+            const synonyms = synonymsAll
+              .filter((value) => value !== primaryEnglish)
+              .slice(0, 4);
             const hasSnippets = items.length > 0;
             const showSnippets = showExamples && examplesOpen && hasSnippets;
             const normalizedWord = primaryEnglish.toLowerCase();
@@ -1095,7 +1078,8 @@ export default function DictionaryPage() {
               <WordCard
                 word={primaryEnglish}
                 translation={primaryRussian}
-                otherTranslations={otherTranslations}
+                otherTranslationsRu={otherTranslationsRu}
+                synonyms={synonyms}
                 showExamplesButton={showExamples && hasSnippets}
                 examplesOpen={examplesOpen}
                 onToggleExamples={() => setExamplesOpen((prev) => !prev)}
@@ -1206,10 +1190,21 @@ export default function DictionaryPage() {
                 status: "idle",
                 items: [],
               };
-                const expanded = userExpandedTranslationsId === entry.id;
-                const otherTranslations = expanded
-                  ? entry.otherTranslations
-                  : undefined;
+              const expanded = userExpandedTranslationsId === entry.id;
+              const otherTranslations = expanded
+                ? entry.otherTranslations
+                : undefined;
+              const hasRuTranslations =
+                expanded &&
+                Boolean(
+                  otherTranslations?.some((value) => detectLanguage(value))
+                );
+              const otherTranslationsRu = hasRuTranslations
+                ? otherTranslations
+                : undefined;
+              const synonyms = expanded && !hasRuTranslations
+                ? otherTranslations
+                : undefined;
 
               return (
                 <div key={entry.id} style={{ position: "relative" }}>
@@ -1254,7 +1249,8 @@ export default function DictionaryPage() {
                     <WordCard
                       word={entry.word}
                       translation={entry.translation}
-                      otherTranslations={otherTranslations}
+                      otherTranslationsRu={otherTranslationsRu}
+                      synonyms={synonyms}
                       showExamplesButton={expanded}
                       examplesOpen={open}
                       onToggleExamples={() =>
