@@ -993,9 +993,9 @@ export default function DictionaryPage() {
               </button>
             )}
           </div>
-          <button
-            onClick={handleSearch}
-            disabled={status === "loading"}
+            <button
+              onClick={() => handleSearch()}
+              disabled={status === "loading"}
             style={{
               width: 44,
               height: 44,
