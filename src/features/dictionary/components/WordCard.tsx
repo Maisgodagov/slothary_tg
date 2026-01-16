@@ -56,7 +56,7 @@ export function WordCard({
         style={{
           display: "grid",
           gap: 8,
-          textAlign: isCompact ? "left" : "center",
+          textAlign: "left",
           color: "var(--tg-text)",
         }}
       >
@@ -79,7 +79,8 @@ export function WordCard({
               color: "var(--tg-subtle)",
             }}
           >
-            др. переводы: {otherTranslationsRu!.join(", ")}
+            <span style={{ fontWeight: 700 }}>др. переводы:</span>{" "}
+            {otherTranslationsRu!.join(", ")}
           </div>
         )}
         {showSynonyms && (
@@ -89,7 +90,8 @@ export function WordCard({
               color: "var(--tg-subtle)",
             }}
           >
-            синонимы: {synonyms!.join(", ")}
+            <span style={{ fontWeight: 700 }}>синонимы:</span>{" "}
+            {synonyms!.join(", ")}
           </div>
         )}
       </div>
@@ -98,7 +100,7 @@ export function WordCard({
         style={{
           display: "flex",
           gap: 10,
-          justifyContent: isCompact ? "flex-start" : "space-between",
+          justifyContent: "flex-start",
           alignItems: "center",
           flexWrap: "wrap",
         }}

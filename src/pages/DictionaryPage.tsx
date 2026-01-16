@@ -850,7 +850,7 @@ export default function DictionaryPage() {
     if (dictStatus === "ready" && dictEntries.length === 0) {
       return "Перевод не найден. Попробуйте другой запрос.";
     }
-    if (status === "ready" && items.length === 0)
+    if (status === "ready" && items.length === 0 && dictEntries.length === 0)
       return "Ничего не найдено. Попробуйте другой запрос.";
     return null;
   }, [
@@ -912,6 +912,7 @@ export default function DictionaryPage() {
 
   const toggleUserExamples = useCallback(
     (entryId: string, phrase: string) => {
+      setExamplesOpen(false);
       setUserExamplesOpenId((prev) => {
         const nextValue = prev === entryId ? null : entryId;
         if (nextValue && userExampleState[entryId]?.status !== "ready") {
@@ -938,88 +939,79 @@ export default function DictionaryPage() {
           justifyItems: "stretch",
           paddingRight: 12,
           paddingLeft: 12,
+          paddingBottom: 60,
         }}
       >
         <div
           style={{
-            background: "var(--tg-surface)",
-            border: "1px solid var(--tg-border)",
-            borderRadius: 18,
-            padding: 16,
             display: "grid",
-            gap: 12,
+            gap: 10,
+            gridTemplateColumns: "1fr auto",
+            alignItems: "center",
           }}
         >
-          <div
-            style={{
-              display: "grid",
-              gap: 10,
-              gridTemplateColumns: "1fr auto",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ position: "relative" }}>
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Введите слово или фразу"
-                style={{
-                  width: "100%",
-                  borderRadius: 12,
-                  border: "1px solid var(--tg-border)",
-                  padding: "10px 36px 10px 12px",
-                  background: "var(--tg-card)",
-                  color: "var(--tg-text)",
-                  fontSize: 14,
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") handleSearch();
-                }}
-              />
-              {query.trim().length > 0 && (
-                <button
-                  onClick={handleClear}
-                  style={{
-                    position: "absolute",
-                    right: 8,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    width: 24,
-                    height: 24,
-                    borderRadius: "50%",
-                    border: "none",
-                    background: "transparent",
-                    color: "var(--tg-subtle)",
-                    display: "grid",
-                    placeItems: "center",
-                    cursor: "pointer",
-                  }}
-                  aria-label="Очистить"
-                >
-                  <Icon name="close" size={16} />
-                </button>
-              )}
-            </div>
-            <button
-              onClick={handleSearch}
-              disabled={status === "loading"}
+          <div style={{ position: "relative" }}>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Введите слово или фразу"
               style={{
-                width: 44,
-                height: 44,
+                width: "100%",
                 borderRadius: 12,
-                border: "none",
-                background: "var(--tg-accent-strong)",
-                color: "#fff",
-                display: "grid",
-                placeItems: "center",
-                cursor: "pointer",
-                opacity: status === "loading" ? 0.7 : 1,
+                border: "1px solid var(--tg-border)",
+                height: 44,
+                padding: "0 36px 0 12px",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                fontSize: 14,
               }}
-              aria-label="Найти фрагменты"
-            >
-              <Icon name="search" size={20} color="#fff" />
-            </button>
+              onKeyDown={(event) => {
+                if (event.key === "Enter") handleSearch();
+              }}
+            />
+            {query.trim().length > 0 && (
+              <button
+                onClick={handleClear}
+                style={{
+                  position: "absolute",
+                  right: 8,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  border: "none",
+                  background: "transparent",
+                  color: "var(--tg-subtle)",
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: "pointer",
+                }}
+                aria-label="Очистить"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            )}
           </div>
+          <button
+            onClick={handleSearch}
+            disabled={status === "loading"}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              border: "none",
+              background: "var(--tg-accent-strong)",
+              color: "#fff",
+              display: "grid",
+              placeItems: "center",
+              cursor: "pointer",
+              opacity: status === "loading" ? 0.7 : 1,
+            }}
+            aria-label="Найти фрагменты"
+          >
+            <Icon name="search" size={20} color="#fff" />
+          </button>
         </div>
 
         {helperText && (
@@ -1082,7 +1074,13 @@ export default function DictionaryPage() {
                 synonyms={synonyms}
                 showExamplesButton={showExamples && hasSnippets}
                 examplesOpen={examplesOpen}
-                onToggleExamples={() => setExamplesOpen((prev) => !prev)}
+                onToggleExamples={() =>
+                  setExamplesOpen((prev) => {
+                    const nextValue = !prev;
+                    if (nextValue) setUserExamplesOpenId(null);
+                    return nextValue;
+                  })
+                }
                 dictionaryActionLabel={dictionaryActionLabel}
                 dictionaryActionMode={isInDictionary ? "tag" : "button"}
                 dictionaryActionDisabled={isInDictionary}
