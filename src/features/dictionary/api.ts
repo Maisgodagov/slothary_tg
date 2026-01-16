@@ -12,6 +12,8 @@ export interface UserDictionaryEntry {
 export interface CreateUserDictionaryEntry {
   query: string;
   lang: 'en' | 'ru';
+  word?: string;
+  translation?: string;
 }
 
 const headersWithUser = (userId?: string | null) => (userId ? { 'x-user-id': userId } : undefined);

@@ -1055,7 +1055,7 @@ export default function DictionaryPage() {
             const hasSnippets = items.length > 0;
             const showSnippets = showExamples && examplesOpen && hasSnippets;
             const normalizedWord = primaryEnglish.toLowerCase();
-            const normalizedTranslation = primaryRussian.toLowerCase();
+            const normalizedTranslation = primaryRussian.trim().toLowerCase();
             const existingEntry = dictionary.items.find(
               (entry) =>
                 entry.word.toLowerCase() === normalizedWord &&
@@ -1095,9 +1095,16 @@ export default function DictionaryPage() {
                     return;
                   }
                   const lang = isRuQuery ? "ru" : "en";
-                  const queryValue = query.trim();
+                  const queryValue = highlight.trim();
                   if (!queryValue) return;
-                  dispatch(addWord({ query: queryValue, lang }));
+                  dispatch(
+                    addWord({
+                      query: queryValue,
+                      lang,
+                      word: primaryEnglish,
+                      translation: primaryRussian,
+                    })
+                  );
                 }}
               >
                 {showSnippets && (
