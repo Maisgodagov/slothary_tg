@@ -164,17 +164,34 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
     vv.addEventListener('resize', listener);
     vv.addEventListener('scroll', listener);
     window.addEventListener('orientationchange', listener);
-    const focusIn = () => root.classList.add('keyboard-open');
-    const focusOut = () => updateKeyboardState();
     const root = document.documentElement;
-    window.addEventListener('focusin', focusIn);
-    window.addEventListener('focusout', focusOut);
+    const isTextInput = (node: Element | null) => {
+      if (!node) return false;
+      if (node instanceof HTMLInputElement) return true;
+      if (node instanceof HTMLTextAreaElement) return true;
+      if ((node as HTMLElement).isContentEditable) return true;
+      return false;
+    };
+    const focusIn = (event: FocusEvent) => {
+      if (isTextInput(event.target as Element)) {
+        root.classList.add('nav-hidden');
+      }
+    };
+    const focusOut = () => {
+      setTimeout(() => {
+        if (!isTextInput(document.activeElement)) {
+          root.classList.remove('nav-hidden');
+        }
+      }, 0);
+    };
+    window.addEventListener('focusin', focusIn, true);
+    window.addEventListener('focusout', focusOut, true);
     return () => {
       vv.removeEventListener('resize', listener);
       vv.removeEventListener('scroll', listener);
       window.removeEventListener('orientationchange', listener);
-      window.removeEventListener('focusin', focusIn);
-      window.removeEventListener('focusout', focusOut);
+      window.removeEventListener('focusin', focusIn, true);
+      window.removeEventListener('focusout', focusOut, true);
     };
   }, []);
 
