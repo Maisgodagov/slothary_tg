@@ -591,6 +591,12 @@ export default function DictionaryPage() {
   }, [auth.profile?.id, dispatch]);
 
   useEffect(() => {
+    if (dictionary.items.length === 0) return;
+    if (userExpandedTranslationsId) return;
+    setUserExpandedTranslationsId(dictionary.items[0]?.id ?? null);
+  }, [dictionary.items, userExpandedTranslationsId]);
+
+  useEffect(() => {
     try {
       const payload = {
         query,
