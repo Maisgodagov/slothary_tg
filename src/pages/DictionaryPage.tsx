@@ -1060,7 +1060,10 @@ export default function DictionaryPage() {
                 style={{
                   width: "100%",
                   borderRadius: 12,
+                  borderBottomLeftRadius: historyOpen ? 0 : 12,
+                  borderBottomRightRadius: historyOpen ? 0 : 12,
                   border: "1px solid var(--tg-border)",
+                  borderBottom: historyOpen ? "none" : "1px solid var(--tg-border)",
                   height: 44,
                   padding: "0 36px 0 12px",
                   background: "var(--tg-card)",
@@ -1103,12 +1106,15 @@ export default function DictionaryPage() {
                   onMouseDown={(event) => event.preventDefault()}
                   style={{
                     position: "absolute",
-                    top: "calc(100% + 6px)",
+                    top: "100%",
                     left: 0,
                     right: 0,
                     background: "var(--tg-surface)",
                     border: "1px solid var(--tg-border)",
+                    borderTop: "none",
                     borderRadius: 12,
+                    borderTopLeftRadius: 0,
+                    borderTopRightRadius: 0,
                     boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
                     zIndex: 20,
                     display: "grid",
