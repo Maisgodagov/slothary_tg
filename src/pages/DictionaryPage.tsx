@@ -26,7 +26,7 @@ import { Icon } from "../shared/ui/Icon";
 import { PageShell } from "../shared/ui/PageShell";
 
 const PAGE_SIZE = 6;
-const CARD_GAP = 16;
+const CARD_GAP = 20;
 const STORAGE_KEY = "videoDictionaryState";
 
 const computePaddingSeconds = (phrase: string): number => {
@@ -640,8 +640,8 @@ export default function DictionaryPage() {
     }
   }, []);
 
-  const handleSearch = useCallback(async () => {
-    const trimmed = query.trim();
+  const handleSearch = useCallback(async (value?: string) => {
+    const trimmed = (value ?? query).trim();
     if (!trimmed) return;
 
     abortRef.current?.abort();
@@ -1034,14 +1034,14 @@ export default function DictionaryPage() {
 
         {dictStatus === "ready" && dictEntries.length > 0 &&
           (() => {
-            const isRuQuery = detectLanguage(query);
+            const isRuQuery = detectLanguage(highlight);
             const primaryEntry = dictEntries[0];
             const ruTranslationsAll = filterPureTranslations(
               primaryEntry?.translations ?? []
             );
             const primaryEnglish = primaryEntry?.word?.trim() || query.trim();
             const primaryRussian = isRuQuery
-              ? query.trim()
+              ? highlight.trim()
               : ruTranslationsAll[0] ?? "";
             const otherTranslationsRu = ruTranslationsAll
               .filter((value) => value && value !== primaryRussian)
@@ -1072,6 +1072,10 @@ export default function DictionaryPage() {
                 translation={primaryRussian}
                 otherTranslationsRu={otherTranslationsRu}
                 synonyms={synonyms}
+                onSynonymClick={(value) => {
+                  setQuery(value);
+                  handleSearch(value);
+                }}
                 showExamplesButton={showExamples && hasSnippets}
                 examplesOpen={examplesOpen}
                 onToggleExamples={() =>
@@ -1105,6 +1109,7 @@ export default function DictionaryPage() {
                         display: "flex",
                         gap: CARD_GAP,
                         overflowX: "auto",
+                        overflowY: "hidden",
                         paddingTop: 4,
                         paddingBottom: 10,
                         paddingLeft:
@@ -1170,126 +1175,134 @@ export default function DictionaryPage() {
             );
           })()}
 
-        {dictionary.items.length > 0 && (
-          <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "grid", gap: 12 }}>
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: 700,
+              color: "var(--tg-text)",
+              paddingLeft: 4,
+            }}
+          >
+            Мой словарь
+          </div>
+          {dictionary.items.length === 0 && (
             <div
               style={{
-                fontSize: 16,
-                fontWeight: 700,
-                color: "var(--tg-text)",
+                color: "var(--tg-subtle)",
+                fontSize: 13,
                 paddingLeft: 4,
               }}
             >
-              Мой словарь
+              Здесь пока пусто. Добавляйте новые слова в словарь, и они будут
+              появляться в этом списке.
             </div>
-            {dictionary.items.map((entry) => {
-              const open = userExamplesOpenId === entry.id;
-              const state = userExampleState[entry.id] ?? {
-                status: "idle",
-                items: [],
-              };
-              const expanded = userExpandedTranslationsId === entry.id;
-              const otherTranslations = expanded
-                ? entry.otherTranslations
-                : undefined;
-              const hasRuTranslations =
-                expanded &&
-                Boolean(
-                  otherTranslations?.some((value) => detectLanguage(value))
-                );
-              const otherTranslationsRu = hasRuTranslations
-                ? otherTranslations
-                : undefined;
-              const synonyms = expanded && !hasRuTranslations
-                ? otherTranslations
-                : undefined;
+          )}
+          {dictionary.items.map((entry) => {
+            const open = userExamplesOpenId === entry.id;
+            const state = userExampleState[entry.id] ?? {
+              status: "idle",
+              items: [],
+            };
+            const expanded = userExpandedTranslationsId === entry.id;
+            const otherTranslations = expanded
+              ? entry.otherTranslations
+              : undefined;
+            const hasRuTranslations =
+              expanded &&
+              Boolean(otherTranslations?.some((value) => detectLanguage(value)));
+            const otherTranslationsRu = hasRuTranslations
+              ? otherTranslations
+              : undefined;
+            const synonyms = expanded && !hasRuTranslations
+              ? otherTranslations
+              : undefined;
 
-              return (
-                <div key={entry.id} style={{ position: "relative" }}>
-                  {expanded && (
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setDeleteTarget({
-                          id: entry.id,
-                          word: entry.word,
-                          translation: entry.translation,
-                        });
-                      }}
-                      style={{
-                        position: "absolute",
-                        top: 10,
-                        right: 10,
-                        width: 24,
-                        height: 24,
-                        borderRadius: "50%",
-                        border: "none",
-                        background: "transparent",
-                        color: "var(--tg-subtle)",
-                        display: "grid",
-                        placeItems: "center",
-                        cursor: "pointer",
-                        zIndex: 2,
-                      }}
-                      aria-label="Удалить"
-                    >
-                      <Icon name="close" size={14} />
-                    </button>
-                  )}
-
-                  <div
+            return (
+              <div key={entry.id} style={{ position: "relative" }}>
+                {expanded && (
+                  <button
+                    type="button"
                     onClick={(event) => {
-                      if ((event.target as HTMLElement).closest("button")) return;
-                      toggleUserTranslations(entry.id);
+                      event.stopPropagation();
+                      setDeleteTarget({
+                        id: entry.id,
+                        word: entry.word,
+                        translation: entry.translation,
+                      });
                     }}
+                    style={{
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      width: 24,
+                      height: 24,
+                      borderRadius: "50%",
+                      border: "none",
+                      background: "transparent",
+                      color: "var(--tg-subtle)",
+                      display: "grid",
+                      placeItems: "center",
+                      cursor: "pointer",
+                      zIndex: 2,
+                    }}
+                    aria-label="Удалить"
                   >
-                    <WordCard
-                      word={entry.word}
-                      translation={entry.translation}
-                      otherTranslationsRu={otherTranslationsRu}
-                      synonyms={synonyms}
-                      showExamplesButton={expanded}
-                      examplesOpen={open}
-                      onToggleExamples={() =>
-                        toggleUserExamples(entry.id, entry.word)
-                      }
-                      dictionaryActionMode="none"
-                      variant="compact"
-                    >
-                      {expanded && open && (
-                        <>
-                          {state.status === "loading" && (
-                            <div style={{ display: "grid", placeItems: "center" }}>
-                              <Loader />
-                            </div>
-                          )}
-                          {state.status === "error" && (
-                            <div style={{ color: "var(--tg-danger)", fontSize: 13 }}>
-                              {state.error}
-                            </div>
-                          )}
-                          {state.status === "ready" && state.items.length === 0 && (
-                            <div style={{ color: "var(--tg-subtle)", fontSize: 13 }}>
-                              Примеры не найдены.
-                            </div>
-                          )}
-                          {state.items.length > 0 && (
-                            <SnippetCarousel
-                              items={state.items}
-                              highlight={entry.word}
-                              onOpenFullVideo={handleOpenFullVideo}
-                            />
-                          )}
-                        </>
-                      )}
-                    </WordCard>
-                  </div>
+                    <Icon name="close" size={14} />
+                  </button>
+                )}
+
+                <div
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest("button")) return;
+                    toggleUserTranslations(entry.id);
+                  }}
+                >
+                  <WordCard
+                    word={entry.word}
+                    translation={entry.translation}
+                    otherTranslationsRu={otherTranslationsRu}
+                    synonyms={synonyms}
+                    showExamplesButton={expanded}
+                    examplesOpen={open}
+                    onToggleExamples={() =>
+                      toggleUserExamples(entry.id, entry.word)
+                    }
+                    dictionaryActionMode="none"
+                    variant="compact"
+                  >
+                    {expanded && open && (
+                      <>
+                        {state.status === "loading" && (
+                          <div style={{ display: "grid", placeItems: "center" }}>
+                            <Loader />
+                          </div>
+                        )}
+                        {state.status === "error" && (
+                          <div style={{ color: "var(--tg-danger)", fontSize: 13 }}>
+                            {state.error}
+                          </div>
+                        )}
+                        {state.status === "ready" && state.items.length === 0 && (
+                          <div style={{ color: "var(--tg-subtle)", fontSize: 13 }}>
+                            Примеры не найдены.
+                          </div>
+                        )}
+                        {state.items.length > 0 && (
+                          <SnippetCarousel
+                            items={state.items}
+                            highlight={entry.word}
+                            onOpenFullVideo={handleOpenFullVideo}
+                          />
+                        )}
+                      </>
+                    )}
+                  </WordCard>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {deleteTarget && (

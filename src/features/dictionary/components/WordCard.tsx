@@ -7,6 +7,7 @@ type WordCardProps = {
   translation: string;
   otherTranslationsRu?: string[];
   synonyms?: string[];
+  onSynonymClick?: (value: string) => void;
   showExamplesButton: boolean;
   examplesOpen: boolean;
   onToggleExamples: () => void;
@@ -23,6 +24,7 @@ export function WordCard({
   translation,
   otherTranslationsRu,
   synonyms,
+  onSynonymClick,
   showExamplesButton,
   examplesOpen,
   onToggleExamples,
@@ -40,6 +42,7 @@ export function WordCard({
   const isCompact = variant === "compact";
   const showDictionaryAction =
     dictionaryActionMode !== "none" && Boolean(dictionaryActionLabel);
+  const displayWord = word.toLowerCase();
 
   return (
     <div
@@ -49,13 +52,13 @@ export function WordCard({
         borderRadius: 16,
         padding: 16,
         display: "grid",
-        gap: isCompact ? 8 : 10,
+        gap: isCompact ? 10 : 14,
       }}
     >
       <div
         style={{
           display: "grid",
-          gap: 8,
+          gap: isCompact ? 8 : 12,
           textAlign: "left",
           color: "var(--tg-text)",
         }}
@@ -64,10 +67,10 @@ export function WordCard({
           style={{
             fontSize: isCompact ? 18 : 28,
             fontWeight: 800,
-            lineHeight: 1.15,
+            lineHeight: 1.25,
           }}
         >
-          <span>{word}</span>
+          <span>{displayWord}</span>
           {translation && (
             <span style={{ fontWeight: 400 }}> - {translation}</span>
           )}
@@ -75,7 +78,7 @@ export function WordCard({
         {showOtherTranslations && (
           <div
             style={{
-              fontSize: isCompact ? 12 : 13,
+              fontSize: isCompact ? 13 : 14,
               color: "var(--tg-subtle)",
             }}
           >
@@ -86,12 +89,36 @@ export function WordCard({
         {showSynonyms && (
           <div
             style={{
-              fontSize: isCompact ? 12 : 13,
+              fontSize: isCompact ? 13 : 14,
               color: "var(--tg-subtle)",
             }}
           >
             <span style={{ fontWeight: 700 }}>синонимы:</span>{" "}
-            {synonyms!.join(", ")}
+            {synonyms!.map((value, index) => (
+              <span key={value}>
+                {index > 0 ? ", " : ""}
+                {onSynonymClick ? (
+                  <button
+                    type="button"
+                    onClick={() => onSynonymClick(value)}
+                    style={{
+                      border: "none",
+                      background: "none",
+                      padding: 0,
+                      margin: 0,
+                      color: "inherit",
+                      font: "inherit",
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                    }}
+                  >
+                    {value}
+                  </button>
+                ) : (
+                  value
+                )}
+              </span>
+            ))}
           </div>
         )}
       </div>
@@ -99,10 +126,11 @@ export function WordCard({
       <div
         style={{
           display: "flex",
-          gap: 10,
-          justifyContent: "flex-start",
+          gap: isCompact ? 10 : 14,
+          justifyContent: isCompact ? "flex-start" : "space-between",
           alignItems: "center",
           flexWrap: "wrap",
+          width: "100%",
         }}
       >
         {showExamplesButton && (
