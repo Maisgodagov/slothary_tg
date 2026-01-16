@@ -21,6 +21,7 @@ import {
   Sun,
   Moon,
   Flame,
+  History,
 } from "lucide-react";
 
 type IconName =
@@ -49,7 +50,8 @@ type IconName =
   | "chevron-down"
   | "sun"
   | "moon"
-  | "flame";
+  | "flame"
+  | "history";
 
 const ICON_MAP: Record<
   IconName,
@@ -87,6 +89,7 @@ const ICON_MAP: Record<
   sun: Sun,
   moon: Moon,
   flame: Flame,
+  history: History,
 };
 
 interface IconProps {

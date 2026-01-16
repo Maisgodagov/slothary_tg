@@ -28,6 +28,8 @@ import { PageShell } from "../shared/ui/PageShell";
 const PAGE_SIZE = 6;
 const CARD_GAP = 20;
 const STORAGE_KEY = "videoDictionaryState";
+const HISTORY_KEY = "dictionarySearchHistory";
+const HISTORY_LIMIT = 5;
 
 const computePaddingSeconds = (phrase: string): number => {
   const trimmed = phrase.trim();
@@ -355,10 +357,12 @@ function SnippetCarousel({
   items,
   highlight,
   onOpenFullVideo,
+  total,
 }: {
   items: PhraseSnippet[];
   highlight: string;
   onOpenFullVideo: (snippet: PhraseSnippet) => void;
+  total?: number;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -476,7 +480,8 @@ function SnippetCarousel({
           color: "var(--tg-subtle)",
         }}
       >
-        {Math.min(activeIndex + 1, items.length)}/{items.length}
+        {Math.min(activeIndex + 1, total ?? items.length)}/
+        {total ?? items.length}
       </div>
     </>
   );
@@ -518,6 +523,18 @@ export default function DictionaryPage() {
       {
         status: "idle" | "loading" | "ready" | "error";
         items: PhraseSnippet[];
+        total?: number;
+        error?: string;
+      }
+    >
+  >({});
+  const [userDictionaryDetails, setUserDictionaryDetails] = useState<
+    Record<
+      string,
+      {
+        status: "idle" | "loading" | "ready" | "error";
+        translationsRu: string[];
+        synonyms: string[];
         error?: string;
       }
     >
@@ -527,6 +544,8 @@ export default function DictionaryPage() {
     word: string;
     translation: string;
   } | null>(null);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -572,6 +591,21 @@ export default function DictionaryPage() {
         setExamplesOpen(saved.examplesOpen);
       }
       if (saved.query) setHighlight(saved.query);
+    } catch {
+      // ignore restore errors
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const rawHistory = localStorage.getItem(HISTORY_KEY);
+      if (!rawHistory) return;
+      const parsed = JSON.parse(rawHistory);
+      if (Array.isArray(parsed)) {
+        setSearchHistory(
+          parsed.filter((value) => typeof value === "string")
+        );
+      }
     } catch {
       // ignore restore errors
     }
@@ -649,6 +683,20 @@ export default function DictionaryPage() {
   const handleSearch = useCallback(async (value?: string) => {
     const trimmed = (value ?? query).trim();
     if (!trimmed) return;
+
+    setHistoryOpen(false);
+    setSearchHistory((prev) => {
+      const next = [
+        trimmed,
+        ...prev.filter((item) => item.toLowerCase() !== trimmed.toLowerCase()),
+      ].slice(0, HISTORY_LIMIT);
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+      } catch {
+        // ignore storage errors
+      }
+      return next;
+    });
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -900,7 +948,7 @@ export default function DictionaryPage() {
         const items = dedupeSnippets(response.items);
         setUserExampleState((prev) => ({
           ...prev,
-          [entryId]: { status: "ready", items },
+          [entryId]: { status: "ready", items, total: response.total },
         }));
       } catch (err: any) {
         setUserExampleState((prev) => ({
@@ -908,12 +956,53 @@ export default function DictionaryPage() {
           [entryId]: {
             status: "error",
             items: [],
+            total: 0,
             error: err?.message ?? "Не удалось загрузить примеры.",
           },
         }));
       }
     },
     [auth.profile?.id]
+  );
+
+  const loadUserDictionaryDetails = useCallback(
+    async (entryId: string, word: string) => {
+      setUserDictionaryDetails((prev) => ({
+        ...prev,
+        [entryId]: { status: "loading", translationsRu: [], synonyms: [] },
+      }));
+
+      try {
+        const lang = detectLanguage(word) ? "ru" : "en";
+        const entries = await muellerApi.lookup({ word, lang });
+        const primary = entries[0];
+        const translationsRu = filterPureTranslations(
+          primary?.translations ?? []
+        ).slice(0, 6);
+        const synonyms = (primary?.synonyms ?? [])
+          .filter((value) => value && /[a-z]/i.test(value))
+          .slice(0, 6);
+        setUserDictionaryDetails((prev) => ({
+          ...prev,
+          [entryId]: {
+            status: "ready",
+            translationsRu,
+            synonyms,
+          },
+        }));
+      } catch (err: any) {
+        setUserDictionaryDetails((prev) => ({
+          ...prev,
+          [entryId]: {
+            status: "error",
+            translationsRu: [],
+            synonyms: [],
+            error: err?.message ?? "Не удалось загрузить переводы.",
+          },
+        }));
+      }
+    },
+    []
   );
 
   const toggleUserExamples = useCallback(
@@ -931,9 +1020,16 @@ export default function DictionaryPage() {
   );
 
   const toggleUserTranslations = useCallback((entryId: string) => {
-    setUserExpandedTranslationsId((prev) => (prev === entryId ? null : entryId));
+    setUserExpandedTranslationsId((prev) => {
+      const nextValue = prev === entryId ? null : entryId;
+      if (nextValue && userDictionaryDetails[nextValue]?.status !== "ready") {
+        const entry = dictionary.items.find((item) => item.id === nextValue);
+        if (entry) loadUserDictionaryDetails(entry.id, entry.word);
+      }
+      return nextValue;
+    });
     setUserExamplesOpenId(null);
-  }, []);
+  }, [dictionary.items, loadUserDictionaryDetails, userDictionaryDetails]);
 
   return (
     <PageShell>
@@ -956,28 +1052,32 @@ export default function DictionaryPage() {
             alignItems: "center",
           }}
         >
-          <div style={{ position: "relative" }}>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Введите слово или фразу"
-              style={{
-                width: "100%",
-                borderRadius: 12,
-                border: "1px solid var(--tg-border)",
-                height: 44,
-                padding: "0 36px 0 12px",
-                background: "var(--tg-card)",
-                color: "var(--tg-text)",
-                fontSize: 14,
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handleSearch();
-              }}
-            />
-            {query.trim().length > 0 && (
-              <button
-                onClick={handleClear}
+            <div style={{ position: "relative" }}>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Введите слово или фразу"
+                style={{
+                  width: "100%",
+                  borderRadius: 12,
+                  border: "1px solid var(--tg-border)",
+                  height: 44,
+                  padding: "0 36px 0 12px",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                  fontSize: 14,
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleSearch();
+                }}
+                onFocus={() => {
+                  if (searchHistory.length > 0) setHistoryOpen(true);
+                }}
+                onBlur={() => setHistoryOpen(false)}
+              />
+              {query.trim().length > 0 && (
+                <button
+                  onClick={handleClear}
                 style={{
                   position: "absolute",
                   right: 8,
@@ -996,9 +1096,56 @@ export default function DictionaryPage() {
                 aria-label="Очистить"
               >
                 <Icon name="close" size={16} />
-              </button>
-            )}
-          </div>
+                </button>
+              )}
+              {historyOpen && searchHistory.length > 0 && (
+                <div
+                  onMouseDown={(event) => event.preventDefault()}
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 6px)",
+                    left: 0,
+                    right: 0,
+                    background: "var(--tg-surface)",
+                    border: "1px solid var(--tg-border)",
+                    borderRadius: 12,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+                    zIndex: 20,
+                    display: "grid",
+                    gap: 4,
+                    padding: 8,
+                  }}
+                >
+                  {searchHistory.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => {
+                        setQuery(item);
+                        handleSearch(item);
+                      }}
+                      style={{
+                        textAlign: "left",
+                        border: "none",
+                        background: "transparent",
+                        color: "var(--tg-text)",
+                        padding: "6px 8px",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontSize: 13,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        opacity: 0.75,
+                      }}
+                    >
+                      <Icon name="history" size={14} color="var(--tg-subtle)" />
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               onClick={() => handleSearch()}
               disabled={status === "loading"}
@@ -1173,8 +1320,8 @@ export default function DictionaryPage() {
                         color: "var(--tg-subtle)",
                       }}
                     >
-                      {(() => {
-                        const displayTotal = items.length;
+                        {(() => {
+                        const displayTotal = total > 0 ? total : items.length;
                         const displayIndex = Math.min(
                           activeIndex + 1,
                           displayTotal
@@ -1230,6 +1377,15 @@ export default function DictionaryPage() {
             const synonyms = expanded && !hasRuTranslations
               ? otherTranslations
               : undefined;
+            const details = userDictionaryDetails[entry.id];
+            const detailsTranslations =
+              expanded && details?.status === "ready"
+                ? details.translationsRu
+                : undefined;
+            const detailsSynonyms =
+              expanded && details?.status === "ready"
+                ? details.synonyms
+                : undefined;
 
             return (
               <div key={entry.id} style={{ position: "relative" }}>
@@ -1271,15 +1427,17 @@ export default function DictionaryPage() {
                     toggleUserTranslations(entry.id);
                   }}
                 >
-                  <WordCard
-                    word={entry.word}
-                    translation={entry.translation}
-                    otherTranslationsRu={otherTranslationsRu}
-                    synonyms={synonyms}
-                    showExamplesButton={expanded}
-                    examplesOpen={open}
-                    onToggleExamples={() =>
-                      toggleUserExamples(entry.id, entry.word)
+                    <WordCard
+                      word={entry.word}
+                      translation={entry.translation}
+                      otherTranslationsRu={
+                        detailsTranslations ?? otherTranslationsRu
+                      }
+                      synonyms={detailsSynonyms ?? synonyms}
+                      showExamplesButton={expanded}
+                      examplesOpen={open}
+                      onToggleExamples={() =>
+                        toggleUserExamples(entry.id, entry.word)
                     }
                     dictionaryActionMode="none"
                     variant="compact"
@@ -1302,12 +1460,13 @@ export default function DictionaryPage() {
                           </div>
                         )}
                         {state.items.length > 0 && (
-                          <SnippetCarousel
-                            items={state.items}
-                            highlight={entry.word}
-                            onOpenFullVideo={handleOpenFullVideo}
-                          />
-                        )}
+                            <SnippetCarousel
+                              items={state.items}
+                              highlight={entry.word}
+                              onOpenFullVideo={handleOpenFullVideo}
+                              total={state.total}
+                            />
+                          )}
                       </>
                     )}
                   </WordCard>
