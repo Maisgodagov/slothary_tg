@@ -67,11 +67,18 @@ function updateKeyboardState() {
   if (typeof window === 'undefined') return;
   const root = document.documentElement;
   const vv = window.visualViewport;
+  const webApp = (window as any).Telegram?.WebApp;
+  const threshold = 120;
+  if (webApp?.viewportHeight && webApp?.viewportStableHeight) {
+    const keyboardOpen =
+      webApp.viewportStableHeight - webApp.viewportHeight > threshold;
+    root.classList.toggle('keyboard-open', keyboardOpen);
+    return;
+  }
   if (!vv) {
     root.classList.remove('keyboard-open');
     return;
   }
-  const threshold = 120;
   const keyboardOpen = window.innerHeight - vv.height > threshold;
   root.classList.toggle('keyboard-open', keyboardOpen);
 }
@@ -157,10 +164,17 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
     vv.addEventListener('resize', listener);
     vv.addEventListener('scroll', listener);
     window.addEventListener('orientationchange', listener);
+    const focusIn = () => root.classList.add('keyboard-open');
+    const focusOut = () => updateKeyboardState();
+    const root = document.documentElement;
+    window.addEventListener('focusin', focusIn);
+    window.addEventListener('focusout', focusOut);
     return () => {
       vv.removeEventListener('resize', listener);
       vv.removeEventListener('scroll', listener);
       window.removeEventListener('orientationchange', listener);
+      window.removeEventListener('focusin', focusIn);
+      window.removeEventListener('focusout', focusOut);
     };
   }, []);
 
