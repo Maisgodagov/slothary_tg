@@ -358,11 +358,17 @@ function SnippetCarousel({
   highlight,
   onOpenFullVideo,
   total,
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
 }: {
   items: PhraseSnippet[];
   highlight: string;
   onOpenFullVideo: (snippet: PhraseSnippet) => void;
   total?: number;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -426,6 +432,14 @@ function SnippetCarousel({
       setActiveIndex(items.length - 1);
     }
   }, [activeIndex, items.length]);
+
+  useEffect(() => {
+    if (!onLoadMore || !hasMore || isLoadingMore) return;
+    if (items.length === 0) return;
+    if (activeIndex >= items.length - 2) {
+      onLoadMore();
+    }
+  }, [activeIndex, hasMore, isLoadingMore, items.length, onLoadMore]);
 
   return (
     <>
@@ -524,6 +538,9 @@ export default function DictionaryPage() {
         status: "idle" | "loading" | "ready" | "error";
         items: PhraseSnippet[];
         total?: number;
+        hasMore?: boolean;
+        nextCursor?: string | null;
+        isLoadingMore?: boolean;
         error?: string;
       }
     >
@@ -935,7 +952,14 @@ export default function DictionaryPage() {
       if (!auth.profile?.id) return;
       setUserExampleState((prev) => ({
         ...prev,
-        [entryId]: { status: "loading", items: [] },
+        [entryId]: {
+          status: "loading",
+          items: [],
+          total: 0,
+          hasMore: false,
+          nextCursor: null,
+          isLoadingMore: false,
+        },
       }));
 
       try {
@@ -949,7 +973,14 @@ export default function DictionaryPage() {
         const items = dedupeSnippets(response.items);
         setUserExampleState((prev) => ({
           ...prev,
-          [entryId]: { status: "ready", items, total: response.total },
+          [entryId]: {
+            status: "ready",
+            items,
+            total: response.total,
+            hasMore: response.hasMore,
+            nextCursor: response.nextCursor,
+            isLoadingMore: false,
+          },
         }));
       } catch (err: any) {
         setUserExampleState((prev) => ({
@@ -958,12 +989,71 @@ export default function DictionaryPage() {
             status: "error",
             items: [],
             total: 0,
+            hasMore: false,
+            nextCursor: null,
+            isLoadingMore: false,
             error: err?.message ?? "Не удалось загрузить примеры.",
           },
         }));
       }
     },
     [auth.profile?.id]
+  );
+
+  const loadMoreUserExamples = useCallback(
+    async (entryId: string, phrase: string) => {
+      if (!auth.profile?.id) return;
+      setUserExampleState((prev) => {
+        const current = prev[entryId];
+        if (!current || current.isLoadingMore || !current.hasMore) return prev;
+        return {
+          ...prev,
+          [entryId]: { ...current, isLoadingMore: true },
+        };
+      });
+
+      try {
+        const current = userExampleState[entryId];
+        const cursor = current?.nextCursor ?? null;
+        const response = await videoDictionaryApi.searchPhrase({
+          phrase,
+          limit: PAGE_SIZE,
+          cursor,
+          paddingSeconds: computePaddingSeconds(phrase),
+          userId: auth.profile.id,
+        });
+        setUserExampleState((prev) => {
+          const existing = prev[entryId];
+          if (!existing) return prev;
+          const merged = mergeSnippets(existing.items, response.items);
+          return {
+            ...prev,
+            [entryId]: {
+              ...existing,
+              items: merged,
+              total: response.total,
+              hasMore: response.hasMore,
+              nextCursor: response.nextCursor,
+              isLoadingMore: false,
+            },
+          };
+        });
+      } catch (err: any) {
+        setUserExampleState((prev) => {
+          const existing = prev[entryId];
+          if (!existing) return prev;
+          return {
+            ...prev,
+            [entryId]: {
+              ...existing,
+              isLoadingMore: false,
+              error: err?.message ?? "Не удалось загрузить примеры.",
+            },
+          };
+        });
+      }
+    },
+    [auth.profile?.id, userExampleState]
   );
 
   const loadUserDictionaryDetails = useCallback(
@@ -1471,14 +1561,17 @@ export default function DictionaryPage() {
                             Примеры не найдены.
                           </div>
                         )}
-                        {state.items.length > 0 && (
-                            <SnippetCarousel
-                              items={state.items}
-                              highlight={entry.word}
-                              onOpenFullVideo={handleOpenFullVideo}
-                              total={state.total}
-                            />
-                          )}
+                      {state.items.length > 0 && (
+                        <SnippetCarousel
+                          items={state.items}
+                          highlight={entry.word}
+                          onOpenFullVideo={handleOpenFullVideo}
+                          total={state.total}
+                          hasMore={state.hasMore}
+                          isLoadingMore={state.isLoadingMore}
+                          onLoadMore={() => loadMoreUserExamples(entry.id, entry.word)}
+                        />
+                      )}
                       </>
                     )}
                   </WordCard>
