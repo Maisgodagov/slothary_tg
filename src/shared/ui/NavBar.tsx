@@ -31,6 +31,7 @@ export function NavBar() {
 
   return (
     <nav
+      className="app-navbar"
       style={{
         position: "absolute",
         bottom: 0,

@@ -93,12 +93,12 @@ button {
   );
   bottom: var(--tg-safe-area-inset-bottom);
     height: calc(
-      var(--app-height, 100vh) -
+      100vh -
         (
           var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top) +
             var(--tg-safe-area-inset-bottom)
         )
-  );
+    );
   position: relative;
   overflow: hidden;
 }
@@ -131,14 +131,18 @@ button {
   margin-top: 0;
 }
 
-.section {
-  background: var(--tg-surface);
-  border: 1px solid var(--tg-border);
-  border-radius: 18px;
-  padding: 16px;
-  margin-bottom: 14px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28);
-}
+  .section {
+    background: var(--tg-surface);
+    border: 1px solid var(--tg-border);
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28);
+  }
+
+  .keyboard-open .app-navbar {
+    display: none;
+  }
 
 .section-header {
   display: flex;

@@ -63,6 +63,19 @@ function updateSafeAreaFromViewport() {
   }
 }
 
+function updateKeyboardState() {
+  if (typeof window === 'undefined') return;
+  const root = document.documentElement;
+  const vv = window.visualViewport;
+  if (!vv) {
+    root.classList.remove('keyboard-open');
+    return;
+  }
+  const threshold = 120;
+  const keyboardOpen = window.innerHeight - vv.height > threshold;
+  root.classList.toggle('keyboard-open', keyboardOpen);
+}
+
 export function TelegramProvider({ children }: { children: ReactNode }) {
   const [systemTheme, setSystemTheme] = useState<Theme>(WebApp?.colorScheme ?? 'dark');
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
@@ -95,6 +108,7 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
     applyTelegramTheme(WebApp.colorScheme ?? 'dark');
     setSystemTheme(WebApp.colorScheme ?? 'dark');
     updateSafeAreaFromViewport();
+    updateKeyboardState();
 
     const handleThemeChange = (newTheme: unknown) => {
       if (typeof newTheme === 'string') {
@@ -113,6 +127,7 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
         WebApp.requestFullscreen();
       }
       updateSafeAreaFromViewport();
+      updateKeyboardState();
     };
 
     WebApp.onEvent('themeChanged', handleThemeChange);
@@ -132,9 +147,13 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     updateSafeAreaFromViewport();
+    updateKeyboardState();
     const vv = window.visualViewport;
     if (!vv) return;
-    const listener = () => updateSafeAreaFromViewport();
+    const listener = () => {
+      updateSafeAreaFromViewport();
+      updateKeyboardState();
+    };
     vv.addEventListener('resize', listener);
     vv.addEventListener('scroll', listener);
     window.addEventListener('orientationchange', listener);
