@@ -2,8 +2,8 @@ const normalizeForm = (raw: string): string | null => {
   const lower = raw
     .trim()
     .toLowerCase()
-    .replace(/[`’]/g, "'");
-  const cleaned = lower.replace(/[^a-z'\-]/g, '');
+    .replace(/[`']/g, "'");
+  const cleaned = lower.replace(/[^a-z'\-]/g, "");
   if (cleaned.length < 2 || cleaned.length > 25) return null;
   return cleaned;
 };
@@ -17,10 +17,15 @@ let formsMap: Record<string, number> | null = null;
 
 const loadFormsMap = async (): Promise<Record<string, number>> => {
   if (formsMap) return formsMap;
-  const base = import.meta.env.BASE_URL || '/';
-  const res = await fetch(`${base}forms_index.json`);
-  if (!res.ok) throw new Error('Не удалось загрузить индекс словаря');
-  formsMap = (await res.json()) as Record<string, number>;
+  const { exercisesApi } = await import("../api");
+  const response = await exercisesApi.getWordIndex();
+  const map: Record<string, number> = {};
+  response.items.forEach((item) => {
+    const normalized = normalizeForm(item.query);
+    if (!normalized) return;
+    map[normalized] = item.id;
+  });
+  formsMap = map;
   return formsMap!;
 };
 
@@ -35,7 +40,7 @@ export const wordIdsFromSubtitles = async (
   const forms: string[] = [];
 
   for (const item of subtitles) {
-    const text = typeof item === 'string' ? item : item.text;
+    const text = typeof item === "string" ? item : item.text;
     if (!text) continue;
     forms.push(...splitWords(text));
   }
@@ -48,7 +53,7 @@ export const wordIdsFromSubtitles = async (
 
   for (const form of normalized) {
     const id = map[form];
-    if (typeof id === 'number' && Number.isFinite(id) && id > 0) {
+    if (typeof id === "number" && Number.isFinite(id) && id > 0) {
       ids.push(id);
       if (ids.length >= limit) break;
     }

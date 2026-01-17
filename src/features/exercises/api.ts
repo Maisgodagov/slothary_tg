@@ -10,6 +10,11 @@ export interface ExerciseProgress {
   addedToVocab: boolean;
 }
 
+export interface WordIndexItem {
+  id: number;
+  query: string;
+}
+
 export interface ExerciseItem {
   wordId: number;
   word: string;
@@ -18,6 +23,7 @@ export interface ExerciseItem {
   prompt: string;
   correctAnswer: string;
   options: string[];
+  poolSize: number;
   translations: string[];
   progress: ExerciseProgress;
 }
@@ -30,6 +36,9 @@ export interface GetExercisesRequest {
 }
 
 export const exercisesApi = {
+  async getWordIndex() {
+    return apiFetch<{ items: WordIndexItem[] }>('exercises/word-index');
+  },
   async getExercises(body: GetExercisesRequest, userId?: string | null) {
     return apiFetch<{ exercises: ExerciseItem[] }>('exercises/for-content', {
       method: 'POST',

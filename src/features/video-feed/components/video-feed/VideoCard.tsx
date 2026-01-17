@@ -6,6 +6,7 @@ import {
   removeWord,
   selectDictionary,
 } from "../../../dictionary/slice";
+import { dictionaryApi } from "../../../dictionary/api";
 import { muellerApi, type MuellerEntry } from "../../../mueller/api";
 import { wordIdsFromSubtitles } from "../../../exercises/lib/wordIds";
 import { exercisesApi, type ExerciseItem } from "../../../exercises/api";
@@ -47,6 +48,7 @@ export function VideoCard({
   const [exercises, setExercises] = useState<ExerciseItem[] | null>(null);
   const [exercisesLoading, setExercisesLoading] = useState(false);
   const [exerciseIndex, setExerciseIndex] = useState(0);
+  const [exerciseOptions, setExerciseOptions] = useState<string[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const lastTapRef = useRef<number>(0);
   const playTimeoutRef = useRef<number | null>(null);
@@ -265,6 +267,14 @@ export function VideoCard({
   }, [enSub, ruSub]);
 
   useEffect(() => {
+    if (isActive) return;
+    setSubtitlePopover(null);
+    setSubtitleLookup(null);
+    subtitleWasPlayingRef.current = false;
+    subtitleForcePlayRef.current = false;
+  }, [isActive]);
+
+  useEffect(() => {
     setSubtitlePopover(null);
     setSubtitleLookup(null);
     subtitleWasPlayingRef.current = false;
@@ -413,12 +423,55 @@ export function VideoCard({
     exercises && exerciseIndex < exercises.length
       ? exercises[exerciseIndex]
       : null;
+  const shuffleOptions = (input: string[]) => {
+    const arr = [...input];
+    for (let i = arr.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
   const exerciseText = (value?: string | null) => {
     if (!value) return "";
     return value.split(",")[0]?.trim() ?? value;
   };
+  const exerciseWord = currentExercise
+    ? exerciseText(currentExercise.word || currentExercise.prompt)
+    : "";
+  const exerciseTranslation = currentExercise?.correctAnswer ?? "";
+  const exerciseInDictionary = Boolean(
+    currentExercise &&
+      dictionary.items.find(
+        (item) =>
+          item.word.toLowerCase() === exerciseWord.toLowerCase() &&
+          item.translation.toLowerCase() === exerciseTranslation.toLowerCase()
+      )
+  );
   const exercisesCount = exercises?.length ?? 0;
   const isAdmin = auth.profile?.role === "admin";
+  const handleExerciseTouchCapture = (
+    event: React.TouchEvent<HTMLDivElement>
+  ) => {
+    if (!showExercises) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("[data-exercise-scroll]")) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const handleExerciseWheelCapture = (
+    event: React.WheelEvent<HTMLDivElement>
+  ) => {
+    if (!showExercises) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("[data-exercise-scroll]")) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  };
   const initialCefr = contentAnalysis?.cefrLevel ?? "A2";
   const initialSpeech = contentAnalysis?.speechSpeed ?? "normal";
   const initialAuthor = content?.author ?? item.author ?? "";
@@ -447,7 +500,7 @@ export function VideoCard({
         }
         // const exercisesRole = "admin";
         const { exercises: data } = await exercisesApi.getExercises(
-          { wordIds, exerciseLimit: 10, wordLimit: 20 },
+          { wordIds, exerciseLimit: 30, wordLimit: 20 },
           resolveUserId()
           // exercisesRole
         );
@@ -521,6 +574,21 @@ export function VideoCard({
 
   const showSpinner = isContentLoading;
   const showExerciseButton = !showSpinner && exercisesCount > 0;
+
+  useEffect(() => {
+    if (!currentExercise) {
+      setExerciseOptions([]);
+      return;
+    }
+    const correct = currentExercise.correctAnswer;
+    const pool = Array.from(new Set(currentExercise.options));
+    const candidates = pool.filter((item) => item !== correct);
+    const picked = shuffleOptions(candidates).slice(0, 2);
+    const next = shuffleOptions([correct, ...picked]);
+    while (next.length < 3) next.push(correct);
+    setExerciseOptions(next);
+  }, [currentExercise?.wordId, currentExercise?.correctAnswer, currentExercise?.options]);
+
 
   const findWordTimestamp = (
     word: string,
@@ -938,7 +1006,12 @@ export function VideoCard({
       )}
 
       {isActive && (
-        <S.ExerciseSheet $open={showExercises}>
+        <S.ExerciseSheet
+          $open={showExercises}
+          onTouchStartCapture={handleExerciseTouchCapture}
+          onTouchMoveCapture={handleExerciseTouchCapture}
+          onWheelCapture={handleExerciseWheelCapture}
+        >
           <S.ExerciseHandle />
           {exercisesLoading && (
             <S.ExercisePlaceholder>
@@ -946,32 +1019,74 @@ export function VideoCard({
             </S.ExercisePlaceholder>
           )}
           {!exercisesLoading && currentExercise && (
-            <S.ExerciseList>
-              <S.ExerciseCard>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <S.ExercisePrompt>
-                    {exerciseText(currentExercise.prompt)}
-                  </S.ExercisePrompt>
-                  {currentExercise.direction === "en-ru" && (
-                    <S.ListenButton
-                      onClick={() => {
-                        const lookupWord = exerciseText(
-                          currentExercise.word || currentExercise.prompt
-                        );
-                        const ts = findWordTimestamp(lookupWord, wordChunks);
-                        if (ts === null) return;
-                        const el = videoRef.current;
-                        if (!el) return;
-                        el.currentTime = ts;
-                        el.play().catch(() => null);
+            <S.ExerciseList data-exercise-scroll>
+                <S.ExerciseCard>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <S.ExercisePrompt>
+                      {exerciseText(currentExercise.prompt)}
+                    </S.ExercisePrompt>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const word = exerciseWord;
+                          const translation = exerciseTranslation;
+                          if (!word || !translation) return;
+                          if (exerciseInDictionary) return;
+                          const normalizedWord = word.toLowerCase();
+                          const payload = {
+                            query: normalizedWord,
+                            lang: "en" as const,
+                            word,
+                            translation,
+                          };
+                        if (auth.profile?.id) {
+                          dispatch(addWord(payload));
+                        } else {
+                          dictionaryApi
+                            .addUserDictionaryEntry(resolveUserId(), payload)
+                            .catch((err) =>
+                              console.error("addUserDictionaryEntry failed", err)
+                            );
+                        }
                       }}
+                      style={{
+                        border: "1px solid var(--tg-border)",
+                        background: "var(--tg-card)",
+                        color: "var(--tg-text)",
+                        fontWeight: 700,
+                        fontSize: 12,
+                        borderRadius: 999,
+                        padding: "6px 10px",
+                        cursor: exerciseInDictionary ? "default" : "pointer",
+                        whiteSpace: "nowrap",
+                        opacity: exerciseInDictionary ? 0.6 : 1,
+                      }}
+                      disabled={exerciseInDictionary}
                     >
-                      <Icon name="volume-on" size={18} />
-                    </S.ListenButton>
-                  )}
+                      {exerciseInDictionary ? "в словаре" : "+ в словарь"}
+                    </button>
+                      {currentExercise.direction === "en-ru" && (
+                        <S.ListenButton
+                          onClick={() => {
+                            const lookupWord = exerciseText(
+                              currentExercise.word || currentExercise.prompt
+                            );
+                            const ts = findWordTimestamp(lookupWord, wordChunks);
+                            if (ts === null) return;
+                            const el = videoRef.current;
+                            if (!el) return;
+                            el.currentTime = ts;
+                            el.play().catch(() => null);
+                          }}
+                        >
+                          <Icon name="volume-on" size={18} />
+                        </S.ListenButton>
+                      )}
+                    </div>
                 </div>
-                <S.ExerciseOptions>
-                  {currentExercise.options.map((opt, i) => {
+                  <S.ExerciseOptions>
+                    {exerciseOptions.map((opt, i) => {
                     const state =
                       selectedOption === null
                         ? "neutral"
@@ -1006,6 +1121,21 @@ export function VideoCard({
         <S.ExerciseOverlay
           $open={showExercises}
           onClick={() => setShowExercises(false)}
+          onTouchStart={(event) => {
+            if (!showExercises) return;
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+          onTouchMove={(event) => {
+            if (!showExercises) return;
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+          onWheel={(event) => {
+            if (!showExercises) return;
+            event.preventDefault();
+            event.stopPropagation();
+          }}
         />
       )}
 

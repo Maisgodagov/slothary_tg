@@ -508,6 +508,8 @@ export const ExerciseOverlay = styled.div<{ $open: boolean }>`
   background: transparent;
   z-index: 125;
   pointer-events: ${({ $open }) => ($open ? "auto" : "none")};
+  touch-action: none;
+  overscroll-behavior: contain;
 `;
 
 export const ExerciseHandle = styled.div`
@@ -557,13 +559,15 @@ export const ExerciseCard = styled.div`
 `;
 
 export const ExercisePrompt = styled.div`
-  font-weight: 600;
-  color: var(--tg-text, #e9edf7);
-  font-size: 26px;
-  justify-content: center;
-  display: flex;
-  width: 100%;
-`;
+    font-weight: 600;
+    color: var(--tg-text, #e9edf7);
+    font-size: 26px;
+    justify-content: flex-start;
+    text-align: left;
+    display: flex;
+    width: 100%;
+    padding-left: 8px;
+  `;
 
 export const ExerciseMeta = styled.div`
   font-size: 12px;
@@ -606,17 +610,17 @@ export const ExerciseOption = styled.button<{
 `;
 
 export const ListenButton = styled.button`
-  align-self: center;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  border: none;
-  background: var(--tg-border, #2b3245);
-  color: var(--tg-text, #e9edf7);
-  cursor: pointer;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--tg-border);
+    background: var(--tg-card);
+    color: var(--tg-text, #e9edf7);
+    cursor: pointer;
   svg {
     filter: none;
   }
