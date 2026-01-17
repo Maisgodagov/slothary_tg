@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
-import { selectAuth } from "../../../auth/slice";
+import { selectAuth, setProfile } from "../../../auth/slice";
 import {
   addWord,
   removeWord,
@@ -10,6 +10,7 @@ import { dictionaryApi } from "../../../dictionary/api";
 import { muellerApi, type MuellerEntry } from "../../../mueller/api";
 import { wordIdsFromSubtitles } from "../../../exercises/lib/wordIds";
 import { exercisesApi, type ExerciseItem } from "../../../exercises/api";
+import { usersApi } from "../../../users/api";
 import type { SpeechSpeedFilter } from "../../slice";
 import { moderationApi } from "../../moderationApi";
 import type { VideoCardProps } from "./types";
@@ -565,6 +566,19 @@ export function VideoCard({
           auth.profile.id
         )
         .catch((err) => console.error("submitAnswer failed", err));
+      if (correct) {
+        usersApi
+          .addXp(XP_PER_CORRECT_ANSWER, auth.profile.id)
+          .then((result) => {
+            dispatch(
+              setProfile({
+                ...auth.profile!,
+                xpPoints: result.xpPoints,
+              })
+            );
+          })
+          .catch((err) => console.error("addXp failed", err));
+      }
     }
     setTimeout(() => {
       setSelectedOption(null);
@@ -1585,6 +1599,8 @@ export function VideoCard({
     </S.Card>
   );
 }
+
+const XP_PER_CORRECT_ANSWER = 10;
 
 const inputStyle: React.CSSProperties = {
   width: "100%",

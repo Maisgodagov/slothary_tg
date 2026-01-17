@@ -8,6 +8,7 @@ import { LoginForm } from "../features/auth/components/LoginForm";
 import { useTelegram } from "../app/providers/TelegramProvider";
 import { Icon } from "../shared/ui/Icon";
 import { PageShell } from "../shared/ui/PageShell";
+import { getLevelInfo } from "../shared/lib/xp";
 
 export default function ProfilePage() {
   const auth = useAppSelector(selectAuth);
@@ -59,6 +60,8 @@ export default function ProfilePage() {
 
   const { fullName, email, role, avatarUrl } = auth.profile;
   const isTelegramUser = email?.endsWith("@telegram.local");
+  const xpPoints = auth.profile.xpPoints ?? 0;
+  const levelInfo = getLevelInfo(xpPoints);
 
   return (
     <PageShell>
@@ -101,6 +104,27 @@ export default function ProfilePage() {
 
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 20, fontWeight: 700 }}>{fullName}</div>
+              <div
+                style={{
+                  marginTop: 6,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-surface)",
+                  color: "var(--tg-text)",
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
+              >
+                <Icon name="exercise" size={16} color="#4cc4ff" />
+                <span>Ур. {levelInfo.level}</span>
+                <span style={{ color: "var(--tg-subtle)", fontWeight: 600 }}>
+                  {xpPoints} XP
+                </span>
+              </div>
             </div>
 
             <div
@@ -145,6 +169,18 @@ export default function ProfilePage() {
                 onClick={() => navigate("/admin/users")}
               >
                 Пользователи
+              </Button>
+              <Button
+                variant="ghost"
+                style={{
+                  flex: 1,
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                }}
+                onClick={() => navigate("/admin/game-snippets")}
+              >
+                Сниппеты игр
               </Button>
             </div>
           )}

@@ -22,6 +22,7 @@ import {
   Moon,
   Flame,
   History,
+  RotateCcw,
 } from "lucide-react";
 
 type IconName =
@@ -51,7 +52,8 @@ type IconName =
   | "sun"
   | "moon"
   | "flame"
-  | "history";
+  | "history"
+  | "replay";
 
 const ICON_MAP: Record<
   IconName,
@@ -90,6 +92,7 @@ const ICON_MAP: Record<
   moon: Moon,
   flame: Flame,
   history: History,
+  replay: RotateCcw,
 };
 
 interface IconProps {

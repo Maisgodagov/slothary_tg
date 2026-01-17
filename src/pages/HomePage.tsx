@@ -4,6 +4,7 @@ import { useAppSelector } from "../app/hooks";
 import { Icon } from "../shared/ui/Icon";
 import { PageShell } from "../shared/ui/PageShell";
 import { selectAuth } from "../features/auth/slice";
+import { getLevelInfo } from "../shared/lib/xp";
 
 export default function HomePage() {
   const auth = useAppSelector(selectAuth);
@@ -23,6 +24,8 @@ export default function HomePage() {
     "Профиль";
 
   const streakDays = auth.profile?.streakDays ?? 0;
+  const xpPoints = auth.profile?.xpPoints ?? 0;
+  const levelInfo = getLevelInfo(xpPoints);
   const avatarUrl =
     auth.profile?.avatarUrl ||
     (auth.profile as any)?.avatar ||
@@ -75,29 +78,56 @@ export default function HomePage() {
             top: 0,
             zIndex: 20,
             background: "var(--tg-bg)",
+            gap: 8,
+            flexWrap: "wrap",
           }}
         >
-          <button
-            onClick={() => setShowStreakModal(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "0 10px",
-              borderRadius: 999,
-              border: "1px solid var(--tg-border)",
-              background: "var(--tg-card)",
-              color: "var(--tg-text)",
-              height: 40,
-              justifyContent: "center",
-              fontSize: 14,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            <Icon name="flame" size={24} color="#ff9f45" />
-            <span>{streakDays} дн.</span>
-          </button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              onClick={() => setShowStreakModal(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "0 10px",
+                borderRadius: 999,
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                height: 40,
+                justifyContent: "center",
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              <Icon name="flame" size={24} color="#ff9f45" />
+              <span>{streakDays} дн.</span>
+            </button>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "0 10px",
+                borderRadius: 999,
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                height: 40,
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              <Icon name="exercise" size={18} color="#4cc4ff" />
+              <span>Ур. {levelInfo.level}</span>
+              <span style={{ color: "var(--tg-subtle)", fontWeight: 600 }}>
+                {xpPoints} XP
+              </span>
+            </div>
+          </div>
+
           <button
             onClick={() => navigate("/profile")}
             style={{
@@ -199,7 +229,33 @@ export default function HomePage() {
             </div>
           </div>
         )}
+
+        {auth.profile?.role === "admin" && (
+          <button
+            type="button"
+            onClick={() => navigate("/admin/audio-phrase-game")}
+            style={{
+              borderRadius: 16,
+              border: "1px solid var(--tg-border)",
+              background: "var(--tg-card)",
+              padding: 16,
+              display: "grid",
+              gap: 8,
+              textAlign: "left",
+              color: "var(--tg-text)",
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ fontWeight: 700 }}>
+              Мини-игра: Слушай и собери фразу
+            </div>
+            <div style={{ color: "var(--tg-subtle)", fontSize: 13 }}>
+              Тренировка восприятия на слух. Собери фразу из слов.
+            </div>
+          </button>
+        )}
       </div>
     </PageShell>
   );
 }
+

@@ -13,10 +13,12 @@ import {
 import { TelegramProvider, useTelegram } from "./providers/TelegramProvider";
 import { store, persistor } from "./store";
 import HomePage from "../pages/HomePage";
+import AudioPhraseGamePage from "../pages/AudioPhraseGamePage";
 import DictionaryPage from "../pages/DictionaryPage";
 import VideoPage from "../pages/VideoPage";
 import ModerationPage from "../pages/ModerationPage";
 import UserAdminPage from "../pages/UserAdminPage";
+import GameSnippetsAdminPage from "../pages/GameSnippetsAdminPage";
 import ProfilePage from "../pages/ProfilePage";
 import UserDictionaryPage from "../pages/UserDictionaryPage";
 import { Loader } from "../shared/ui/Loader";
@@ -114,6 +116,14 @@ function App() {
                 />
                 <Route path="/admin/moderation" element={<ModerationPage />} />
                 <Route path="/admin/users" element={<UserAdminPage />} />
+                <Route
+                  path="/admin/game-snippets"
+                  element={<GameSnippetsAdminPage />}
+                />
+                <Route
+                  path="/admin/audio-phrase-game"
+                  element={<AudioPhraseGamePage />}
+                />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
