@@ -274,7 +274,9 @@ const wrapperStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: 16,
-  paddingBottom: "50px",
+  paddingBottom: "70px",
+  paddingLeft: 12,
+  paddingRight: 12,
 };
 
 const headerRow: React.CSSProperties = {
