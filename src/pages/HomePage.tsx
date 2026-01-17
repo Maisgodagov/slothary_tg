@@ -1,43 +1,14 @@
-﻿import { useMemo, useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import { Icon } from "../shared/ui/Icon";
 import { PageShell } from "../shared/ui/PageShell";
 import { selectAuth } from "../features/auth/slice";
-import { useTelegram } from "../app/providers/TelegramProvider";
 
 export default function HomePage() {
   const auth = useAppSelector(selectAuth);
   const navigate = useNavigate();
   const [showStreakModal, setShowStreakModal] = useState(false);
-  const { initData } = useTelegram();
-  const webAppState = useMemo(() => {
-    const webApp = (window as any)?.Telegram?.WebApp;
-    if (!webApp) return null;
-    try {
-      return JSON.stringify(
-        {
-          platform: webApp.platform,
-          version: webApp.version,
-          colorScheme: webApp.colorScheme,
-          isExpanded: webApp.isExpanded,
-          headerColor: webApp.headerColor,
-          backgroundColor: webApp.backgroundColor,
-          initData: webApp.initData,
-          initDataUnsafe: webApp.initDataUnsafe,
-          viewportHeight: webApp.viewportHeight,
-          viewportStableHeight: webApp.viewportStableHeight,
-          safeAreaInset: webApp.safeAreaInset,
-          contentSafeAreaInset: webApp.contentSafeAreaInset,
-          isClosingConfirmationEnabled: webApp.isClosingConfirmationEnabled,
-        },
-        null,
-        2
-      );
-    } catch {
-      return null;
-    }
-  }, []);
 
   const initial = (
     auth.profile?.fullName?.[0] ??
@@ -228,7 +199,6 @@ export default function HomePage() {
             </div>
           </div>
         )}
-
       </div>
     </PageShell>
   );
