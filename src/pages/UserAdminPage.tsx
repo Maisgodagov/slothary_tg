@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
 import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
 import { usersAdminApi, type AdminUser } from "../features/admin/usersApi";
@@ -11,7 +9,6 @@ const PAGE_SIZE = 50;
 
 export default function UserAdminPage() {
   const auth = useAppSelector(selectAuth);
-  const navigate = useNavigate();
   const isAdmin = auth.profile?.role === "admin";
 
   const [items, setItems] = useState<AdminUser[]>([]);
@@ -20,6 +17,7 @@ export default function UserAdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<Record<string, boolean>>({});
+  const [query, setQuery] = useState("");
 
   const canLoadMore = page < totalPages;
 
@@ -54,6 +52,21 @@ export default function UserAdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
+  const filteredItems = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    const base = normalized
+      ? items.filter((user) => {
+          const name = (user.fullName || user.email || "").toLowerCase();
+          return name.includes(normalized);
+        })
+      : items;
+    return [...base].sort((a, b) => {
+      const aTime = a.lastSeenAt ? new Date(a.lastSeenAt).getTime() : 0;
+      const bTime = b.lastSeenAt ? new Date(b.lastSeenAt).getTime() : 0;
+      return bTime - aTime;
+    });
+  }, [items, query]);
+
   const title = useMemo(() => {
     if (!isAdmin) return "Доступ ограничен";
     return "Пользователи";
@@ -64,9 +77,6 @@ export default function UserAdminPage() {
       <PageShell>
         <div style={wrapperStyle}>
         <div className="page-header" style={headerRow}>
-          <Button variant="ghost" onClick={() => navigate("/profile")}>
-            Назад
-          </Button>
         </div>
         <div style={cardStyle}>
           <div style={{ fontWeight: 700 }}>{title}</div>
@@ -83,15 +93,17 @@ export default function UserAdminPage() {
     <PageShell>
       <div style={wrapperStyle}>
       <div className="page-header" style={headerRow}>
-        <Button variant="ghost" onClick={() => navigate("/profile")}>
-          Назад
-        </Button>
         <div style={{ fontWeight: 700 }}>{title}</div>
-        <div style={{ width: 64 }} />
       </div>
 
       <div style={listWrapper}>
-        {items.map((user) => (
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Поиск по имени"
+          style={searchInput}
+        />
+        {filteredItems.map((user) => (
           <div key={user.id} style={userCard}>
             <div style={userHeader}>
               <div style={avatarStyle}>
@@ -262,7 +274,7 @@ const wrapperStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: 16,
-  paddingBottom: "55px",
+  paddingBottom: "50px",
 };
 
 const headerRow: React.CSSProperties = {
@@ -275,6 +287,17 @@ const headerRow: React.CSSProperties = {
 const listWrapper: React.CSSProperties = {
   display: "grid",
   gap: 12,
+};
+
+const searchInput: React.CSSProperties = {
+  width: "100%",
+  borderRadius: 14,
+  border: "1px solid var(--tg-border)",
+  background: "var(--tg-card)",
+  color: "var(--tg-text)",
+  padding: "10px 12px",
+  fontSize: 14,
+  outline: "none",
 };
 
 const cardStyle: React.CSSProperties = {

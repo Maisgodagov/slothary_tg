@@ -135,18 +135,16 @@ export default function ProfilePage() {
           {role === "admin" && (
             <div style={{ display: "flex", gap: 8 }}>
               <Button
-                variant="primary"
-                style={{ flex: 1 }}
-                onClick={() => navigate("/admin/moderation")}
-              >
-                Модерация упражнений
-              </Button>
-              <Button
-                variant="primary"
-                style={{ flex: 1 }}
+                variant="ghost"
+                style={{
+                  flex: 1,
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                }}
                 onClick={() => navigate("/admin/users")}
               >
-                Администрирование пользователей
+                Пользователи
               </Button>
             </div>
           )}

@@ -52,8 +52,6 @@ export default function HomePage() {
     "Профиль";
 
   const streakDays = auth.profile?.streakDays ?? 0;
-  const isAdmin = auth.profile?.role === "admin";
-
   const avatarUrl =
     auth.profile?.avatarUrl ||
     (auth.profile as any)?.avatar ||
@@ -231,71 +229,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {isAdmin && (
-          <pre
-            style={{
-              marginTop: 12,
-              padding: 12,
-              borderRadius: 12,
-              background: "var(--tg-card)",
-              border: "1px solid var(--tg-border)",
-              color: "var(--tg-text)",
-              fontSize: 12,
-              lineHeight: 1.5,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-all",
-            }}
-          >
-            {`window.screen.width: ${window.screen.width}px\n`}
-            {`window.screen.height: ${window.screen.height}px\n`}
-            {`window.innerWidth: ${window.innerWidth}px\n`}
-            {`window.innerHeight: ${window.innerHeight}px\n`}
-            {`visualViewport.height: ${
-              window.visualViewport?.height ?? "n/a"
-            }px\n`}
-            {`1vh: ${window.innerHeight / 100}px\n`}
-            {`1dvh: ${window.innerHeight / 100}px\n`}
-            {`1vw: ${window.innerWidth / 100}px\n`}
-          </pre>
-        )}
-
-        {isAdmin && initData && (
-          <pre
-            style={{
-              marginTop: 12,
-              padding: 12,
-              borderRadius: 12,
-              background: "var(--tg-card)",
-              border: "1px solid var(--tg-border)",
-              color: "var(--tg-text)",
-              fontSize: 12,
-              lineHeight: 1.5,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-all",
-            }}
-          >
-            {initData}
-          </pre>
-        )}
-
-        {isAdmin && webAppState && (
-          <pre
-            style={{
-              marginTop: 12,
-              padding: 12,
-              borderRadius: 12,
-              background: "var(--tg-card)",
-              border: "1px solid var(--tg-border)",
-              color: "var(--tg-text)",
-              fontSize: 12,
-              lineHeight: 1.5,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-all",
-            }}
-          >
-            {webAppState}
-          </pre>
-        )}
       </div>
     </PageShell>
   );
