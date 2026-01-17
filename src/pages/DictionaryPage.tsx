@@ -1318,8 +1318,8 @@ export default function DictionaryPage() {
             );
             const isInDictionary = Boolean(existingEntry);
             const dictionaryActionLabel = isInDictionary
-              ? "В словаре"
-              : "+ В словарь";
+              ? "в словаре"
+              : "+ в словарь";
 
             return (
               <WordCard

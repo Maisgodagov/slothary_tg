@@ -63,7 +63,7 @@ export function WordCard({
         background: "var(--tg-surface)",
         border: "1px solid var(--tg-border)",
         borderRadius: 16,
-        padding: 16,
+        padding: isSubtitle ? 10 : 16,
         display: "grid",
         gap: isSubtitle ? 8 : isCompact ? 10 : 14,
       }}
