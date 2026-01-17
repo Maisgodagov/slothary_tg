@@ -9,6 +9,7 @@ export type GameSnippet = {
   startSeconds: number;
   endSeconds: number;
   isActive: boolean;
+  isApproved: boolean;
   createdAt: string;
   updatedAt: string;
   videoUrl: string | null;
@@ -22,10 +23,18 @@ const adminHeaders = (role?: UserRole | null): Record<string, string> => {
 };
 
 export const gameSnippetsApi = {
-  list(role?: UserRole | null) {
-    return apiFetch<{ items: GameSnippet[] }>("admin/game-snippets", {
+  list(params?: { approved?: boolean }, role?: UserRole | null) {
+    const searchParams = new URLSearchParams();
+    if (params?.approved !== undefined) {
+      searchParams.append("approved", String(params.approved));
+    }
+    const suffix = searchParams.toString();
+    return apiFetch<{ items: GameSnippet[] }>(
+      `admin/game-snippets${suffix ? `?${suffix}` : ""}`,
+      {
       headers: adminHeaders(role),
-    });
+      }
+    );
   },
   create(
     payload: {
@@ -51,6 +60,7 @@ export const gameSnippetsApi = {
       startSeconds?: number;
       endSeconds?: number;
       isActive?: boolean;
+      isApproved?: boolean;
     },
     role?: UserRole | null
   ) {
