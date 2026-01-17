@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
 import { gameSnippetsApi, type GameSnippet } from "../features/game-snippets/api";
+import { Icon } from "../shared/ui/Icon";
 import { PageShell } from "../shared/ui/PageShell";
 
 type FilterMode = "all" | "approved" | "pending";
@@ -40,6 +41,8 @@ export default function GameSnippetsAdminPage() {
   const [filter, setFilter] = useState<FilterMode>("pending");
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<GameSnippet[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingPhrase, setEditingPhrase] = useState("");
   const [editingTranslation, setEditingTranslation] = useState("");
@@ -48,17 +51,31 @@ export default function GameSnippetsAdminPage() {
   const [editingApproved, setEditingApproved] = useState(false);
   const [editingActive, setEditingActive] = useState(true);
 
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
+
   useEffect(() => {
     if (!auth.profile?.role) return;
     setLoading(true);
     gameSnippetsApi
-      .list(applyFilter(filter), auth.profile.role)
-      .then((result) => setItems(result.items))
+      .list(
+        { ...applyFilter(filter), limit: pageSize, offset: (page - 1) * pageSize },
+        auth.profile.role
+      )
+      .then((result) => {
+        setItems(result.items);
+        setTotal(result.total);
+      })
       .catch(() => {
         setItems([]);
+        setTotal(0);
       })
       .finally(() => setLoading(false));
-  }, [auth.profile?.role, filter]);
+  }, [auth.profile?.role, filter, page, pageSize]);
 
   if (!isAdmin) {
     return (
@@ -111,7 +128,14 @@ export default function GameSnippetsAdminPage() {
 
   return (
     <PageShell>
-      <div style={{ padding: 16, display: "grid", gap: 16 }}>
+      <div
+        style={{
+          padding: 16,
+          paddingBottom: 70,
+          display: "grid",
+          gap: 16,
+        }}
+      >
         <div style={{ fontWeight: 700 }}>{TEXT.title}</div>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -148,6 +172,13 @@ export default function GameSnippetsAdminPage() {
           <div style={{ display: "grid", gap: 12 }}>
             {items.map((item) => (
               <div key={item.id} style={cardStyle}>
+                {item.videoUrl && (
+                  <SnippetPreview
+                    videoUrl={item.videoUrl}
+                    startSeconds={item.startSeconds}
+                    endSeconds={item.endSeconds}
+                  />
+                )}
                 <div style={{ display: "grid", gap: 8 }}>
                   {editingId === item.id ? (
                     <div style={{ display: "grid", gap: 8 }}>
@@ -295,10 +326,124 @@ export default function GameSnippetsAdminPage() {
                 </div>
               </div>
             ))}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  style={ghostButtonStyle}
+                  disabled={page <= 1}
+                >
+                  Назад
+                </button>
+                <div style={{ alignSelf: "center", color: "var(--tg-subtle)" }}>
+                  {page} / {totalPages}
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPage((current) => Math.min(totalPages, current + 1))
+                  }
+                  style={ghostButtonStyle}
+                  disabled={page >= totalPages}
+                >
+                  Вперед
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
     </PageShell>
+  );
+}
+
+function SnippetPreview({
+  videoUrl,
+  startSeconds,
+  endSeconds,
+}: {
+  videoUrl: string;
+  startSeconds: number;
+  endSeconds: number;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [ended, setEnded] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const handleTimeUpdate = () => {
+      if (video.currentTime >= endSeconds) {
+        video.pause();
+        setEnded(true);
+      }
+    };
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
+  }, [endSeconds]);
+
+  return (
+    <div
+      style={{
+        borderRadius: 14,
+        overflow: "hidden",
+        background: "#000",
+        border: "1px solid var(--tg-border)",
+        maxWidth: 320,
+        width: "100%",
+        margin: "0 auto",
+        maxHeight: 360,
+        position: "relative",
+        cursor: "pointer",
+      }}
+      onClick={() => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.currentTime = startSeconds;
+        video.play().catch(() => undefined);
+        setEnded(false);
+      }}
+    >
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        style={{
+          width: "100%",
+          display: "block",
+          height: 360,
+          objectFit: "cover",
+        }}
+        onPlay={() => setEnded(false)}
+        controls={false}
+        playsInline
+        muted={false}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "grid",
+          placeItems: "center",
+          pointerEvents: "none",
+          opacity: ended ? 1 : 0.9,
+        }}
+      >
+        <div
+          style={{
+            width: 54,
+            height: 54,
+            borderRadius: "50%",
+            background: "rgba(0,0,0,0.35)",
+            display: "grid",
+            placeItems: "center",
+            color: "#fff",
+          }}
+        >
+          <Icon name="play" size={22} />
+        </div>
+      </div>
+    </div>
   );
 }
 
