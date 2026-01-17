@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
 import { gameSnippetsApi, type GameSnippet } from "../features/game-snippets/api";
-import { Icon } from "../shared/ui/Icon";
 import { PageShell } from "../shared/ui/PageShell";
 
 type FilterMode = "all" | "approved" | "pending";
@@ -38,7 +36,6 @@ const applyFilter = (filter: FilterMode) => {
 
 export default function GameSnippetsAdminPage() {
   const auth = useAppSelector(selectAuth);
-  const navigate = useNavigate();
   const isAdmin = auth.profile?.role === "admin";
   const [filter, setFilter] = useState<FilterMode>("pending");
   const [loading, setLoading] = useState(false);
@@ -115,16 +112,7 @@ export default function GameSnippetsAdminPage() {
   return (
     <PageShell>
       <div style={{ padding: 16, display: "grid", gap: 16 }}>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button
-            type="button"
-            onClick={() => navigate("/profile")}
-            style={navButtonStyle}
-          >
-            <Icon name="back" size={18} />
-          </button>
-          <div style={{ fontWeight: 700 }}>{TEXT.title}</div>
-        </div>
+        <div style={{ fontWeight: 700 }}>{TEXT.title}</div>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button
@@ -313,19 +301,6 @@ export default function GameSnippetsAdminPage() {
     </PageShell>
   );
 }
-
-const navButtonStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 999,
-  height: 36,
-  border: "1px solid var(--tg-border)",
-  padding: "0 10px",
-  background: "var(--tg-card)",
-  color: "var(--tg-text)",
-  cursor: "pointer",
-};
 
 const cardStyle: CSSProperties = {
   borderRadius: 16,

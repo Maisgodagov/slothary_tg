@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { selectAuth, setProfile } from "../features/auth/slice";
 import { publicGameSnippetsApi } from "../features/game-snippets/publicApi";
 import { type PhraseSnippet } from "../features/video-dictionary/api";
 import { usersApi } from "../features/users/api";
-import { Icon } from "../shared/ui/Icon";
 import { PageShell } from "../shared/ui/PageShell";
+import { Icon } from "../shared/ui/Icon";
 
 const GAME_ROUNDS = 5;
 const XP_PER_PHRASE = 25;
@@ -67,7 +66,6 @@ type GameItem = PhraseSnippet & {
 export default function AudioPhraseGamePage() {
   const auth = useAppSelector(selectAuth);
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const isAdmin = auth.profile?.role === "admin";
 
   if (!isAdmin) {
@@ -91,28 +89,6 @@ export default function AudioPhraseGamePage() {
           paddingLeft: 12,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 999,
-              height: 40,
-              border: "1px solid var(--tg-border)",
-              padding: "0 12px",
-              background: "var(--tg-card)",
-              color: "var(--tg-text)",
-              cursor: "pointer",
-            }}
-          >
-            <Icon name="back" size={18} />
-          </button>
-          <div style={{ fontWeight: 700 }}>Мини-игра</div>
-        </div>
-
         <AudioPhraseGame
           userId={auth.profile?.id}
           onXp={(xpPoints) => {
@@ -282,11 +258,10 @@ function AudioPhraseGame({
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <div style={{ fontWeight: 700 }}>
-          Мини-игра: Слушай и собери фразу
-        </div>
+        <div style={{ fontWeight: 700 }}>Мини-игра: Слушай и собери фразу</div>
         <div style={{ color: "var(--tg-subtle)", fontSize: 12 }}>
-          Раунд {Math.min(roundIndex + 1, gameItems.length)} / {gameItems.length}
+          Раунд {Math.min(roundIndex + 1, gameItems.length)} /{" "}
+          {gameItems.length}
         </div>
       </div>
 
