@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { useLocation } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
 import { gameSnippetsApi, type GameSnippet } from "../features/game-snippets/api";
@@ -37,6 +38,7 @@ const applyFilter = (filter: FilterMode) => {
 
 export default function GameSnippetsAdminPage() {
   const auth = useAppSelector(selectAuth);
+  const location = useLocation();
   const isAdmin = auth.profile?.role === "admin";
   const [filter, setFilter] = useState<FilterMode>("pending");
   const [loading, setLoading] = useState(false);
@@ -50,6 +52,7 @@ export default function GameSnippetsAdminPage() {
   const [editingEnd, setEditingEnd] = useState("");
   const [editingApproved, setEditingApproved] = useState(false);
   const [editingActive, setEditingActive] = useState(true);
+  const [pendingEditId, setPendingEditId] = useState<string | null>(null);
 
   const pageSize = 10;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -57,6 +60,12 @@ export default function GameSnippetsAdminPage() {
   useEffect(() => {
     setPage(1);
   }, [filter]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const editId = params.get("edit");
+    setPendingEditId(editId);
+  }, [location.search]);
 
   useEffect(() => {
     if (!auth.profile?.role) return;
@@ -76,6 +85,28 @@ export default function GameSnippetsAdminPage() {
       })
       .finally(() => setLoading(false));
   }, [auth.profile?.role, filter, page, pageSize]);
+
+  useEffect(() => {
+    if (!pendingEditId || !auth.profile?.role) return;
+    const match = items.find((item) => item.id === pendingEditId);
+    if (match) {
+      beginEdit(match);
+      setPendingEditId(null);
+      return;
+    }
+    gameSnippetsApi
+      .getById(pendingEditId, auth.profile.role)
+      .then((item) => {
+        setItems((prev) => {
+          const exists = prev.find((entry) => entry.id === item.id);
+          if (exists) return prev;
+          return [item, ...prev];
+        });
+        beginEdit(item);
+        setPendingEditId(null);
+      })
+      .catch(() => null);
+  }, [auth.profile?.role, items, pendingEditId]);
 
   if (!isAdmin) {
     return (
@@ -386,20 +417,23 @@ function SnippetPreview({
   return (
     <div
       style={{
-        borderRadius: 14,
+        borderRadius: "50%",
         overflow: "hidden",
         background: "#000",
         border: "1px solid var(--tg-border)",
-        maxWidth: 320,
-        width: "100%",
+        width: 300,
+        height: 300,
         margin: "0 auto",
-        maxHeight: 360,
         position: "relative",
         cursor: "pointer",
       }}
       onClick={() => {
         const video = videoRef.current;
         if (!video) return;
+        if (!video.paused) {
+          video.pause();
+          return;
+        }
         video.currentTime = startSeconds;
         video.play().catch(() => undefined);
         setEnded(false);
@@ -411,8 +445,9 @@ function SnippetPreview({
         style={{
           width: "100%",
           display: "block",
-          height: 360,
+          height: "100%",
           objectFit: "cover",
+          objectPosition: "center 40%",
         }}
         onPlay={() => setEnded(false)}
         controls={false}

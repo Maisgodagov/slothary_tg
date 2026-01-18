@@ -23,6 +23,11 @@ const adminHeaders = (role?: UserRole | null): Record<string, string> => {
 };
 
 export const gameSnippetsApi = {
+  getById(id: string, role?: UserRole | null) {
+    return apiFetch<GameSnippet>(`admin/game-snippets/${id}`, {
+      headers: adminHeaders(role),
+    });
+  },
   list(
     params?: { approved?: boolean; limit?: number; offset?: number },
     role?: UserRole | null
