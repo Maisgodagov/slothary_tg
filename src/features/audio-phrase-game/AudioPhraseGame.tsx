@@ -76,6 +76,15 @@ const shuffleWords = (input: string[]) => {
   return next;
 };
 
+const shuffleItems = <T,>(input: T[]) => {
+  const next = [...input];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+};
+
 type GameItem = PhraseSnippet & {
   translation?: string | null;
 };
@@ -157,7 +166,7 @@ export default function AudioPhraseGame({
             translation: item.translation ?? null,
             durationSeconds: null,
           })) ?? [];
-        setGameItems(items.slice(0, maxRounds));
+        setGameItems(shuffleItems(items).slice(0, maxRounds));
       } catch {
         if (!cancelled) setGameItems([]);
       } finally {
@@ -255,16 +264,34 @@ export default function AudioPhraseGame({
           gap: 12,
         }}
       >
-        <style>
-          {`@keyframes slot-wiggle {
+      <style>
+        {`@keyframes slot-wiggle {
   0% { transform: translateX(0); }
   20% { transform: translateX(-3px); }
   40% { transform: translateX(3px); }
   60% { transform: translateX(-2px); }
   80% { transform: translateX(2px); }
   100% { transform: translateX(0); }
+}
+
+body[data-theme='light'] .apg-slot--empty {
+  border-color: rgba(0, 0, 0, 0.35) !important;
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+body[data-theme='light'] .apg-word {
+  border-color: rgba(0, 0, 0, 0.2) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #0b1b2b !important;
+}
+
+body[data-theme='light'] .apg-next {
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  background: rgba(46, 163, 255, 0.18) !important;
+  color: #0b1b2b !important;
+}
 }`}
-        </style>
+      </style>
         {showHeader && (
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <div style={{ fontWeight: 700 }}>{TEXT.title}</div>
@@ -327,19 +354,20 @@ export default function AudioPhraseGame({
               }}
             >
               {slots.map((slot, index) => (
-                <div
-                  key={`slot-${index}`}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={(event) => {
-                    event.preventDefault();
-                    const word = event.dataTransfer.getData("text/plain");
-                    if (!word) return;
+              <div
+                key={`slot-${index}`}
+                className={`apg-slot ${slot ? "apg-slot--filled" : "apg-slot--empty"}`}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const word = event.dataTransfer.getData("text/plain");
+                  if (!word) return;
                     handleWordDrop(word, index);
                   }}
                   style={{
                     minWidth: 72,
                     minHeight: 32,
-                    borderRadius: 0,
+                    borderRadius: 10,
                     border:
                       showCheck && slot
                         ? slot.toLowerCase() ===
@@ -423,16 +451,20 @@ export default function AudioPhraseGame({
                 }}
               >
                 {availableWords.map((word) => (
-                  <div
-                    key={word}
-                    draggable
-                    onDragStart={(event) => {
-                      event.dataTransfer.setData("text/plain", word);
-                    }}
-                    onClick={() => handleWordClick(word)}
-                    style={{
-                      padding: "7px 12px",
-                      borderRadius: 999,
+                <div
+                  key={word}
+                  draggable
+                  onDragStart={(event) => {
+                    event.dataTransfer.setData("text/plain", word);
+                  }}
+                  onClick={() => handleWordClick(word)}
+                  className="apg-word"
+                  style={{
+                    minHeight: 32,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "4px 12px",
+                      borderRadius: 10,
                       border: "1px solid rgba(255,255,255,0.18)",
                       background: "rgba(114, 189, 227, 0.311)",
                       color: "#eef7ff",
@@ -477,17 +509,18 @@ export default function AudioPhraseGame({
             )}
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               {isCorrect && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setRoundIndex((idx) => Math.min(idx + 1, gameItems.length))
-                  }
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+              <button
+                type="button"
+                onClick={() =>
+                  setRoundIndex((idx) => Math.min(idx + 1, gameItems.length))
+                }
+                className="apg-next"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                     padding: "10px 18px",
-                    borderRadius: 999,
+                    borderRadius: 10,
                     border: "1px solid rgba(76,196,255,0.55)",
                     background: "rgba(76,196,255,0.18)",
                     color: "#e9f7ff",

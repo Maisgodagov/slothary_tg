@@ -16,12 +16,64 @@ export interface CreateUserDictionaryEntry {
   translation?: string;
 }
 
+export interface DictionaryStats {
+  learningCount: number;
+  knownCount: number;
+  viewedCount: number;
+}
+
+export interface DictionaryStatsWord {
+  id: string;
+  query: string;
+  lang: 'en' | 'ru';
+  word: string;
+  translation: string;
+  otherTranslations: string[];
+  touchesTotal: number | null;
+  touchesCorrect: number | null;
+  touchesIncorrect: number | null;
+}
+
 const headersWithUser = (userId?: string | null) => (userId ? { 'x-user-id': userId } : undefined);
 
 export const dictionaryApi = {
   getUserDictionary(userId: string) {
     return apiFetch<UserDictionaryEntry[]>('dictionary', {
       headers: headersWithUser(userId),
+    });
+  },
+  getStats(userId: string) {
+    return apiFetch<DictionaryStats>('dictionary/stats', {
+      headers: headersWithUser(userId),
+    });
+  },
+  getStatsWords(
+    userId: string,
+    status: 'learning' | 'known' | 'viewed',
+    options?: { limit?: number; offset?: number }
+  ) {
+    const query = new URLSearchParams({ status });
+    if (typeof options?.limit === "number") {
+      query.set("limit", String(options.limit));
+    }
+    if (typeof options?.offset === "number") {
+      query.set("offset", String(options.offset));
+    }
+    return apiFetch<{ items: DictionaryStatsWord[] }>(
+      `dictionary/stats/words?${query.toString()}`,
+      {
+        headers: headersWithUser(userId),
+      }
+    );
+  },
+  recordView(
+    userId: string,
+    payload: { query: string; lang: 'en' | 'ru'; word: string; translation: string }
+  ) {
+    return apiFetch<void>('dictionary/views', {
+      method: 'POST',
+      headers: headersWithUser(userId),
+      body: payload,
     });
   },
   addUserDictionaryEntry(userId: string, payload: CreateUserDictionaryEntry) {

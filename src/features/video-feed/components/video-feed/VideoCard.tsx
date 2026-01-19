@@ -377,6 +377,17 @@ export function VideoCard({
         status: "ready",
         entry: entries[0],
       });
+      const primary = entries[0];
+      if (primary?.word && primary.translations?.[0]) {
+        dictionaryApi
+          .recordView(resolveUserId(), {
+            query: normalized,
+            lang: "en",
+            word: primary.word,
+            translation: primary.translations[0],
+          })
+          .catch(() => null);
+      }
     } catch (err: any) {
       setSubtitleLookup({
         word: normalized,

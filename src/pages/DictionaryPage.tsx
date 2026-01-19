@@ -15,6 +15,7 @@ import {
   removeWord,
   selectDictionary,
 } from "../features/dictionary/slice";
+import { dictionaryApi } from "../features/dictionary/api";
 import { muellerApi, type MuellerEntry } from "../features/mueller/api";
 import {
   type PhraseSnippet,
@@ -741,6 +742,18 @@ export default function DictionaryPage() {
 
       setDictEntries(dictionaryResults);
       setDictStatus("ready");
+
+      const primary = dictionaryResults[0];
+      if (auth.profile?.id && primary?.word && primary.translations?.[0]) {
+        dictionaryApi
+          .recordView(auth.profile.id, {
+            query: trimmed.toLowerCase(),
+            lang: isRu ? "ru" : "en",
+            word: primary.word,
+            translation: primary.translations[0],
+          })
+          .catch(() => null);
+      }
 
       const nextVideoQuery = isRu ? dictionaryResults[0]?.word?.trim() ?? "" : trimmed;
       setVideoQuery(nextVideoQuery);

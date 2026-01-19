@@ -16,6 +16,10 @@ type WordCardProps = {
   dictionaryActionMode?: "button" | "tag" | "none";
   dictionaryActionDisabled?: boolean;
   onDictionaryAction?: () => void;
+  dictionaryActionPlacement?: "footer" | "inline";
+  dictionaryActionVisibility?: "always" | "expanded-only";
+  isExpanded?: boolean;
+  layoutMode?: "default" | "tight";
   variant?: "default" | "compact";
   children?: ReactNode;
 };
@@ -34,18 +38,30 @@ export function WordCard({
   dictionaryActionMode = "button",
   dictionaryActionDisabled = false,
   onDictionaryAction,
+  dictionaryActionPlacement = "footer",
+  dictionaryActionVisibility = "always",
+  isExpanded = false,
+  layoutMode = "default",
   variant = "default",
   children,
 }: WordCardProps) {
   const showOtherTranslations = Boolean(
-    otherTranslationsRu && otherTranslationsRu.length > 0
+    otherTranslationsRu && otherTranslationsRu.length > 0,
   );
   const showSynonyms = Boolean(synonyms && synonyms.length > 0);
   const isCompact = variant === "compact";
   const isSubtitle = size === "subtitle";
-  const showDictionaryAction =
+  const canShowDictionaryAction =
     dictionaryActionMode !== "none" && Boolean(dictionaryActionLabel);
+  const showDictionaryAction =
+    canShowDictionaryAction &&
+    (dictionaryActionVisibility === "always" || isExpanded);
+  const showInlineAction =
+    showDictionaryAction && dictionaryActionPlacement === "inline";
+  const showFooterAction =
+    showDictionaryAction && dictionaryActionPlacement !== "inline";
   const displayWord = word.toLowerCase();
+  const outerGap = layoutMode === "tight" ? 5 : isSubtitle ? 8 : isCompact ? 10 : 14;
 
   const wordFontSize = isSubtitle ? 16 : isCompact ? 18 : 28;
   const metaFontSize = isSubtitle ? 12 : isCompact ? 13 : 14;
@@ -54,8 +70,8 @@ export function WordCard({
     isSubtitle && !showExamplesButton
       ? "flex-end"
       : isCompact
-      ? "flex-start"
-      : "space-between";
+        ? "flex-start"
+        : "space-between";
 
   return (
     <div
@@ -63,30 +79,85 @@ export function WordCard({
         background: "var(--tg-surface)",
         border: "1px solid var(--tg-border)",
         borderRadius: 16,
-        padding: isSubtitle ? 10 : 16,
+        padding: isSubtitle ? 10 : layoutMode === "tight" ? 12 : 16,
         display: "grid",
-        gap: isSubtitle ? 8 : isCompact ? 10 : 14,
+        gap: outerGap,
       }}
     >
       <div
         style={{
           display: "grid",
-          gap: isSubtitle ? 6 : isCompact ? 8 : 12,
+          gap: isSubtitle ? 6 : isCompact ? 4 : 12,
           textAlign: "left",
           color: "var(--tg-text)",
         }}
       >
         <div
           style={{
-            fontSize: wordFontSize,
-            fontWeight: 800,
-            lineHeight: isSubtitle ? 1.2 : 1.25,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: showInlineAction ? "space-between" : "flex-start",
+            gap: 12,
           }}
         >
-          <span>{displayWord}</span>
-          {translation && (
-            <span style={{ fontWeight: 400 }}> - {translation}</span>
-          )}
+          <div
+            style={{
+              fontSize: wordFontSize,
+              fontWeight: 800,
+              lineHeight: isSubtitle ? 1.2 : 1.25,
+            }}
+          >
+            <span>{displayWord}</span>
+            {translation && (
+              <span style={{ fontWeight: 400 }}> - {translation}</span>
+            )}
+          </div>
+          {showInlineAction &&
+            (dictionaryActionMode === "tag" ? (
+              <span
+                style={{
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                  fontWeight: 700,
+                  fontSize: buttonFontSize,
+                  borderRadius: 999,
+                  padding: isCompact ? "6px 12px" : "8px 14px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  opacity: 0.7,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {dictionaryActionLabel}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={
+                  dictionaryActionDisabled ? undefined : onDictionaryAction
+                }
+                disabled={dictionaryActionDisabled}
+                style={{
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                  fontWeight: 700,
+                  fontSize: buttonFontSize,
+                  borderRadius: 999,
+                  padding: isCompact ? "6px 12px" : "8px 14px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  cursor: dictionaryActionDisabled ? "default" : "pointer",
+                  opacity: dictionaryActionDisabled ? 0.6 : 1,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {dictionaryActionLabel}
+              </button>
+            ))}
         </div>
         {showOtherTranslations && (
           <div
@@ -174,7 +245,7 @@ export function WordCard({
             />
           </button>
         )}
-        {showDictionaryAction &&
+        {showFooterAction &&
           (dictionaryActionMode === "tag" ? (
             <span
               style={{
@@ -196,7 +267,9 @@ export function WordCard({
           ) : (
             <button
               type="button"
-              onClick={dictionaryActionDisabled ? undefined : onDictionaryAction}
+              onClick={
+                dictionaryActionDisabled ? undefined : onDictionaryAction
+              }
               disabled={dictionaryActionDisabled}
               style={{
                 border: "1px solid var(--tg-border)",
