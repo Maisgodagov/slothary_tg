@@ -57,7 +57,7 @@ export const HeaderText = styled.div`
 
 export const Greeting = styled.div`
   font-weight: 700;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -88,6 +88,11 @@ export const StreakButton = styled.button`
   cursor: pointer;
   min-width: 88px;
   justify-content: center;
+
+  [data-theme="light"] & {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+  }
 `;
 
 export const StreakCount = styled.span`

@@ -21,6 +21,7 @@ type WordCardProps = {
   isExpanded?: boolean;
   layoutMode?: "default" | "tight";
   variant?: "default" | "compact";
+  summary?: boolean;
   children?: ReactNode;
 };
 
@@ -43,6 +44,7 @@ export function WordCard({
   isExpanded = false,
   layoutMode = "default",
   variant = "default",
+  summary = false,
   children,
 }: WordCardProps) {
   const showOtherTranslations = Boolean(
@@ -61,7 +63,8 @@ export function WordCard({
   const showFooterAction =
     showDictionaryAction && dictionaryActionPlacement !== "inline";
   const displayWord = word.toLowerCase();
-  const outerGap = layoutMode === "tight" ? 5 : isSubtitle ? 8 : isCompact ? 10 : 14;
+  const effectiveLayout = summary ? "tight" : layoutMode;
+  const outerGap = effectiveLayout === "tight" ? 5 : isSubtitle ? 8 : isCompact ? 10 : 14;
 
   const wordFontSize = isSubtitle ? 16 : isCompact ? 18 : 28;
   const metaFontSize = isSubtitle ? 12 : isCompact ? 13 : 14;
@@ -79,7 +82,7 @@ export function WordCard({
         background: "var(--tg-surface)",
         border: "1px solid var(--tg-border)",
         borderRadius: 16,
-        padding: isSubtitle ? 10 : layoutMode === "tight" ? 12 : 16,
+        padding: isSubtitle ? 10 : effectiveLayout === "tight" ? 12 : 16,
         display: "grid",
         gap: outerGap,
       }}
@@ -206,71 +209,21 @@ export function WordCard({
         )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: isCompact ? 10 : 14,
-          justifyContent: actionsJustify,
-          alignItems: "center",
-          flexWrap: "wrap",
-          width: "100%",
-        }}
-      >
-        {showExamplesButton && (
-          <button
-            type="button"
-            onClick={onToggleExamples}
-            style={{
-              border: "1px solid var(--tg-border)",
-              background: "var(--tg-card)",
-              color: "var(--tg-text)",
-              fontWeight: 700,
-              fontSize: buttonFontSize,
-              borderRadius: 999,
-              padding: isCompact ? "6px 12px" : "8px 14px",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              cursor: "pointer",
-            }}
-          >
-            {examplesOpen ? "Скрыть примеры" : "Показать примеры"}
-            <Icon
-              name="chevron-down"
-              size={16}
-              style={{
-                transform: examplesOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.15s ease",
-              }}
-            />
-          </button>
-        )}
-        {showFooterAction &&
-          (dictionaryActionMode === "tag" ? (
-            <span
-              style={{
-                border: "1px solid var(--tg-border)",
-                background: "var(--tg-card)",
-                color: "var(--tg-text)",
-                fontWeight: 700,
-                fontSize: buttonFontSize,
-                borderRadius: 999,
-                padding: isCompact ? "6px 12px" : "8px 14px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                opacity: 0.7,
-              }}
-            >
-              {dictionaryActionLabel}
-            </span>
-          ) : (
+      {(showExamplesButton || showFooterAction) && !summary && (
+        <div
+          style={{
+            display: "flex",
+            gap: isCompact ? 10 : 14,
+            justifyContent: actionsJustify,
+            alignItems: "center",
+            flexWrap: "wrap",
+            width: "100%",
+          }}
+        >
+          {showExamplesButton && (
             <button
               type="button"
-              onClick={
-                dictionaryActionDisabled ? undefined : onDictionaryAction
-              }
-              disabled={dictionaryActionDisabled}
+              onClick={onToggleExamples}
               style={{
                 border: "1px solid var(--tg-border)",
                 background: "var(--tg-card)",
@@ -282,14 +235,66 @@ export function WordCard({
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                cursor: dictionaryActionDisabled ? "default" : "pointer",
-                opacity: dictionaryActionDisabled ? 0.6 : 1,
+                cursor: "pointer",
               }}
             >
-              {dictionaryActionLabel}
+              {examplesOpen ? "Скрыть примеры" : "Показать примеры"}
+              <Icon
+                name="chevron-down"
+                size={16}
+                style={{
+                  transform: examplesOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.15s ease",
+                }}
+              />
             </button>
-          ))}
-      </div>
+          )}
+          {showFooterAction &&
+            (dictionaryActionMode === "tag" ? (
+              <span
+                style={{
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                  fontWeight: 700,
+                  fontSize: buttonFontSize,
+                  borderRadius: 999,
+                  padding: isCompact ? "6px 12px" : "8px 14px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  opacity: 0.7,
+                }}
+              >
+                {dictionaryActionLabel}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={
+                  dictionaryActionDisabled ? undefined : onDictionaryAction
+                }
+                disabled={dictionaryActionDisabled}
+                style={{
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                  fontWeight: 700,
+                  fontSize: buttonFontSize,
+                  borderRadius: 999,
+                  padding: isCompact ? "6px 12px" : "8px 14px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  cursor: dictionaryActionDisabled ? "default" : "pointer",
+                  opacity: dictionaryActionDisabled ? 0.6 : 1,
+                }}
+              >
+                {dictionaryActionLabel}
+              </button>
+            ))}
+        </div>
+      )}
 
       {children}
     </div>
