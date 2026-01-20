@@ -19,7 +19,7 @@ export function VideoContainer() {
   }, [contentId, dispatch]);
 
   return (
-    <PageShell scroll={false}>
+    <PageShell scroll={false} pullToRefresh={false}>
       <VideoWrapper>
         <VideoFeed initialContentId={contentId} />
       </VideoWrapper>
