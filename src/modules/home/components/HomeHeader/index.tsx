@@ -20,6 +20,7 @@ export function HomeHeader({
   avatarUrl,
   displayName,
   initial,
+  isLightTheme,
   onOpenStreak,
   onOpenProfile,
 }: HomeHeaderProps) {
@@ -48,7 +49,7 @@ export function HomeHeader({
           name="flame-filled"
           size={24}
           color="#F97316"
-          fillColor="#442D22"
+          fillColor={isLightTheme ? "none" : "#442D22"}
         />
         <StreakCount>{streakDays}</StreakCount>
       </StreakButton>

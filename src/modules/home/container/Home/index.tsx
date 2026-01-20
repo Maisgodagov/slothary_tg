@@ -1,39 +1,30 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
+import { useTelegram } from "../../../../app/providers/TelegramProvider";
 import { selectAuth } from "../../../../features/auth/slice";
 import { getLevelInfo } from "../../../../shared/lib/xp";
-import { Icon } from "../../../../shared/ui/Icon";
 import { PageShell } from "../../../../shared/ui/PageShell";
 import { homeApi } from "../../api";
 import type { DictionaryStats } from "../../api/types";
 import { AdminActionCard } from "../../components/AdminActionCard";
 import { HomeHeader } from "../../components/HomeHeader";
+import { ProgressSummary } from "../../components/ProgressSummary";
 import { StreakModal } from "../../components/StreakModal";
 import { setLastStatsUpdatedAt } from "../../store/slice";
-import {
-  HomeWrapper,
-  ProgressCard,
-  ProgressDivider,
-  ProgressGrid,
-  ProgressHeader,
-  ProgressItem,
-  ProgressLabel,
-  ProgressLink,
-  ProgressMuted,
-  ProgressSection,
-  ProgressTitle,
-  ProgressValue,
-} from "./styles";
+import { HomeWrapper } from "./styles";
 
 export function HomeContainer() {
   const auth = useAppSelector(selectAuth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { themeMode, theme } = useTelegram();
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [wordStats, setWordStats] = useState<DictionaryStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const isLightTheme =
+    themeMode === "light" || (themeMode === "system" && theme === "light");
 
   const initial = useMemo(() => {
     const raw = auth.profile?.fullName?.[0] ?? auth.profile?.email?.[0] ?? "U";
@@ -102,6 +93,7 @@ export function HomeContainer() {
           avatarUrl={avatarUrl}
           displayName={displayName}
           initial={initial}
+          isLightTheme={isLightTheme}
           onOpenStreak={() => setShowStreakModal(true)}
           onOpenProfile={() => navigate("/profile")}
         />
@@ -112,47 +104,13 @@ export function HomeContainer() {
           onClose={() => setShowStreakModal(false)}
         />
 
-        {wordStats && (
-          <ProgressSection>
-            <ProgressHeader>
-              <ProgressTitle>Мой прогресс</ProgressTitle>
-              {auth.profile?.role === "admin" && (
-                <ProgressLink
-                  type="button"
-                  onClick={() => navigate("/admin/word-progress")}
-                >
-                  Детали
-                </ProgressLink>
-              )}
-            </ProgressHeader>
-            <ProgressCard>
-              {statsLoading && (
-                <ProgressMuted>Загружаем статистику...</ProgressMuted>
-              )}
-              {!statsLoading && (
-                <ProgressGrid>
-                  <ProgressItem>
-                    <Icon name="exercise" size={24} color="#4da3ff" />
-                    <ProgressValue>{wordStats.learningCount}</ProgressValue>
-                    <ProgressLabel>ИЗУЧАЮ</ProgressLabel>
-                  </ProgressItem>
-                  <ProgressDivider />
-                  <ProgressItem>
-                    <Icon name="trophy" size={24} color="#2ecc71" />
-                    <ProgressValue>{wordStats.knownCount}</ProgressValue>
-                    <ProgressLabel>ВЫУЧЕНО</ProgressLabel>
-                  </ProgressItem>
-                  <ProgressDivider />
-                  <ProgressItem>
-                    <Icon name="translate" size={24} color="#8b5cf6" />
-                    <ProgressValue>{wordStats.viewedCount}</ProgressValue>
-                    <ProgressLabel>ПЕРЕВОДОВ</ProgressLabel>
-                  </ProgressItem>
-                </ProgressGrid>
-              )}
-            </ProgressCard>
-          </ProgressSection>
-        )}
+        <ProgressSummary
+          stats={wordStats}
+          loading={statsLoading}
+          isAdmin={auth.profile?.role === "admin"}
+          onDetails={() => navigate("/admin/word-progress")}
+        />
+
         {auth.profile?.role === "admin" && (
           <AdminActionCard
             title="Мини-игра: Слушай и собери фразу"

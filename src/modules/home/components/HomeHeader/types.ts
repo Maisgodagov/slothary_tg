@@ -5,6 +5,7 @@ export type HomeHeaderProps = {
   avatarUrl: string | null;
   displayName: string;
   initial: string;
+  isLightTheme: boolean;
   onOpenStreak: () => void;
   onOpenProfile: () => void;
 };
