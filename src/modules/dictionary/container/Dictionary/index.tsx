@@ -691,7 +691,9 @@ export function DictionaryContainer() {
       setUserExpandedTranslationsId((prev) => {
         const nextValue = prev === entryId ? null : entryId;
         if (nextValue && userDictionaryDetails[nextValue]?.status !== 'ready') {
-          const entry = dictionary.items.find((item) => item.id === nextValue);
+          const entry = (dictionary.items as UserDictionaryEntry[]).find(
+            (item: UserDictionaryEntry) => item.id === nextValue,
+          );
           if (entry) loadUserDictionaryDetails(entry.id, entry.word);
         }
         return nextValue;
@@ -743,8 +745,8 @@ export function DictionaryContainer() {
             const showSnippets = showExamples && examplesOpen && hasSnippets;
             const normalizedWord = primaryEnglish.toLowerCase();
             const normalizedTranslation = primaryRussian.trim().toLowerCase();
-            const existingEntry = dictionary.items.find(
-              (entry) =>
+            const existingEntry = (dictionary.items as UserDictionaryEntry[]).find(
+              (entry: UserDictionaryEntry) =>
                 entry.word.toLowerCase() === normalizedWord &&
                 entry.translation.toLowerCase() === normalizedTranslation,
             );
@@ -814,13 +816,13 @@ export function DictionaryContainer() {
 
         <DictionarySection>
           <SectionTitle>Мой словарь</SectionTitle>
-          {dictionary.items.length === 0 && (
+          {(dictionary.items as UserDictionaryEntry[]).length === 0 && (
             <EmptyText>
               Здесь пока пусто. Добавляйте новые слова в словарь, и они будут появляться в этом списке.
             </EmptyText>
           )}
           <UserList>
-            {dictionary.items.map((entry: UserDictionaryEntry) => {
+            {(dictionary.items as UserDictionaryEntry[]).map((entry: UserDictionaryEntry) => {
               const open = userExamplesOpenId === entry.id;
               const state = userExampleState[entry.id] ?? {
                 status: 'idle',

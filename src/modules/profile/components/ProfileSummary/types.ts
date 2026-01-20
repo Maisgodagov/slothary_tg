@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 export type ProfileSummaryProps = {
   fullName: string;
@@ -6,7 +6,7 @@ export type ProfileSummaryProps = {
   avatarUrl?: string | null;
   initials: string;
   xpPoints: number;
-  levelLabel: string;
+  levelLabel: string | number;
   isTelegramUser: boolean;
   onLogout: () => void;
   children?: ReactNode;
