@@ -1,4 +1,3 @@
-import { Icon } from "../../../../shared/ui/Icon";
 import type { ProgressSummaryProps } from "./types";
 import {
   ProgressCard,
