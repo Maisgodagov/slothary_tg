@@ -12,15 +12,17 @@ import {
 
 import { TelegramProvider, useTelegram } from "./providers/TelegramProvider";
 import { store, persistor } from "./store";
-import HomePage from "../pages/HomePage";
 import AudioPhraseGamePage from "../pages/AudioPhraseGamePage";
-import DictionaryPage from "../pages/DictionaryPage";
-import VideoPage from "../pages/VideoPage";
 import ModerationPage from "../pages/ModerationPage";
 import UserAdminPage from "../pages/UserAdminPage";
 import GameSnippetsAdminPage from "../pages/GameSnippetsAdminPage";
-import ProfilePage from "../pages/ProfilePage";
 import UserDictionaryPage from "../pages/UserDictionaryPage";
+import WordProgressPage from "../pages/WordProgressPage";
+import { HomeContainer } from "../modules/home";
+import { VideoContainer } from "../modules/video";
+import { DictionaryContainer } from "../modules/dictionary";
+import { ProfileContainer } from "../modules/profile";
+import { AdminContainer } from "../modules/admin";
 import { Loader } from "../shared/ui/Loader";
 import "../shared/styles/global.css";
 import { useAppDispatch, useAppSelector } from "./hooks";
@@ -105,10 +107,10 @@ function App() {
             <StreakRefresher />
             <div className="page">
               <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/video" element={<VideoPage />} />
-                <Route path="/dictionary" element={<DictionaryPage />} />
+                <Route path="/" element={<HomeContainer />} />
+                <Route path="/profile" element={<ProfileContainer />} />
+                <Route path="/video" element={<VideoContainer />} />
+                <Route path="/dictionary" element={<DictionaryContainer />} />
                 <Route path="/user-dictionary" element={<UserDictionaryPage />} />
                 <Route
                   path="/video-dictionary"
@@ -116,6 +118,7 @@ function App() {
                 />
                 <Route path="/admin/moderation" element={<ModerationPage />} />
                 <Route path="/admin/users" element={<UserAdminPage />} />
+                <Route path="/admin/word-progress" element={<WordProgressPage />} />
                 <Route
                   path="/admin/game-snippets"
                   element={<GameSnippetsAdminPage />}
@@ -124,6 +127,7 @@ function App() {
                   path="/admin/audio-phrase-game"
                   element={<AudioPhraseGamePage />}
                 />
+                <Route path="/admin" element={<AdminContainer />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>

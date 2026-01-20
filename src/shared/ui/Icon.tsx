@@ -12,6 +12,8 @@ import {
   X,
   LogOut,
   Brain,
+  Trophy,
+  Languages,
   Settings,
   UserRound,
   Edit3,
@@ -52,8 +54,11 @@ type IconName =
   | "sun"
   | "moon"
   | "flame"
+  | "flame-filled"
   | "history"
-  | "replay";
+  | "replay"
+  | "trophy"
+  | "translate";
 
 const ICON_MAP: Record<
   IconName,
@@ -91,8 +96,11 @@ const ICON_MAP: Record<
   sun: Sun,
   moon: Moon,
   flame: Flame,
+  "flame-filled": Flame,
   history: History,
   replay: RotateCcw,
+  trophy: Trophy,
+  translate: Languages,
 };
 
 interface IconProps {
@@ -100,14 +108,21 @@ interface IconProps {
   size?: number;
   color?: string;
   style?: CSSProperties;
+  fillColor?: string;
 }
 
-export function Icon({ name, size = 20, color = "currentColor", style }: IconProps) {
+export function Icon({
+  name,
+  size = 20,
+  color = "currentColor",
+  style,
+  fillColor = "currentColor",
+}: IconProps) {
   const Component = ICON_MAP[name];
   if (!Component) return null;
 
   const filled = name.endsWith("filled") || name === "like";
-  const fill = filled ? color : "none";
+  const fill = filled ? fillColor : "none";
 
   return (
     <Component
