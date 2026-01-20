@@ -12,8 +12,8 @@ export const ProgressHeader = styled.div`
 `;
 
 export const ProgressTitle = styled.div`
-  font-weight: 800;
-  font-size: 20px;
+  font-weight: 700;
+  font-size: 18px;
   color: var(--tg-text);
 `;
 
