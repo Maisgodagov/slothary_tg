@@ -1,26 +1,36 @@
-import styled from 'styled-components';
+﻿import styled from "styled-components";
 
-export const Card = styled.div`
+export const Card = styled.section`
   width: 100%;
-  max-width: 560px;
-  padding: 16px;
-  border-radius: 14px;
-  border: 1px solid var(--tg-border);
-  background: var(--tg-card);
   display: grid;
-  gap: 12px;
+  gap: 18px;
 `;
 
-export const ProfileRow = styled.div`
+export const TopBar = styled.div`
   display: flex;
-  gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
+  justify-content: flex-end;
 `;
 
-export const Avatar = styled.div<{ $isAdmin: boolean }>`
-  width: 72px;
-  height: 72px;
+export const CenterBlock = styled.div`
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 10px;
+`;
+
+export const AvatarRing = styled.div`
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  padding: 6px;
+  background: conic-gradient(from 110deg, #4cc4ff, #3a4db7, #4cc4ff);
+  display: grid;
+  place-items: center;
+`;
+
+export const Avatar = styled.div`
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   overflow: hidden;
   background: linear-gradient(135deg, #2ea3ff55, #6dd3ff33);
@@ -28,8 +38,7 @@ export const Avatar = styled.div<{ $isAdmin: boolean }>`
   place-items: center;
   font-weight: 700;
   color: #0c1021;
-  font-size: 20px;
-  border: ${({ $isAdmin }) => ($isAdmin ? '2px solid #f2c45a' : 'none')};
+  font-size: 24px;
 `;
 
 export const AvatarImage = styled.img`
@@ -38,36 +47,143 @@ export const AvatarImage = styled.img`
   object-fit: cover;
 `;
 
-export const Name = styled.div`
-  font-size: 20px;
-  font-weight: 700;
-`;
-
-export const Badge = styled.div`
-  margin-top: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+export const LevelPill = styled.div`
+  margin-top: -12px;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid var(--tg-border);
-  background: var(--tg-surface);
-  color: var(--tg-text);
-  font-size: 12px;
+  background: #1f2a3c;
+  color: #ffffff;
   font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  [data-theme="light"] & {
+    background: #0f172a;
+  }
 `;
 
-export const BadgeSubtle = styled.span`
+export const Name = styled.div`
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tg-text);
+`;
+
+export const Subline = styled.div`
   color: var(--tg-subtle);
+  font-size: 12px;
+`;
+
+export const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+`;
+
+export const StatCard = styled.button<{ $clickable?: boolean }>`
+  border-radius: 16px;
+  padding: 14px;
+  background: var(--tg-card);
+  display: grid;
+  gap: 8px;
+  min-height: 92px;
+  justify-items: center;
+  text-align: center;
+  cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
+  border: 1px solid var(--tg-border);
+  color: var(--tg-text);
+  outline: none;
+`;
+
+export const StatIcon = styled.div`
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.06);
+
+  [data-theme="light"] & {
+    background: rgba(15, 23, 42, 0.06);
+  }
+`;
+
+export const StatValue = styled.div`
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--tg-text);
+`;
+
+export const StatLabel = styled.div`
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tg-subtle);
+`;
+
+export const SettingsSection = styled.div`
+  display: grid;
+  gap: 10px;
+`;
+
+export const SettingsTitle = styled.div`
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tg-subtle);
+`;
+
+export const SettingsList = styled.div`
+  display: grid;
+  gap: 10px;
+`;
+
+export const SettingsItem = styled.button`
+  border-radius: 16px;
+  border: 1px solid var(--tg-border);
+  background: var(--tg-card);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--tg-text);
+  cursor: pointer;
+`;
+
+export const SettingsLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+export const SettingsIcon = styled.div`
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+
+  [data-theme="light"] & {
+    background: rgba(15, 23, 42, 0.06);
+  }
+`;
+
+export const SettingsText = styled.div`
+  font-size: 14px;
   font-weight: 600;
 `;
 
+export const SettingsRight = styled.div`
+  color: var(--tg-subtle);
+  font-size: 18px;
+`;
+
 export const Actions = styled.div`
-  margin-left: auto;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
+  gap: 10px;
+  align-items: center;
 `;
 
 export const IconButton = styled.button`

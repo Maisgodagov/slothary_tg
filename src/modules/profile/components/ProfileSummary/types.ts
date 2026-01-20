@@ -7,7 +7,12 @@ export type ProfileSummaryProps = {
   initials: string;
   xpPoints: number;
   levelLabel: string | number;
+  streakDays: number;
+  wordsLearned: number;
   isTelegramUser: boolean;
   onLogout: () => void;
+  onOpenAdmin?: () => void;
+  onContact?: () => void;
+  onOpenWordProgress?: () => void;
   children?: ReactNode;
 };
