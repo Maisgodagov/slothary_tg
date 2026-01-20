@@ -32,7 +32,7 @@ export function HomeContainer() {
   }, [auth.profile?.email, auth.profile?.fullName]);
 
   const displayName =
-    auth.profile?.fullName ||
+    auth.profile?.fullName?.split(" ").filter(Boolean)[0] ||
     auth.profile?.email ||
     (auth.profile as any)?.username ||
     "Профиль";
