@@ -103,40 +103,46 @@ export function PageShell({
         onTouchEnd={handleTouchEnd}
         style={{ position: "relative" }}
       >
-        {pullToRefresh && (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 0,
-              height: 40,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              pointerEvents: "none",
-              color: "var(--tg-text-secondary)",
-              fontSize: 13,
-              transform: `translateY(${Math.min(pullDistance, maxPull) - 40}px)`,
-              transition: refreshing ? "transform 160ms ease" : "none",
-            }}
-          >
-            {refreshing
-              ? "Обновляю..."
-              : pullDistance > threshold
-              ? "Отпустите, чтобы обновить"
-              : "Потяните для обновления"}
-          </div>
+        {pullToRefresh ? (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: 0,
+                height: 40,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                pointerEvents: "none",
+                color: "var(--tg-text-secondary)",
+                fontSize: 13,
+                transform: `translateY(${Math.min(pullDistance, maxPull) - 40}px)`,
+                transition: refreshing ? "transform 160ms ease" : "none",
+              }}
+            >
+              {refreshing
+                ? "Обновляю..."
+                : pullDistance > threshold
+                ? "Отпустите, чтобы обновить"
+                : "Потяните для обновления"}
+            </div>
+            <div
+              style={{
+                transform: `translateY(${pullDistance}px)`,
+                transition:
+                  refreshing || pullDistance === 0
+                    ? "transform 160ms ease"
+                    : "none",
+              }}
+            >
+              {children}
+            </div>
+          </>
+        ) : (
+          children
         )}
-        <div
-          style={{
-            transform: `translateY(${pullDistance}px)`,
-            transition:
-              refreshing || pullDistance === 0 ? "transform 160ms ease" : "none",
-          }}
-        >
-          {children}
-        </div>
       </div>
       {withNav && <NavBar />}
     </div>
