@@ -11,7 +11,6 @@ import type { DictionaryStats } from "../../api/types";
 import { AdminActionCard } from "../../components/AdminActionCard";
 import { HomeHeader } from "../../components/HomeHeader";
 import ProgressSummary from "../../components/ProgressSummary";
-import { StreakModal } from "../../components/StreakModal";
 import { setLastStatsUpdatedAt } from "../../store/slice";
 import { HomeWrapper } from "./styles";
 
@@ -20,7 +19,6 @@ export function HomeContainer() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { themeMode, theme } = useTelegram();
-  const [showStreakModal, setShowStreakModal] = useState(false);
   const [wordStats, setWordStats] = useState<DictionaryStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const isLightTheme =
@@ -61,28 +59,6 @@ export function HomeContainer() {
       .finally(() => setStatsLoading(false));
   }, [auth.profile?.id, dispatch]);
 
-  const getStreakMessage = (days: number) => {
-    if (days <= 0) {
-      return "Похоже, это ваш первый день. Отличный старт!";
-    }
-    if (days == 1) {
-      return "Вы заходили в приложение 1 день подряд. Так держать!";
-    }
-    if (days <= 3) {
-      return `Вы заходили в приложение ${days} дня подряд. Хороший темп, продолжайте!`;
-    }
-    if (days <= 6) {
-      return `Уже ${days} дней подряд! Отличная дисциплина - не сбавляйте обороты.`;
-    }
-    if (days <= 13) {
-      return `Круто! ${days} дней подряд - это стабильность и прогресс.`;
-    }
-    if (days <= 29) {
-      return `Вау! ${days} дней подряд. Очень сильная серия, продолжайте в том же духе.`;
-    }
-    return `Невероятно! ${days} дней подряд. Вы мощно прокачали привычку.`;
-  };
-
   return (
     <PageShell>
       <HomeWrapper>
@@ -94,14 +70,8 @@ export function HomeContainer() {
           displayName={displayName}
           initial={initial}
           isLightTheme={isLightTheme}
-          onOpenStreak={() => setShowStreakModal(true)}
+          onOpenStreak={() => navigate("/streak")}
           onOpenProfile={() => navigate("/profile")}
-        />
-
-        <StreakModal
-          open={showStreakModal}
-          message={getStreakMessage(streakDays)}
-          onClose={() => setShowStreakModal(false)}
         />
 
         <ProgressSummary

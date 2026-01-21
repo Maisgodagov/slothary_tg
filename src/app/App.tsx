@@ -18,6 +18,7 @@ import UserAdminPage from "../pages/UserAdminPage";
 import GameSnippetsAdminPage from "../pages/GameSnippetsAdminPage";
 import UserDictionaryPage from "../pages/UserDictionaryPage";
 import WordProgressPage from "../pages/WordProgressPage";
+import StreakPage from "../pages/StreakPage";
 import { HomeContainer } from "../modules/home";
 import { VideoContainer } from "../modules/video";
 import { DictionaryContainer } from "../modules/dictionary";
@@ -119,6 +120,7 @@ function App() {
                 <Route path="/admin/moderation" element={<ModerationPage />} />
                 <Route path="/admin/users" element={<UserAdminPage />} />
                 <Route path="/admin/word-progress" element={<WordProgressPage />} />
+                <Route path="/streak" element={<StreakPage />} />
                 <Route
                   path="/admin/game-snippets"
                   element={<GameSnippetsAdminPage />}

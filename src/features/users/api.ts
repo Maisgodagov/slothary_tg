@@ -8,6 +8,10 @@ export type XpResponse = {
   xpPoints: number;
 };
 
+export type StreakHistoryResponse = {
+  dates: string[];
+};
+
 const buildHeaders = (userId?: string | null) => {
   const headers: Record<string, string> = {};
   if (userId) headers['x-user-id'] = userId;
@@ -27,6 +31,11 @@ export const usersApi = {
       method: 'POST',
       headers: buildHeaders(userId),
       body: { amount },
+    });
+  },
+  getStreakHistory(userId?: string | null) {
+    return apiFetch<StreakHistoryResponse>('users/streak/history', {
+      headers: buildHeaders(userId),
     });
   },
 };
