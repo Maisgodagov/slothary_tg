@@ -54,6 +54,15 @@ const buildMonthGrid = (month: Date) => {
   return cells;
 };
 
+const formatDaysLabel = (value: number) => {
+  const lastTwo = value % 100;
+  const last = value % 10;
+  if (lastTwo >= 11 && lastTwo <= 14) return "дней подряд";
+  if (last === 1) return "день подряд";
+  if (last >= 2 && last <= 4) return "дня подряд";
+  return "дней подряд";
+};
+
 export default function StreakPage() {
   const auth = useAppSelector(selectAuth);
   const navigate = useNavigate();
@@ -116,7 +125,7 @@ export default function StreakPage() {
           >
             <Icon name="back" size={18} />
           </IconButton>
-          <HeaderTitle>Ударный режим</HeaderTitle>
+          <HeaderTitle>Моя активность</HeaderTitle>
           <div style={{ width: 36 }} />
         </HeaderRow>
 
@@ -124,7 +133,7 @@ export default function StreakPage() {
           <StreakRow>
             <div>
               <StreakValue>{auth.profile?.streakDays ?? 0}</StreakValue>
-              <StreakLabel>дней подряд</StreakLabel>
+              <StreakLabel>{formatDaysLabel(auth.profile?.streakDays ?? 0)}</StreakLabel>
             </div>
             <Icon
               name="flame-filled"
