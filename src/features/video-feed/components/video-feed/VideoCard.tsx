@@ -658,9 +658,7 @@ export function VideoCard({
           const el = videoRef.current;
           if (!el) return;
           el.currentTime = 0;
-          if (isActive) {
-            el.play().catch(() => null);
-          }
+          el.play().catch(() => null);
         }}
       />
 
