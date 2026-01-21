@@ -1,4 +1,4 @@
-import type { ProgressSummaryProps } from "./types";
+﻿import type { ProgressSummaryProps } from "./types";
 import {
   ProgressCard,
   ProgressDivider,
@@ -17,7 +17,6 @@ import {
 export function ProgressSummary({
   stats,
   loading,
-  isAdmin,
   onDetails,
 }: ProgressSummaryProps) {
   if (!stats) return null;
@@ -26,40 +25,35 @@ export function ProgressSummary({
     <ProgressSection>
       <ProgressHeader>
         <ProgressTitle>Мой прогресс</ProgressTitle>
-        {isAdmin && (
-          <ProgressLink type="button" onClick={onDetails}>
-            Детали
-          </ProgressLink>
-        )}
+        <ProgressLink type="button" onClick={onDetails}>
+          Детали
+        </ProgressLink>
       </ProgressHeader>
-      <ProgressCard>
+      <ProgressCard type="button" onClick={onDetails}>
         {loading && <ProgressMuted>Загружаем статистику...</ProgressMuted>}
         {!loading && (
           <ProgressGrid>
             <ProgressItem>
-              {/* <Icon name="exercise" size={24} color="#4da3ff" /> */}
               <ProgressValue>{stats.learningCount}</ProgressValue>
               <ProgressLabelWrapper>
-                <ProgressLabel>слов</ProgressLabel>
-                <ProgressLabel>ИЗУЧАЮ</ProgressLabel>
+                <ProgressLabel>Слов</ProgressLabel>
+                <ProgressLabel>изучаю</ProgressLabel>
               </ProgressLabelWrapper>
             </ProgressItem>
             <ProgressDivider />
             <ProgressItem>
-              {/* <Icon name="trophy" size={24} color="#2ecc71" /> */}
               <ProgressValue>{stats.knownCount}</ProgressValue>
               <ProgressLabelWrapper>
-                <ProgressLabel>слов</ProgressLabel>
-                <ProgressLabel>ВЫУЧЕНО</ProgressLabel>
+                <ProgressLabel>Слов</ProgressLabel>
+                <ProgressLabel>выучено</ProgressLabel>
               </ProgressLabelWrapper>
             </ProgressItem>
             <ProgressDivider />
             <ProgressItem>
-              {/* <Icon name="translate" size={24} color="#8b5cf6" /> */}
               <ProgressValue>{stats.viewedCount}</ProgressValue>
               <ProgressLabelWrapper>
-                <ProgressLabel>слов</ProgressLabel>
-                <ProgressLabel>ПЕРЕВОДЕНО</ProgressLabel>
+                <ProgressLabel>Слов</ProgressLabel>
+                <ProgressLabel>переведено</ProgressLabel>
               </ProgressLabelWrapper>
             </ProgressItem>
           </ProgressGrid>
@@ -68,3 +62,5 @@ export function ProgressSummary({
     </ProgressSection>
   );
 }
+
+export default ProgressSummary;

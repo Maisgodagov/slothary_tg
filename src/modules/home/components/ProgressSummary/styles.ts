@@ -15,6 +15,7 @@ export const ProgressTitle = styled.div`
   font-weight: 700;
   font-size: 18px;
   color: var(--tg-text);
+  padding-left: 10px;
 `;
 
 export const ProgressLink = styled.button`
@@ -24,15 +25,20 @@ export const ProgressLink = styled.button`
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
+  padding-right: 10px;
 `;
 
-export const ProgressCard = styled.div`
+export const ProgressCard = styled.button`
   border-radius: 28px;
   background: var(--tg-card-strong);
   padding: 10px;
   display: grid;
   align-items: center;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+  border: none;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
 `;
 
 export const ProgressGrid = styled.div`

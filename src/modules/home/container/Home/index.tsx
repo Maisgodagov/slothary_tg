@@ -10,7 +10,7 @@ import { homeApi } from "../../api";
 import type { DictionaryStats } from "../../api/types";
 import { AdminActionCard } from "../../components/AdminActionCard";
 import { HomeHeader } from "../../components/HomeHeader";
-import { ProgressSummary } from "../../components/ProgressSummary";
+import ProgressSummary from "../../components/ProgressSummary";
 import { StreakModal } from "../../components/StreakModal";
 import { setLastStatsUpdatedAt } from "../../store/slice";
 import { HomeWrapper } from "./styles";
@@ -107,7 +107,6 @@ export function HomeContainer() {
         <ProgressSummary
           stats={wordStats}
           loading={statsLoading}
-          isAdmin={auth.profile?.role === "admin"}
           onDetails={() => navigate("/admin/word-progress")}
         />
 
