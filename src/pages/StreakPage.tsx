@@ -14,7 +14,6 @@ import {
   DaysGrid,
   HeaderRow,
   HeaderTitle,
-  Hint,
   IconButton,
   MonthLabel,
   PageWrap,
@@ -97,7 +96,10 @@ export default function StreakPage() {
   }, [auth.profile?.id, auth.profile?.streakDays]);
 
   const monthLabel = useMemo(() => {
-    return month.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+    return month.toLocaleDateString("ru-RU", {
+      month: "long",
+      year: "numeric",
+    });
   }, [month]);
 
   const cells = useMemo(() => buildMonthGrid(month), [month]);
@@ -107,7 +109,11 @@ export default function StreakPage() {
     <PageShell>
       <PageWrap>
         <HeaderRow>
-          <IconButton type="button" onClick={() => navigate(-1)} aria-label="Назад">
+          <IconButton
+            type="button"
+            onClick={() => navigate(-1)}
+            aria-label="Назад"
+          >
             <Icon name="back" size={18} />
           </IconButton>
           <HeaderTitle>Ударный режим</HeaderTitle>
@@ -134,7 +140,10 @@ export default function StreakPage() {
             <IconButton
               type="button"
               onClick={() =>
-                setMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
+                setMonth(
+                  (prev) =>
+                    new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
+                )
               }
               aria-label="Предыдущий месяц"
             >
@@ -144,11 +153,18 @@ export default function StreakPage() {
             <IconButton
               type="button"
               onClick={() =>
-                setMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
+                setMonth(
+                  (prev) =>
+                    new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
+                )
               }
               aria-label="Следующий месяц"
             >
-              <Icon name="back" size={18} style={{ transform: "rotate(180deg)" }} />
+              <Icon
+                name="back"
+                size={18}
+                style={{ transform: "rotate(180deg)" }}
+              />
             </IconButton>
           </CalendarHeader>
 
