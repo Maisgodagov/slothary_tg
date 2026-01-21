@@ -1,5 +1,4 @@
 ﻿import { useCallback, useEffect, useRef, useState } from "react";
-import { Navigate } from "react-router-dom";
 
 import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
@@ -74,22 +73,26 @@ export default function WordProgressPage() {
       const items: StatsWordWithStatus[] = [];
       let offset = 0;
       while (true) {
-        const result = await dictionaryApi.getStatsWords(auth.profile.id, status, {
-          limit: STATS_PAGE_SIZE,
-          offset,
-        });
+        const result = await dictionaryApi.getStatsWords(
+          auth.profile.id,
+          status,
+          {
+            limit: STATS_PAGE_SIZE,
+            offset,
+          },
+        );
         items.push(
           ...result.items.map((entry) => ({
             ...entry,
             status,
-          }))
+          })),
         );
         if (result.items.length < STATS_PAGE_SIZE) break;
         offset += result.items.length;
       }
       return items;
     },
-    [auth.profile?.id]
+    [auth.profile?.id],
   );
 
   const loadStatsWords = useCallback(
@@ -113,7 +116,7 @@ export default function WordProgressPage() {
           result.items.map((entry) => ({
             ...entry,
             status: tab,
-          }))
+          })),
         );
         setStatsWordsHasMore(result.items.length >= STATS_PAGE_SIZE);
         setStatsWordsOffset(result.items.length);
@@ -123,7 +126,7 @@ export default function WordProgressPage() {
         setStatsWordsLoading(false);
       }
     },
-    [auth.profile?.id, fetchAllByStatus]
+    [auth.profile?.id, fetchAllByStatus],
   );
 
   const handleStatsTabClick = (tab: StatsTab) => {
@@ -168,7 +171,7 @@ export default function WordProgressPage() {
           loadMoreStatsWords();
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
     statsLoadMoreObserver.current.observe(statsLoadMoreRef.current);
     return () => {
@@ -186,7 +189,7 @@ export default function WordProgressPage() {
       learning: "ИЗУЧАЮ",
       known: "ВЫУЧИЛ",
       viewed: "СМОТРЕЛ",
-    }[status]);
+    })[status];
 
   return (
     <PageShell>
@@ -247,11 +250,15 @@ export default function WordProgressPage() {
                 const incorrect = entry.touchesIncorrect ?? 0;
                 const answered = correct + incorrect;
                 const progressPercent =
-                  answered > 0 ? Math.min(100, Math.round((correct / answered) * 100)) : 0;
+                  answered > 0
+                    ? Math.min(100, Math.round((correct / answered) * 100))
+                    : 0;
 
                 return (
                   <WordCardWrap key={`${entry.status}-${entry.id}-${index}`}>
-                    <StatusBadge $tone={status}>{getStatusLabel(status)}</StatusBadge>
+                    <StatusBadge $tone={status}>
+                      {getStatusLabel(status)}
+                    </StatusBadge>
                     <WordCard
                       word={entry.word}
                       translation={entry.translation}
@@ -278,7 +285,10 @@ export default function WordProgressPage() {
                               </StatChip>
                             </div>
                             <ProgressTrack>
-                              <ProgressFill $tone={status} $percent={progressPercent} />
+                              <ProgressFill
+                                $tone={status}
+                                $percent={progressPercent}
+                              />
                             </ProgressTrack>
                           </WordStatsRow>
                         )}
