@@ -25,7 +25,7 @@ export const AvatarRing = styled.div`
   border-radius: 50%;
   margin-top: 30px;
   padding: 4px;
-  background: #3c4267;
+  background: var(--tg-card);
   display: grid;
   place-items: center;
 `;
@@ -39,7 +39,7 @@ export const Avatar = styled.div`
   display: grid;
   place-items: center;
   font-weight: 700;
-  color: #0c1021;
+  color: var(--tg-text);
   font-size: 24px;
 `;
 
@@ -53,16 +53,12 @@ export const LevelPill = styled.div`
   margin-top: -26px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: #1f2a3c;
-  color: #ffffff;
+  background: var(--tg-card);
+  color: var(--tg-text);
   font-weight: 700;
   font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-
-  [data-theme="light"] & {
-    background: #0f172a;
-  }
 `;
 
 export const Name = styled.div`
@@ -92,9 +88,14 @@ export const StatCard = styled.button<{ $clickable?: boolean }>`
   justify-items: center;
   text-align: center;
   cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
-  border: 1px solid var(--tg-border);
+  border: none;
   color: var(--tg-text);
   outline: none;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+
+  [data-theme="light"] & {
+    background: var(--tg-card-strong);
+  }
 `;
 
 export const StatIcon = styled.div`
@@ -103,11 +104,7 @@ export const StatIcon = styled.div`
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.06);
-
-  [data-theme="light"] & {
-    background: rgba(15, 23, 42, 0.06);
-  }
+  background: var(--tg-surface);
 `;
 
 export const StatValue = styled.div`
@@ -142,7 +139,6 @@ export const SettingsList = styled.div`
 
 export const SettingsItem = styled.button`
   border-radius: 16px;
-  border: 1px solid var(--tg-border);
   background: var(--tg-card);
   padding: 12px 14px;
   display: flex;
@@ -151,6 +147,12 @@ export const SettingsItem = styled.button`
   gap: 12px;
   color: var(--tg-text);
   cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+
+  [data-theme="light"] & {
+    background: var(--tg-card-strong);
+  }
 `;
 
 export const SettingsLeft = styled.div`
@@ -165,11 +167,7 @@ export const SettingsIcon = styled.div`
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.08);
-
-  [data-theme="light"] & {
-    background: rgba(15, 23, 42, 0.06);
-  }
+  background: var(--tg-surface);
 `;
 
 export const SettingsText = styled.div`
@@ -198,10 +196,15 @@ export const IconButton = styled.button`
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid var(--tg-border);
   background: var(--tg-card);
   color: var(--tg-text);
   display: grid;
   place-items: center;
   cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+
+  [data-theme="light"] & {
+    background: var(--tg-card-strong);
+  }
 `;

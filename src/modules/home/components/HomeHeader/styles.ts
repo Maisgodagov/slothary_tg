@@ -28,12 +28,13 @@ export const HeaderCard = styled.button`
 `;
 
 export const AvatarWrap = styled.div`
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  border: 2px solid rgba(255, 255, 255, 0.08);
+  border: 2px solid var(--tg-card-strong);
+  background: var(--tg-card-strong);
   overflow: hidden;
 `;
 
@@ -46,7 +47,7 @@ export const AvatarImage = styled.img`
 export const AvatarInitial = styled.span`
   font-weight: 700;
   font-size: 16px;
-  color: #0c1021;
+  color: var(--tg-text);
 `;
 
 export const HeaderText = styled.div`
@@ -82,17 +83,13 @@ export const StreakButton = styled.button`
   padding: 10px 14px;
   border-radius: 99px;
   border: none;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--tg-card-strong);
   color: var(--tg-text);
   font-weight: 700;
   cursor: pointer;
   min-width: 88px;
   justify-content: center;
-
-  [data-theme="light"] & {
-    background: #ffffff;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-  }
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 `;
 
 export const StreakCount = styled.span`

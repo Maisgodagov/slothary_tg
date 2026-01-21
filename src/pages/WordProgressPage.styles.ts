@@ -9,15 +9,15 @@ export const PageWrap = styled.div`
 
 export const SummaryCard = styled.div`
   border-radius: 20px;
-  border: 1px solid var(--tg-border);
-  background: var(--tg-card);
+  border: none;
+  background: var(--tg-surface);
   padding: 16px;
   display: grid;
   gap: 14px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
 
   [data-theme="light"] & {
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
   }
 `;
 
@@ -50,18 +50,14 @@ export const SummaryTab = styled.button<{
   padding: 10px 12px;
   display: grid;
   gap: 6px;
-  text-align: left;
-  color: #fff;
-  background: ${({ $tone, $active }) => {
-    const base = {
-      learning: "linear-gradient(135deg, #1f3b73, #1b2a52)",
-      known: "linear-gradient(135deg, #5b4a1a, #3c2f12)",
-      viewed: "linear-gradient(135deg, #1f4a3b, #163326)",
-    }[$tone];
-    return $active ? base : "rgba(255, 255, 255, 0.06)";
-  }};
+  text-align: center;
+  justify-items: center;
+  color: var(--tg-text);
+  background: var(--tg-bg);
+  border: 1px solid ${({ $active }) =>
+    $active ? "var(--tg-accent)" : "var(--tg-border)"};
   box-shadow: ${({ $active }) =>
-    $active ? "0 10px 18px rgba(0, 0, 0, 0.22)" : "none"};
+    $active ? "0 1px 4px rgba(15, 23, 42, 0.06)" : "none"};
 
   span {
     font-size: 11px;
@@ -77,17 +73,11 @@ export const SummaryTab = styled.button<{
 
   [data-theme="light"] & {
     color: var(--tg-text);
-    background: ${({ $tone, $active }) => {
-      const base = {
-        learning: "linear-gradient(135deg, #e6f0ff, #cfe3ff)",
-        known: "linear-gradient(135deg, #fff2c9, #ffe2a3)",
-        viewed: "linear-gradient(135deg, #e3f6ee, #c7ebdd)",
-      }[$tone];
-      return $active ? base : "#ffffff";
-    }};
-    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: var(--tg-bg);
+    border: 1px solid ${({ $active }) =>
+      $active ? "var(--tg-accent)" : "var(--tg-border)"};
     box-shadow: ${({ $active }) =>
-      $active ? "0 8px 18px rgba(15, 23, 42, 0.12)" : "none"};
+      $active ? "0 1px 4px rgba(15, 23, 42, 0.06)" : "none"};
 
     span {
       opacity: 0.6;
@@ -115,6 +105,12 @@ export const WordsList = styled.div`
 
 export const WordCardWrap = styled.div`
   position: relative;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+  border-radius: 16px;
+
+  [data-theme="light"] & {
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+  }
 `;
 
 export const StatusBadge = styled.span<{
@@ -127,10 +123,10 @@ export const StatusBadge = styled.span<{
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--tg-subtle);
 
   [data-theme="light"] & {
-    color: rgba(15, 23, 42, 0.45);
+    color: var(--tg-subtle);
   }
 `;
 
@@ -177,11 +173,11 @@ export const ProgressTrack = styled.div`
   height: 3px;
   width: 36px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--tg-border);
   overflow: hidden;
 
   [data-theme="light"] & {
-    background: rgba(15, 23, 42, 0.12);
+    background: var(--tg-border);
   }
 `;
 

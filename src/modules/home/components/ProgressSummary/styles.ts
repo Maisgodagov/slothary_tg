@@ -20,7 +20,7 @@ export const ProgressTitle = styled.div`
 export const ProgressLink = styled.button`
   border: none;
   background: transparent;
-  color: #4da3ff;
+  color: var(--tg-accent);
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
@@ -28,22 +28,20 @@ export const ProgressLink = styled.button`
 
 export const ProgressCard = styled.div`
   border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: #101524;
+  background: var(--tg-card-strong);
   padding: 10px;
   display: grid;
   align-items: center;
-
-  [data-theme="light"] & {
-    background: #ffffff;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-  }
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
 `;
 
 export const ProgressGrid = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  justify-items: center;
+  gap: 8px;
+  width: 100%;
 `;
 
 export const ProgressItem = styled.div`
@@ -51,25 +49,22 @@ export const ProgressItem = styled.div`
   justify-items: center;
   gap: 8px;
   padding: 8px 0;
-  flex: 1;
+  width: 100%;
+  text-align: center;
 `;
 
 export const ProgressDivider = styled.div`
   width: 1px;
   height: 54px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--tg-border);
   justify-self: center;
-  flex: 0 0 1px;
 `;
 
 export const ProgressValue = styled.div`
   font-size: 22px;
   font-weight: 800;
-  color: #eef3ff;
-
-  [data-theme="light"] & {
-    color: #1e293b;
-  }
+  color: var(--tg-text);
+  text-align: center;
 `;
 
 export const ProgressLabel = styled.div`
@@ -77,11 +72,9 @@ export const ProgressLabel = styled.div`
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(200, 210, 235, 0.55);
-
-  [data-theme="light"] & {
-    color: rgba(15, 23, 42, 0.45);
-  }
+  color: var(--tg-subtle);
+  text-align: center;
+  width: 100%;
 `;
 
 export const ProgressMuted = styled.div`
@@ -89,10 +82,6 @@ export const ProgressMuted = styled.div`
   font-size: 13px;
   text-align: center;
   padding: 8px 0 6px;
-
-  [data-theme="light"] & {
-    color: rgba(15, 23, 42, 0.55);
-  }
 `;
 
 export const ProgressLabelWrapper = styled.div`
@@ -100,4 +89,5 @@ export const ProgressLabelWrapper = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  text-align: center;
 `;

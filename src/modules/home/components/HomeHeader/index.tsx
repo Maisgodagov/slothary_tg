@@ -49,7 +49,7 @@ export function HomeHeader({
           name="flame-filled"
           size={24}
           color="#F97316"
-          fillColor={isLightTheme ? "none" : "#442D22"}
+          fillColor={isLightTheme ? "rgb(240, 210, 89)" : "#442D22"}
         />
         <StreakCount>{streakDays}</StreakCount>
       </StreakButton>

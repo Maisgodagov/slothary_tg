@@ -79,8 +79,8 @@ export function WordCard({
   return (
     <div
       style={{
-        background: "var(--tg-surface)",
-        border: "1px solid var(--tg-border)",
+        background: "var(--tg-card-strong)",
+        border: "none",
         borderRadius: 16,
         padding: isSubtitle ? 10 : effectiveLayout === "tight" ? 12 : 16,
         display: "grid",
