@@ -1,6 +1,8 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { publicGameSnippetsApi } from "../game-snippets/publicApi";
-import { type PhraseSnippet } from "../video-dictionary/api";
+import {
+  publicGameSnippetsApi,
+  type PublicGameSnippetGame,
+} from "../game-snippets/publicApi";
 import { usersApi } from "../users/api";
 import { Icon } from "../../shared/ui/Icon";
 
@@ -50,6 +52,9 @@ const TEXT = {
   title:
     "\u041c\u0438\u043d\u0438-\u0438\u0433\u0440\u0430: \u0421\u043b\u0443\u0448\u0430\u0439 \u0438 \u0441\u043e\u0431\u0435\u0440\u0438 \u0444\u0440\u0430\u0437\u0443",
   round: "\u0420\u0430\u0443\u043d\u0434",
+  countTitle: "\u0421\u043a\u043e\u043b\u044c\u043a\u043e \u0441\u043b\u043e\u0432 \u0432 \u0444\u0440\u0430\u0437\u0435?",
+  translationTitle:
+    "\u0412\u044b\u0431\u0435\u0440\u0438 \u043f\u0435\u0440\u0435\u0432\u043e\u0434",
   loading:
     "\u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043c \u0444\u0440\u0430\u0437\u044b...",
   empty:
@@ -85,9 +90,25 @@ const shuffleItems = <T,>(input: T[]) => {
   return next;
 };
 
-type GameItem = PhraseSnippet & {
-  translation?: string | null;
+const uniqueById = <T extends { id: string }>(items: T[]) => {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
 };
+
+type GameSnippet = Omit<
+  PublicGameSnippetGame,
+  "videoUrl" | "videoName" | "contentId"
+> & {
+  videoUrl: string;
+  videoName: string;
+  contentId: string;
+};
+
+type GamePhase = "count" | "translate" | "assemble";
 
 type AudioPhraseGameProps = {
   userId?: string | null;
@@ -106,9 +127,7 @@ export default function AudioPhraseGame({
   difficulty = 1,
   showSkip = false,
 }: AudioPhraseGameProps) {
-  const [currentSnippet, setCurrentSnippet] = useState<PhraseSnippet | null>(
-    null,
-  );
+  const [currentSnippet, setCurrentSnippet] = useState<GameSnippet | null>(null);
   const [loading, setLoading] = useState(false);
   const [roundIndex, setRoundIndex] = useState(0);
   const [availableWords, setAvailableWords] = useState<string[]>([]);
@@ -117,7 +136,10 @@ export default function AudioPhraseGame({
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showCheck, setShowCheck] = useState(false);
-  const [gameItems, setGameItems] = useState<GameItem[]>([]);
+  const [gameItems, setGameItems] = useState<GameSnippet[]>([]);
+  const [phase, setPhase] = useState<GamePhase>("count");
+  const [questionMessage, setQuestionMessage] = useState<string | null>(null);
+  const [questionCorrect, setQuestionCorrect] = useState<boolean | null>(null);
 
   const currentItem = gameItems[roundIndex] ?? null;
   const currentPhrase = normalizePhrase(currentItem?.phrase ?? "");
@@ -127,6 +149,11 @@ export default function AudioPhraseGame({
       .map((word) => word.trim())
       .filter(Boolean);
   }, [currentPhrase]);
+  const wordCount = currentItem?.wordCount ?? 0;
+  const wordCountOptions = currentItem?.wordCountOptions ?? [];
+  const translationOptions = currentItem?.translationOptions ?? [];
+  const showCountQuestion = wordCount >= 6 && wordCountOptions.length >= 2;
+  const showTranslationQuestion = translationOptions.length >= 2;
 
   useEffect(() => {
     setSlots(currentWords.map(() => null));
@@ -146,11 +173,27 @@ export default function AudioPhraseGame({
   }, [currentWords, difficulty]);
 
   useEffect(() => {
+    if (!currentItem) return;
+    if (showCountQuestion) {
+      setPhase("count");
+    } else if (showTranslationQuestion) {
+      setPhase("translate");
+    } else {
+      setPhase("assemble");
+    }
+    setQuestionMessage(null);
+    setQuestionCorrect(null);
+  }, [currentItem, showCountQuestion, showTranslationQuestion]);
+
+  useEffect(() => {
     let cancelled = false;
     const loadPool = async () => {
       setLoading(true);
       try {
-        const response = await publicGameSnippetsApi.list(maxRounds);
+        const response = await publicGameSnippetsApi.listGame({
+          limit: maxRounds,
+          minWords: 6,
+        });
         if (cancelled) return;
         const items =
           response.items?.map((item) => ({
@@ -160,13 +203,14 @@ export default function AudioPhraseGame({
             videoUrl: item.videoUrl ?? "",
             startSeconds: item.startSeconds,
             endSeconds: item.endSeconds,
-            matchedText: "",
-            contextText: item.phrase,
             phrase: item.phrase,
             translation: item.translation ?? null,
-            durationSeconds: null,
+            wordCount: item.wordCount,
+            wordCountOptions: item.wordCountOptions ?? [],
+            translationOptions: item.translationOptions ?? [],
           })) ?? [];
-        setGameItems(shuffleItems(items).slice(0, maxRounds));
+        const uniqueItems = uniqueById(items);
+        setGameItems(shuffleItems(uniqueItems).slice(0, maxRounds));
       } catch {
         if (!cancelled) setGameItems([]);
       } finally {
@@ -182,6 +226,36 @@ export default function AudioPhraseGame({
   useEffect(() => {
     setCurrentSnippet(currentItem ?? null);
   }, [currentItem]);
+
+  const advancePhase = () => {
+    setQuestionMessage(null);
+    setQuestionCorrect(null);
+    if (phase === "count") {
+      if (showTranslationQuestion) {
+        setPhase("translate");
+      } else {
+        setPhase("assemble");
+      }
+      return;
+    }
+    if (phase === "translate") {
+      setPhase("assemble");
+    }
+  };
+
+  const handleCountAnswer = (value: number) => {
+    if (!currentItem || questionCorrect) return;
+    const correct = value === wordCount;
+    setQuestionCorrect(correct);
+    setQuestionMessage(correct ? TEXT.correct : TEXT.retry);
+  };
+
+  const handleTranslationAnswer = (value: string) => {
+    if (!currentItem || questionCorrect) return;
+    const correct = value === currentItem.translation;
+    setQuestionCorrect(correct);
+    setQuestionMessage(correct ? TEXT.correct : TEXT.retry);
+  };
 
   const handleWordDrop = (word: string, slotIndex: number) => {
     setSlots((prev) => {
@@ -316,9 +390,11 @@ body[data-theme='light'] .apg-next {
                 marginBottom: 6,
               }}
             >
-              {
-                "\u0427\u0442\u043e \u0442\u0443\u0442 \u0433\u043e\u0432\u043e\u0440\u0438\u0442\u0441\u044f?"
-              }
+              {phase === "translate"
+                ? TEXT.translationTitle
+                : phase === "count"
+                  ? TEXT.countTitle
+                  : "\u0427\u0442\u043e \u0442\u0443\u0442 \u0433\u043e\u0432\u043e\u0440\u0438\u0442\u0441\u044f?"}
             </div>
             <SnippetPlayer snippet={currentSnippet} />
           </>
@@ -342,7 +418,161 @@ body[data-theme='light'] .apg-next {
           </div>
         )}
 
-        {!loading && !isFinished && (
+        {!loading && !isFinished && phase === "count" && showCountQuestion && (
+          <div style={{ display: "grid", gap: 10 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+              {wordCountOptions.map((option) => (
+                <button
+                  key={`count-${option}`}
+                  type="button"
+                  onClick={() => handleCountAnswer(option)}
+                  disabled={questionCorrect === true}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: 10,
+                    border: "1px solid var(--tg-border)",
+                    background: questionCorrect === true && option === wordCount
+                      ? "rgba(53,199,89,0.18)"
+                      : "rgba(255,255,255,0.04)",
+                    color: "var(--tg-text)",
+                    cursor: questionCorrect ? "default" : "pointer",
+                    fontWeight: 700,
+                  }}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+            {questionMessage && (
+              <div
+                style={{
+                  textAlign: "center",
+                  fontWeight: 700,
+                  color: questionCorrect ? "#35c759" : "#ff6b6b",
+                }}
+              >
+                {questionMessage}
+              </div>
+            )}
+            {questionCorrect && (
+              <>
+                {currentItem && (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      display: "grid",
+                      gap: 6,
+                      color: "var(--tg-text)",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700 }}>{currentItem.phrase}</div>
+                    {currentItem.translation && (
+                      <div style={{ color: "var(--tg-subtle)" }}>
+                        {currentItem.translation}
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  <button
+                    type="button"
+                    onClick={advancePhase}
+                    className="apg-next"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "10px 18px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(76,196,255,0.55)",
+                      background: "rgba(76,196,255,0.18)",
+                      color: "#e9f7ff",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                      fontSize: 16,
+                    }}
+                  >
+                    {TEXT.next}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {!loading && !isFinished && phase === "translate" && showTranslationQuestion && (
+          <div style={{ display: "grid", gap: 10 }}>
+            <div
+              style={{
+                display: "grid",
+                gap: 8,
+                justifyItems: "center",
+              }}
+            >
+              {translationOptions.map((option) => (
+                <button
+                  key={`translation-${option}`}
+                  type="button"
+                  onClick={() => handleTranslationAnswer(option)}
+                  disabled={questionCorrect === true}
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    border: "1px solid var(--tg-border)",
+                    background:
+                      questionCorrect === true && option === currentItem?.translation
+                        ? "rgba(53,199,89,0.18)"
+                        : "rgba(255,255,255,0.04)",
+                    color: "var(--tg-text)",
+                    cursor: questionCorrect ? "default" : "pointer",
+                    textAlign: "center",
+                    fontWeight: 600,
+                    width: "min(360px, 100%)",
+                  }}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+            {questionMessage && (
+              <div
+                style={{
+                  textAlign: "center",
+                  fontWeight: 700,
+                  color: questionCorrect ? "#35c759" : "#ff6b6b",
+                }}
+              >
+                {questionMessage}
+              </div>
+            )}
+            {questionCorrect && (
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <button
+                  type="button"
+                  onClick={advancePhase}
+                  className="apg-next"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "10px 18px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(76,196,255,0.55)",
+                    background: "rgba(76,196,255,0.18)",
+                    color: "#e9f7ff",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                    fontSize: 16,
+                  }}
+                >
+                  {TEXT.next}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!loading && !isFinished && phase === "assemble" && (
           <>
             <div
               style={{
@@ -564,7 +794,7 @@ body[data-theme='light'] .apg-next {
   );
 }
 
-function SnippetPlayer({ snippet }: { snippet: PhraseSnippet }) {
+function SnippetPlayer({ snippet }: { snippet: GameSnippet }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [ended, setEnded] = useState(false);
   useEffect(() => {
