@@ -6,24 +6,26 @@ export const Card = styled.section`
   gap: 18px;
 `;
 
-export const TopBar = styled.div`
-  display: flex;
-  justify-content: flex-end;
+export const TopRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
 `;
 
 export const CenterBlock = styled.div`
   display: grid;
   justify-items: center;
   text-align: center;
-  gap: 10px;
+  gap: 6px;
 `;
 
 export const AvatarRing = styled.div`
-  width: 112px;
-  height: 112px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
-  padding: 6px;
-  background: conic-gradient(from 110deg, #4cc4ff, #3a4db7, #4cc4ff);
+  margin-top: 30px;
+  padding: 4px;
+  background: #3c4267;
   display: grid;
   place-items: center;
 `;
@@ -48,7 +50,7 @@ export const AvatarImage = styled.img`
 `;
 
 export const LevelPill = styled.div`
-  margin-top: -12px;
+  margin-top: -26px;
   padding: 4px 10px;
   border-radius: 999px;
   background: #1f2a3c;
@@ -180,10 +182,16 @@ export const SettingsRight = styled.div`
   font-size: 18px;
 `;
 
-export const Actions = styled.div`
+export const Actions = styled.div<{
+  $align?: "start" | "center";
+  $justify?: "start" | "end";
+}>`
   display: flex;
   gap: 10px;
   align-items: center;
+  justify-content: ${({ $justify }) =>
+    $justify === "start" ? "flex-start" : "flex-end"};
+  align-self: ${({ $align }) => ($align === "start" ? "flex-start" : "center")};
 `;
 
 export const IconButton = styled.button`

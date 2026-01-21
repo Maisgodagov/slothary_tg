@@ -24,7 +24,7 @@ import {
   StatValue,
   StatsGrid,
   Subline,
-  TopBar,
+  TopRow,
 } from "./styles";
 
 export function ProfileSummary({
@@ -49,8 +49,8 @@ export function ProfileSummary({
 
   return (
     <Card>
-      <TopBar>
-        <Actions>
+      <TopRow>
+        <Actions $align="start" $justify="start">
           {!isTelegramUser && (
             <IconButton
               type="button"
@@ -61,11 +61,8 @@ export function ProfileSummary({
               <Icon name="logout" size={18} />
             </IconButton>
           )}
-          {children}
         </Actions>
-      </TopBar>
 
-      <CenterBlock>
         <AvatarRing>
           <Avatar>
             {avatarUrl ? (
@@ -75,6 +72,13 @@ export function ProfileSummary({
             )}
           </Avatar>
         </AvatarRing>
+
+        <Actions $align="start" $justify="end">
+          {children}
+        </Actions>
+      </TopRow>
+
+      <CenterBlock>
         <LevelPill>ур. {levelLabel}</LevelPill>
         <Name>{displayName}</Name>
         <Subline>{xpPoints} XP</Subline>
@@ -116,7 +120,7 @@ export function ProfileSummary({
       </StatsGrid>
 
       <SettingsSection>
-        <SettingsTitle>Настройки аккаунта</SettingsTitle>
+        <SettingsTitle>Дополнительно</SettingsTitle>
         <SettingsList>
           {role === "admin" && (
             <SettingsItem type="button" onClick={onOpenAdmin}>
