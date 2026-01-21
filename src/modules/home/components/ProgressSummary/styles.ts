@@ -25,7 +25,7 @@ export const ProgressLink = styled.button`
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
-  padding-right: 10px;
+  padding-right: 14px;
 `;
 
 export const ProgressCard = styled.button`

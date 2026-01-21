@@ -26,7 +26,7 @@ export function ProgressSummary({
       <ProgressHeader>
         <ProgressTitle>Мой прогресс</ProgressTitle>
         <ProgressLink type="button" onClick={onDetails}>
-          Детали
+          Подробнее
         </ProgressLink>
       </ProgressHeader>
       <ProgressCard type="button" onClick={onDetails}>
