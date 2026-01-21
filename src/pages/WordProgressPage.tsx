@@ -181,10 +181,6 @@ export default function WordProgressPage() {
     loadStatsWords(statsTab);
   }, [auth.profile?.id, loadStatsWords, statsTab]);
 
-  if (auth.profile?.role !== "admin") {
-    return <Navigate to="/" replace />;
-  }
-
   const getStatusLabel = (status: StatsTab) =>
     ({
       learning: "ИЗУЧАЮ",
