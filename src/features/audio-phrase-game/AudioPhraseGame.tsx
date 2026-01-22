@@ -310,6 +310,8 @@ export default function AudioPhraseGame({
             endSeconds: item.endSeconds,
             phrase: item.phrase,
             translation: item.translation ?? null,
+            wordCount: item.wordCount,
+            wordCountOptions: item.wordCountOptions ?? [],
             translationOptions: item.translationOptions ?? [],
           })) ?? [];
         const uniqueItems = uniqueById(items);
