@@ -7,8 +7,6 @@ import {
   FooterRow,
   GameCard,
   InfoText,
-  LifeHeart,
-  LivesRow,
   MissingOptionsRow,
   MissingOptionButton,
   OddWordOptionsGrid,
@@ -21,27 +19,21 @@ import {
   PhaseTitle,
   QuestionMessage,
   QuestionSection,
-  SkipButton,
-  SkipRow,
   SlotWord,
   SlotBox,
   SlotRow,
   StatusBanner,
-  TopSection,
   WordChip,
 } from "./styles";
 import { SnippetPlayer } from "../SnippetPlayer";
-import { Icon } from "../../../../shared/ui/Icon";
 
 const TEXT = AUDIO_PHRASE_GAME_TEXT;
 const normalizeRevealPhrase = (value: string) => value.replace(/[.!?]\s*$/, "");
 
 export function AudioPhraseGameView({
-  lives,
   phase,
   loading,
   isFinished,
-  outOfLives,
   currentSnippet,
   currentItem,
   currentWords,
@@ -66,7 +58,6 @@ export function AudioPhraseGameView({
   questionMessage,
   questionCorrect,
   isAnswerWrong,
-  showSkip,
   onTranslationAnswer,
   onMissingPick,
   onMissingRemove,
@@ -91,15 +82,6 @@ export function AudioPhraseGameView({
   return (
     <>
       {/* <AudioPhraseGameGlobalStyles /> */}
-      <TopSection>
-        <LivesRow>
-          {Array.from({ length: 3 }).map((_, index) => (
-            <LifeHeart key={`life-${index}`} $active={index < lives}>
-              <Icon name="like" size={40} color="#ff6b6b" fillColor="#ff6b6b" />
-            </LifeHeart>
-          ))}
-        </LivesRow>
-      </TopSection>
       <GameCard>
         {loading && <InfoText>{TEXT.loading}</InfoText>}
         {!loading && !isFinished && currentSnippet && (
@@ -113,17 +95,12 @@ export function AudioPhraseGameView({
           <InfoText>{TEXT.empty}</InfoText>
         )}
 
-        {!loading && outOfLives && (
-          <StatusBanner $tone="danger">{TEXT.gameOver}</StatusBanner>
-        )}
-
-        {!loading && isFinished && !outOfLives && (
+        {!loading && isFinished && (
           <StatusBanner $tone="info">{TEXT.finished}</StatusBanner>
         )}
 
         {!loading &&
           !isFinished &&
-          !outOfLives &&
           phase === "translate" &&
           showTranslationQuestion && (
             <QuestionSection>
@@ -143,7 +120,7 @@ export function AudioPhraseGameView({
                       key={`translation-${option}`}
                       type="button"
                       onClick={() => onTranslationAnswer(option)}
-                      disabled={questionCorrect !== null || outOfLives}
+                      disabled={questionCorrect !== null}
                       $state={state}
                     >
                       {option}
@@ -179,24 +156,11 @@ export function AudioPhraseGameView({
                   </CenteredRow>
                 </QuestionSection>
               )}
-              {outOfLives && questionCorrect === null && (
-                <CenteredRow>
-                  <NextButton
-                    type="button"
-                    onClick={onAdvancePhase}
-                    className="apg-next"
-                    $size={22}
-                  >
-                    {TEXT.next}
-                  </NextButton>
-                </CenteredRow>
-              )}
             </QuestionSection>
           )}
 
         {!loading &&
           !isFinished &&
-          !outOfLives &&
           phase === "missing" &&
           showMissingQuestion && (
             <QuestionSection>
@@ -227,14 +191,14 @@ export function AudioPhraseGameView({
                   );
                 })}
               </MissingSentence>
-              {questionCorrect === null && !outOfLives && (
+              {questionCorrect === null && (
                 <MissingOptionsRow>
                   {missingOptions.map((option) => (
                     <MissingOptionButton
                       key={`missing-option-${option}`}
                       type="button"
                       onClick={() => onMissingPick(option)}
-                      disabled={questionCorrect !== null || outOfLives}
+                      disabled={questionCorrect !== null}
                     >
                       {option}
                     </MissingOptionButton>
@@ -269,28 +233,15 @@ export function AudioPhraseGameView({
                   </CenteredRow>
                 </QuestionSection>
               )}
-              {outOfLives && questionCorrect === null && (
-                <CenteredRow>
-                  <NextButton
-                    type="button"
-                    onClick={onAdvancePhase}
-                    className="apg-next"
-                    $size={22}
-                  >
-                    {TEXT.next}
-                  </NextButton>
-                </CenteredRow>
-              )}
             </QuestionSection>
           )}
 
         {!loading &&
           !isFinished &&
-          !outOfLives &&
           phase === "oddword" &&
           showOddWordQuestion && (
             <QuestionSection>
-              {questionCorrect === null && !outOfLives && (
+              {questionCorrect === null && (
                 <OddWordOptionsGrid>
                   {oddWordOptions.map((option) => {
                     const isCorrectOption =
@@ -305,12 +256,12 @@ export function AudioPhraseGameView({
                     return (
                       <OptionButton
                         key={`odd-option-${option}`}
-                        type="button"
-                        onClick={() => onOddWordPick(option)}
-                        disabled={questionCorrect !== null || outOfLives}
-                        $state={state}
-                        $shake={
-                          oddWordShake &&
+                      type="button"
+                      onClick={() => onOddWordPick(option)}
+                      disabled={questionCorrect !== null}
+                      $state={state}
+                      $shake={
+                        oddWordShake &&
                           option === selectedOddWord &&
                           isAnswerWrong
                         }
@@ -336,7 +287,7 @@ export function AudioPhraseGameView({
                   </PhraseLine>
                 </PhraseReveal>
               )}
-              {(questionCorrect !== null || outOfLives) && (
+              {questionCorrect !== null && (
                 <CenteredRow>
                   <NextButton
                     type="button"
@@ -351,7 +302,7 @@ export function AudioPhraseGameView({
             </QuestionSection>
           )}
 
-        {!loading && !isFinished && !outOfLives && phase === "assemble" && (
+        {!loading && !isFinished && phase === "assemble" && (
           <>
             <SlotRow>
               {slots.map((slot, index) => {
@@ -444,7 +395,7 @@ export function AudioPhraseGameView({
               </PhraseReveal>
             )}
             <FooterRow>
-              {(isCorrect || outOfLives) && (
+              {isCorrect && (
                 <NextButton
                   type="button"
                   onClick={onAdvancePhase}
@@ -457,13 +408,6 @@ export function AudioPhraseGameView({
           </>
         )}
       </GameCard>
-      {showSkip && !isFinished && (
-        <SkipRow>
-          <SkipButton type="button" onClick={onAdvancePhase}>
-            {TEXT.skip}
-          </SkipButton>
-        </SkipRow>
-      )}
     </>
   );
 }

@@ -72,8 +72,8 @@ export const GameCard = styled.div`
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  /* min-height: calc(100vh - 260px); */
-  margin: 0 auto;
+  height: calc(100% - 90px);
+  margin: 20px auto;
 `;
 
 export const HeaderRow = styled.div`
@@ -356,23 +356,4 @@ export const FooterRow = styled.div`
   justify-content: center;
   width: 100%;
   margin-top: auto;
-`;
-
-export const SkipRow = styled.div`
-  display: flex;
-  justify-content: center;
-  padding-bottom: 20px;
-`;
-
-export const SkipButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.06);
-  color: #c7d4e8;
-  cursor: pointer;
-  font-weight: 600;
 `;

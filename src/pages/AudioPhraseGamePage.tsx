@@ -2,6 +2,7 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { selectAuth, setProfile } from "../features/auth/slice";
 import { AudioPhraseGameContainer } from "../modules/audio-phrase-game";
 import { PageShell } from "../shared/ui/PageShell";
+import { PageShellContent } from "../shared/ui/PageShellContent";
 
 const TEXT = {
   adminOnly:
@@ -24,27 +25,29 @@ export default function AudioPhraseGamePage() {
   }
 
   return (
-    <PageShell>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-          paddingRight: 12,
-          paddingLeft: 12,
-        }}
-      >
-        <AudioPhraseGameContainer
-          userId={auth.profile?.id}
-          onXp={(xpPoints) => {
-            if (!auth.profile) return;
-            dispatch(setProfile({ ...auth.profile, xpPoints }));
+    <PageShell pullToRefresh={false} scroll={false} padding={false}>
+      <PageShellContent>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+            paddingRight: 12,
+            paddingLeft: 12,
+            flex: 1,
           }}
-          maxRounds={10}
-          showHeader={false}
-          showSkip={isAdmin}
-        />
-      </div>
+        >
+          <AudioPhraseGameContainer
+            userId={auth.profile?.id}
+            onXp={(xpPoints) => {
+              if (!auth.profile) return;
+              dispatch(setProfile({ ...auth.profile, xpPoints }));
+            }}
+            maxRounds={8}
+            showHeader={false}
+          />
+        </div>
+      </PageShellContent>
     </PageShell>
   );
 }

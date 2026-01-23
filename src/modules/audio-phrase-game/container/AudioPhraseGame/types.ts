@@ -6,5 +6,4 @@ export type AudioPhraseGameProps = {
   maxRounds?: number;
   showHeader?: boolean;
   difficulty?: AudioPhraseGameDifficulty;
-  showSkip?: boolean;
 };

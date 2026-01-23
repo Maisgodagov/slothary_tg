@@ -92,7 +92,6 @@ export function AudioPhraseGameContainer({
   maxRounds = 1,
   showHeader = false,
   difficulty = 1,
-  showSkip = false,
 }: AudioPhraseGameProps) {
   const dispatch = useAppDispatch();
   const [currentSnippet, setCurrentSnippet] = useState<GameSnippet | null>(null);
@@ -119,18 +118,11 @@ export function AudioPhraseGameContainer({
   const [selectedOddWord, setSelectedOddWord] = useState<string | null>(null);
   const [selectedTranslation, setSelectedTranslation] = useState<string | null>(null);
   const [oddWordShake, setOddWordShake] = useState(false);
-  const [lives, setLives] = useState(3);
   const [isAnswerWrong, setIsAnswerWrong] = useState(false);
-  const phaseCountsRef = useRef<Record<GamePhase, number>>({
-    translate: 0,
-    missing: 0,
-    oddword: 0,
-    assemble: 0,
-  });
+  const [phasePlan, setPhasePlan] = useState<GamePhase[]>([]);
   const seenSnippetIdsRef = useRef<Set<string>>(new Set());
 
   const currentItem = gameItems[roundIndex] ?? null;
-  const outOfLives = lives <= 0;
   const currentPhrase = normalizePhrase(currentItem?.phrase ?? '');
   const currentWords = useMemo(() => {
     return currentPhrase
@@ -177,24 +169,17 @@ export function AudioPhraseGameContainer({
     if (showTranslationQuestion) availablePhases.push('translate');
     if (showMissingQuestion) availablePhases.push('missing');
     if (showOddWordQuestion) availablePhases.push('oddword');
-    const counts = phaseCountsRef.current;
-    const minCount = availablePhases.reduce(
-      (min, phaseKey) => Math.min(min, counts[phaseKey]),
-      Number.POSITIVE_INFINITY,
-    );
-    const leastUsed = availablePhases.filter(
-      (phaseKey) => counts[phaseKey] === minCount,
-    );
-    const nextPhase = shuffleItems(leastUsed)[0] ?? 'translate';
+    const plannedPhase = phasePlan[roundIndex] ?? 'translate';
+    const nextPhase = availablePhases.includes(plannedPhase)
+      ? plannedPhase
+      : availablePhases[0] ?? 'translate';
     setPhase(nextPhase);
-    phaseCountsRef.current = {
-      ...counts,
-      [nextPhase]: counts[nextPhase] + 1,
-    };
     setQuestionMessage(null);
     setQuestionCorrect(null);
   }, [
     currentItem,
+    phasePlan,
+    roundIndex,
     showTranslationQuestion,
     showMissingQuestion,
     showOddWordQuestion,
@@ -286,14 +271,21 @@ export function AudioPhraseGameContainer({
             translationOptions: item.translationOptions ?? [],
           })) ?? [];
         const uniqueItems = uniqueById(items);
-        const unseenItems = uniqueItems.filter(
+        const eligibleItems = uniqueItems.filter(
+          (item) =>
+            item.translationOptions.length >= 2 &&
+            item.wordCount >= 3 &&
+            item.wordCount <= 7,
+        );
+        const unseenItems = eligibleItems.filter(
           (item) => !seenSnippetIdsRef.current.has(item.id),
         );
         unseenItems.forEach((item) => {
           seenSnippetIdsRef.current.add(item.id);
         });
-        const effectiveItems = unseenItems.length ? unseenItems : uniqueItems;
-        setPoolItems(uniqueItems);
+        const fallbackItems = eligibleItems.length ? eligibleItems : uniqueItems;
+        const effectiveItems = unseenItems.length ? unseenItems : fallbackItems;
+        setPoolItems(fallbackItems);
         setGameItems(shuffleItems(effectiveItems).slice(0, maxRounds));
       } catch {
         if (!cancelled) setGameItems([]);
@@ -306,6 +298,21 @@ export function AudioPhraseGameContainer({
       cancelled = true;
     };
   }, [maxRounds]);
+
+  useEffect(() => {
+    if (!gameItems.length) return;
+    const phases: GamePhase[] = [
+      'translate',
+      'translate',
+      'missing',
+      'missing',
+      'oddword',
+      'oddword',
+      'assemble',
+      'assemble',
+    ];
+    setPhasePlan(shuffleItems(phases).slice(0, gameItems.length));
+  }, [gameItems]);
 
   useEffect(() => {
     setCurrentSnippet(currentItem ?? null);
@@ -345,7 +352,7 @@ export function AudioPhraseGameContainer({
   };
 
   const handleTranslationAnswer = (value: string) => {
-    if (!currentItem || questionCorrect || outOfLives) return;
+    if (!currentItem || questionCorrect) return;
     setQuestionMessage(null);
     setIsAnswerWrong(false);
     const correct = value === currentItem.translation;
@@ -358,14 +365,13 @@ export function AudioPhraseGameContainer({
     }
     setQuestionMessage(TEXT.wrongAnswer);
     setIsAnswerWrong(true);
-    setLives((prev) => Math.max(prev - 1, 0));
     setTimeout(() => {
       setIsAnswerWrong(false);
     }, 2000);
   };
 
   const handleMissingPick = (value: string) => {
-    if (questionCorrect !== null || outOfLives) return;
+    if (questionCorrect !== null) return;
     setQuestionMessage(null);
     setIsAnswerWrong(false);
     setMissingSlots((prev) => {
@@ -381,7 +387,6 @@ export function AudioPhraseGameContainer({
   useEffect(() => {
     if (phase !== 'missing') return;
     if (questionCorrect !== null) return;
-    if (outOfLives) return;
     if (!missingSlots.length || missingSlots.some((slot) => !slot)) return;
     const isCorrectMissing = missingIndices.every(
       (idx, i) =>
@@ -397,17 +402,16 @@ export function AudioPhraseGameContainer({
     setQuestionMessage(TEXT.wrongAnswer);
     setIsAnswerWrong(true);
     setMissingShake(true);
-    setLives((prev) => Math.max(prev - 1, 0));
     setTimeout(() => {
       setMissingShake(false);
       setIsAnswerWrong(false);
       setMissingSlots((prev) => prev.map(() => null));
       setMissingOptions([...missingOptionsRef.current]);
     }, 2000);
-  }, [phase, questionCorrect, missingSlots, missingIndices, currentWords, outOfLives]);
+  }, [phase, questionCorrect, missingSlots, missingIndices, currentWords]);
 
   const handleMissingRemove = (slotIndex: number) => {
-    if (questionCorrect !== null || outOfLives) return;
+    if (questionCorrect !== null) return;
     setQuestionMessage(null);
     setIsAnswerWrong(false);
     setMissingSlots((prev) => {
@@ -424,7 +428,7 @@ export function AudioPhraseGameContainer({
   };
 
   const handleOddWordPick = (value: string) => {
-    if (questionCorrect || outOfLives) return;
+    if (questionCorrect) return;
     setQuestionMessage(null);
     setIsAnswerWrong(false);
     const correct = value === oddWordAnswer;
@@ -438,7 +442,6 @@ export function AudioPhraseGameContainer({
     setQuestionMessage(TEXT.wrongAnswer);
     setIsAnswerWrong(true);
     setOddWordShake(true);
-    setLives((prev) => Math.max(prev - 1, 0));
     setTimeout(() => {
       setOddWordShake(false);
       setIsAnswerWrong(false);
@@ -446,7 +449,6 @@ export function AudioPhraseGameContainer({
   };
 
   const handleWordDrop = (word: string, slotIndex: number) => {
-    if (outOfLives) return;
     setSlots((prev) => {
       if (prev[slotIndex]) return prev;
       const next = [...prev];
@@ -457,13 +459,11 @@ export function AudioPhraseGameContainer({
   };
 
   const handleReturnWord = (word: string) => {
-    if (outOfLives) return;
     setSlots((prev) => prev.map((w) => (w === word ? null : w)));
     setAvailableWords((prev) => (prev.includes(word) ? prev : [...prev, word]));
   };
 
   const handleWordClick = (word: string) => {
-    if (outOfLives) return;
     setSlots((prev) => {
       const idx = prev.findIndex((slot) => !slot);
       if (idx === -1) return prev;
@@ -475,7 +475,6 @@ export function AudioPhraseGameContainer({
   };
 
   const handleSlotClick = (slotIndex: number) => {
-    if (outOfLives) return;
     setSlots((prev) => {
       const word = prev[slotIndex];
       if (!word) return prev;
@@ -491,14 +490,12 @@ export function AudioPhraseGameContainer({
   useEffect(() => {
     if (hasAnswered) return;
     if (!slots.length || slots.some((slot) => !slot)) return;
-    if (outOfLives) return;
     const answer = slots.join(' ').toLowerCase();
     const target = currentWords.join(' ').toLowerCase();
     const correct = answer === target;
     setIsCorrect(correct);
     setMessage(correct ? TEXT.correct : TEXT.wrongAnswer);
     if (!correct) {
-      setLives((prev) => Math.max(prev - 1, 0));
       setShowCheck(true);
       setTimeout(() => {
         setMessage(null);
@@ -516,7 +513,7 @@ export function AudioPhraseGameContainer({
         .then((result) => onXp(result.xpPoints))
         .catch(() => null);
     }
-  }, [currentWords, hasAnswered, onXp, maxRounds, slots, userId, outOfLives]);
+  }, [currentWords, hasAnswered, onXp, maxRounds, slots, userId]);
 
   const isFinished = roundIndex >= gameItems.length;
 
@@ -525,11 +522,9 @@ export function AudioPhraseGameContainer({
       showHeader={showHeader}
       roundIndex={roundIndex}
       totalRounds={gameItems.length}
-      lives={lives}
       phase={phase}
       loading={loading}
       isFinished={isFinished}
-      outOfLives={outOfLives}
       currentSnippet={currentSnippet}
       currentItem={currentItem}
       currentWords={currentWords}
@@ -554,7 +549,6 @@ export function AudioPhraseGameContainer({
       questionMessage={questionMessage}
       questionCorrect={questionCorrect}
       isAnswerWrong={isAnswerWrong}
-      showSkip={showSkip}
       onTranslationAnswer={handleTranslationAnswer}
       onMissingPick={handleMissingPick}
       onMissingRemove={handleMissingRemove}

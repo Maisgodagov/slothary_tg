@@ -4,11 +4,9 @@ export type AudioPhraseGameViewProps = {
   showHeader: boolean;
   roundIndex: number;
   totalRounds: number;
-  lives: number;
   phase: GamePhase;
   loading: boolean;
   isFinished: boolean;
-  outOfLives: boolean;
   currentSnippet: GameSnippet | null;
   currentItem: GameSnippet | null;
   currentWords: string[];
@@ -33,7 +31,6 @@ export type AudioPhraseGameViewProps = {
   questionMessage: string | null;
   questionCorrect: boolean | null;
   isAnswerWrong: boolean;
-  showSkip: boolean;
   onTranslationAnswer: (value: string) => void;
   onMissingPick: (value: string) => void;
   onMissingRemove: (slotIndex: number) => void;
