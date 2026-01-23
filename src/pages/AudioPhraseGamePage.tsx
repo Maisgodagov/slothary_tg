@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { selectAuth, setProfile } from "../features/auth/slice";
-import AudioPhraseGame from "../features/audio-phrase-game/AudioPhraseGame";
+import { AudioPhraseGameContainer } from "../modules/audio-phrase-game";
 import { PageShell } from "../shared/ui/PageShell";
 
 const TEXT = {
@@ -34,7 +34,7 @@ export default function AudioPhraseGamePage() {
           paddingLeft: 12,
         }}
       >
-        <AudioPhraseGame
+        <AudioPhraseGameContainer
           userId={auth.profile?.id}
           onXp={(xpPoints) => {
             if (!auth.profile) return;

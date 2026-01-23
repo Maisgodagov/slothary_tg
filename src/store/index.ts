@@ -19,6 +19,7 @@ import videoReducer from '../modules/video/store/slice';
 import dictionaryModuleReducer from '../modules/dictionary/store/slice';
 import profileReducer from '../modules/profile/store/slice';
 import adminReducer from '../modules/admin/store/slice';
+import audioPhraseGameReducer from '../modules/audio-phrase-game/store/slice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -29,6 +30,7 @@ const rootReducer = combineReducers({
   dictionaryModule: dictionaryModuleReducer,
   profile: profileReducer,
   admin: adminReducer,
+  audioPhraseGame: audioPhraseGameReducer,
 });
 
 const persistConfig = {
