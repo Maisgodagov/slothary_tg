@@ -14,6 +14,7 @@ export function PageShellContent({ children, className }: PageShellContentProps)
         flexDirection: "column",
         height: "100%",
         width: "100%",
+        position: "relative",
       }}
     >
       {children}

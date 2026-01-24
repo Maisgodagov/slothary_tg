@@ -308,35 +308,35 @@ export function AudioPhraseGameView({
             <FooterRow />
           </>
         )}
-        <ResultSheet $visible={showResult}>
-          {resultMessage && (
-            <ResultMessage $success={Boolean(resultIsCorrect)}>
-              {resultMessage}
-            </ResultMessage>
-          )}
-          {currentItem && (
-            <ResultLine>
-              <ResultLineEn>
-                {normalizeRevealPhrase(currentItem.phrase)}
-              </ResultLineEn>
-              {currentItem.translation && (
-                <ResultLineRu>{currentItem.translation}</ResultLineRu>
-              )}
-            </ResultLine>
-          )}
-          {showResultNext && (
-            <ResultActions>
-              <NextButton
-                type="button"
-                onClick={onAdvancePhase}
-                className="apg-next"
-              >
-                {resultButtonLabel}
-              </NextButton>
-            </ResultActions>
-          )}
-        </ResultSheet>
       </GameCard>
+      <ResultSheet $visible={showResult}>
+        {resultMessage && (
+          <ResultMessage $success={Boolean(resultIsCorrect)}>
+            {resultMessage}
+          </ResultMessage>
+        )}
+        {currentItem && (
+          <ResultLine>
+            <ResultLineEn>
+              {normalizeRevealPhrase(currentItem.phrase)}
+            </ResultLineEn>
+            {currentItem.translation && (
+              <ResultLineRu>{currentItem.translation}</ResultLineRu>
+            )}
+          </ResultLine>
+        )}
+        {showResultNext && (
+          <ResultActions>
+            <NextButton
+              type="button"
+              onClick={onAdvancePhase}
+              className="apg-next"
+            >
+              {resultButtonLabel}
+            </NextButton>
+          </ResultActions>
+        )}
+      </ResultSheet>
     </>
   );
 }

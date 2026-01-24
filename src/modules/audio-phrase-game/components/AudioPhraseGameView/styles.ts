@@ -74,7 +74,7 @@ export const GameCard = styled.div`
   width: 100%;
   height: calc(100% - 90px);
   margin: 20px auto;
-  position: relative;
+  padding-bottom: 160px;
 `;
 
 export const HeaderRow = styled.div`
@@ -219,7 +219,7 @@ export const MissingOptionButton = styled.button`
 `;
 
 export const ResultSheet = styled.div<{ $visible: boolean }>`
-  position: fixed;
+  position: absolute;
   left: 0;
   right: 0;
   bottom: 50px;
