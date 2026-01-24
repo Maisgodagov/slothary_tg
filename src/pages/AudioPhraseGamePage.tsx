@@ -43,7 +43,7 @@ export default function AudioPhraseGamePage() {
               if (!auth.profile) return;
               dispatch(setProfile({ ...auth.profile, xpPoints }));
             }}
-            maxRounds={8}
+            maxRounds={16}
             showHeader={false}
           />
         </div>

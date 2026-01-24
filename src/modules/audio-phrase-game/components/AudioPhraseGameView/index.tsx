@@ -236,8 +236,9 @@ export function AudioPhraseGameView({
                   slot &&
                   slot.toLowerCase() ===
                     (currentWords[index] ?? "").toLowerCase();
+                const allSlotsFilled = slots.every(Boolean);
                 const shouldShowWrong = Boolean(
-                  showCheck && slot && !isCorrectSlot,
+                  showCheck && allSlotsFilled && slot && !isCorrectSlot,
                 );
                 const state =
                   isCorrect && slot

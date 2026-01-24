@@ -110,6 +110,7 @@ export const QuestionSection = styled.div`
   flex-direction: column;
   gap: 10px;
   flex: 1;
+  justify-content: center;
 `;
 
 export const CenteredGrid = styled.div`
@@ -225,7 +226,7 @@ export const ResultSheet = styled.div<{ $visible: boolean }>`
   bottom: 50px;
   padding: 14px 16px;
   border-radius: 32px 32px 0 0;
-  background: rgba(18, 26, 40, 0.96);
+  background: #121a28;
   border: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
   gap: 10px;
