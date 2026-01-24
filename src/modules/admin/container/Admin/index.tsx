@@ -24,11 +24,11 @@ export function AdminContainer() {
       <PageShell>
         <AdminWrapper>
           <HeaderRow>
-            <Title>Админка</Title>
+            <Title>{'Админка'}</Title>
           </HeaderRow>
-          <SubtleText>Доступно только для администратора.</SubtleText>
+          <SubtleText>{'Доступно только для администратора.'}</SubtleText>
           <Button variant="ghost" onClick={() => navigate('/')}>
-            На главную
+            {'На главную'}
           </Button>
         </AdminWrapper>
       </PageShell>
@@ -39,7 +39,7 @@ export function AdminContainer() {
     <PageShell>
       <AdminWrapper>
         <HeaderRow className="page-header">
-          <Title>Админка</Title>
+          <Title>{'Админка'}</Title>
         </HeaderRow>
 
         <AdminNavCard
@@ -51,6 +51,11 @@ export function AdminContainer() {
           title="Модерация сниппетов"
           description="Редактируйте и подтверждайте игровые сниппеты."
           onClick={() => navigate('/admin/game-snippets')}
+        />
+        <AdminNavCard
+          title="Уровни аудиофраз"
+          description="Создавайте и редактируйте уровни для игры."
+          onClick={() => navigate('/admin/audio-phrase-levels')}
         />
         <AdminNavCard
           title="Пользователи"

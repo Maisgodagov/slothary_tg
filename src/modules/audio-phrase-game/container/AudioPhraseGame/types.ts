@@ -6,4 +6,6 @@ export type AudioPhraseGameProps = {
   maxRounds?: number;
   showHeader?: boolean;
   difficulty?: AudioPhraseGameDifficulty;
+  levelId: string;
+  onLevelComplete?: (reward: number) => void;
 };

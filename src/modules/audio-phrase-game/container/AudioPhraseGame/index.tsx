@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { audioPhraseGameApi } from '../../api';
+import { audioPhraseLevelsApi } from '../../../../features/audio-phrase-levels/api';
 import { AudioPhraseGameView } from '../../components/AudioPhraseGameView';
 import { AUDIO_PHRASE_GAME_TEXT } from '../../copy';
 import { useAppDispatch } from '../../../../app/hooks';
@@ -114,6 +115,8 @@ export function AudioPhraseGameContainer({
   maxRounds = 1,
   showHeader = false,
   difficulty = 1,
+  levelId,
+  onLevelComplete,
 }: AudioPhraseGameProps) {
   const dispatch = useAppDispatch();
   const [currentSnippet, setCurrentSnippet] = useState<GameSnippet | null>(null);
@@ -143,10 +146,11 @@ export function AudioPhraseGameContainer({
   const [isAnswerWrong, setIsAnswerWrong] = useState(false);
   const phasePriority: GamePhase[] = ['missing', 'assemble', 'oddword', 'translate'];
   const [phasePlan, setPhasePlan] = useState<GamePhase[]>([]);
+  const levelCompletedRef = useRef(false);
+  const lastProgressKeyRef = useRef<string | null>(null);
   const successAudioRef = useRef<HTMLAudioElement | null>(null);
   const errorAudioRef = useRef<HTMLAudioElement | null>(null);
   const lastResultRef = useRef<boolean | null>(null);
-  const seenSnippetIdsRef = useRef<Set<string>>(new Set());
 
   const currentItem = gameItems[roundIndex] ?? null;
   const currentPhrase = normalizePhrase(currentItem?.phrase ?? '');
@@ -287,56 +291,92 @@ export function AudioPhraseGameContainer({
 
   useEffect(() => {
     let cancelled = false;
-    const loadPool = async () => {
+    const loadLevel = async () => {
+      if (!levelId) return;
       setLoading(true);
       try {
-        const response = await audioPhraseGameApi.listGameSnippets({
-          limit: Math.max(maxRounds * 3, maxRounds),
-          minWords: 1,
-        });
+        const level = await audioPhraseLevelsApi.getLevel(levelId, userId);
         if (cancelled) return;
         const items =
-          response.items?.map((item) => ({
-            id: item.id,
-            contentId: String(item.contentId),
-            videoName: item.videoName ?? '',
-            videoUrl: item.videoUrl ?? '',
-            startSeconds: item.startSeconds,
-            endSeconds: item.endSeconds,
-            phrase: item.phrase,
-            translation: item.translation ?? null,
-            wordCount: item.wordCount,
-            wordCountOptions: item.wordCountOptions ?? [],
-            translationOptions: item.translationOptions ?? [],
+          level.levelSnippets?.map((entry) => ({
+            id: entry.snippet.id,
+            contentId: String(entry.snippet.contentId),
+            videoName: entry.snippet.videoName ?? '',
+            videoUrl: entry.snippet.videoUrl ?? '',
+            startSeconds: entry.snippet.startSeconds,
+            endSeconds: entry.snippet.endSeconds,
+            phrase: entry.snippet.phrase,
+            translation: entry.snippet.translation ?? null,
+            wordCount: entry.snippet.phrase
+              ? countWords(entry.snippet.phrase)
+              : 0,
+            wordCountOptions: [],
+            translationOptions: [],
           })) ?? [];
-        const uniqueItems = uniqueById(items);
-        const eligibleItems = uniqueItems.filter(
-          (item) =>
-            item.translationOptions.length >= 2 &&
-            item.wordCount >= 3 &&
-            item.wordCount <= 7,
-        );
-        const unseenItems = eligibleItems.filter(
-          (item) => !seenSnippetIdsRef.current.has(item.id),
-        );
-        unseenItems.forEach((item) => {
-          seenSnippetIdsRef.current.add(item.id);
+        const translations = items
+          .map((item) => item.translation)
+          .filter((value): value is string => Boolean(value));
+        const withOptions = items.map((item) => {
+          if (!item.translation) return item;
+          const pool = translations.filter((value) => value !== item.translation);
+          const distractors = shuffleItems(pool).slice(0, 3);
+          const options = shuffleItems([item.translation, ...distractors]);
+          return { ...item, translationOptions: options };
         });
-        const fallbackItems = eligibleItems.length ? eligibleItems : uniqueItems;
-        const effectiveItems = unseenItems.length ? unseenItems : fallbackItems;
-        setPoolItems(fallbackItems);
-        setGameItems(shuffleItems(effectiveItems).slice(0, maxRounds));
+        const uniqueWithOptions = uniqueById(withOptions);
+        setPoolItems(uniqueWithOptions);
+        setGameItems(uniqueWithOptions.slice(0, maxRounds));
+        levelCompletedRef.current = false;
       } catch {
         if (!cancelled) setGameItems([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
-    loadPool();
+    loadLevel();
     return () => {
       cancelled = true;
     };
-  }, [maxRounds]);
+  }, [levelId, maxRounds, userId]);
+
+  useEffect(() => {
+    if (!currentItem) return;
+    if (!levelId) return;
+    const resultState =
+      questionCorrect !== null
+        ? questionCorrect
+        : isCorrect !== null
+          ? isCorrect
+          : null;
+    if (resultState === null) return;
+    const key = `${currentItem.id}:${phase}`;
+    if (lastProgressKeyRef.current === key) return;
+    lastProgressKeyRef.current = key;
+    audioPhraseLevelsApi
+      .recordProgress(
+        levelId,
+        {
+          snippetId: currentItem.id,
+          exerciseType:
+            phase === 'missing'
+              ? 'MISSING'
+              : phase === 'assemble'
+                ? 'ASSEMBLE'
+                : phase === 'oddword'
+                  ? 'ODDWORD'
+                  : 'TRANSLATE',
+          isCorrect: resultState,
+        },
+        userId,
+      )
+      .then((result) => {
+        if (result.completed && !levelCompletedRef.current) {
+          levelCompletedRef.current = true;
+          onLevelComplete?.(result.xpReward ?? 0);
+        }
+      })
+      .catch(() => null);
+  }, [currentItem, levelId, phase, questionCorrect, isCorrect, userId, onLevelComplete, onXp]);
 
   useEffect(() => {
     if (!gameItems.length) return;

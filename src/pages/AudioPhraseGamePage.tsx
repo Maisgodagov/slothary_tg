@@ -1,28 +1,29 @@
+import { useEffect, useState } from "react";
+
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { selectAuth, setProfile } from "../features/auth/slice";
+import { audioPhraseLevelsApi, type AudioPhraseLevelListItem } from "../features/audio-phrase-levels/api";
 import { AudioPhraseGameContainer } from "../modules/audio-phrase-game";
 import { PageShell } from "../shared/ui/PageShell";
 import { PageShellContent } from "../shared/ui/PageShellContent";
 
-const TEXT = {
-  adminOnly:
-    "\u0414\u043e\u0441\u0442\u0443\u043f\u043d\u043e \u0442\u043e\u043b\u044c\u043a\u043e \u0434\u043b\u044f \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440\u0430.",
-};
-
 export default function AudioPhraseGamePage() {
   const auth = useAppSelector(selectAuth);
   const dispatch = useAppDispatch();
-  const isAdmin = auth.profile?.role === "admin";
+  const [levels, setLevels] = useState<AudioPhraseLevelListItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [activeLevelId, setActiveLevelId] = useState<string | null>(null);
+  const [levelReward, setLevelReward] = useState<number | null>(null);
 
-  if (!isAdmin) {
-    return (
-      <PageShell>
-        <div style={{ padding: 16, color: "var(--tg-subtle)" }}>
-          {TEXT.adminOnly}
-        </div>
-      </PageShell>
-    );
-  }
+  useEffect(() => {
+    if (!auth.profile?.id) return;
+    setLoading(true);
+    audioPhraseLevelsApi
+      .list(auth.profile.id)
+      .then((result) => setLevels(result.items))
+      .catch(() => setLevels([]))
+      .finally(() => setLoading(false));
+  }, [auth.profile?.id]);
 
   return (
     <PageShell pullToRefresh={false} scroll={false} padding={false}>
@@ -37,15 +38,93 @@ export default function AudioPhraseGamePage() {
             flex: 1,
           }}
         >
-          <AudioPhraseGameContainer
-            userId={auth.profile?.id}
-            onXp={(xpPoints) => {
-              if (!auth.profile) return;
-              dispatch(setProfile({ ...auth.profile, xpPoints }));
-            }}
-            maxRounds={16}
-            showHeader={false}
-          />
+          {!activeLevelId && (
+            <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ fontWeight: 700 }}>{"Уровни"}</div>
+              {loading && (
+                <div style={{ color: "var(--tg-subtle)" }}>
+                  {"Загружаем..."}
+                </div>
+              )}
+              {!loading && levels.length === 0 && (
+                <div style={{ color: "var(--tg-subtle)" }}>
+                  {"Уровни пока не созданы."}
+                </div>
+              )}
+              {!loading && levels.length > 0 && (
+                <div style={{ display: "grid", gap: 10 }}>
+                  {levels.map((level) => {
+                    const status = level.progress?.status ?? "NOT_STARTED";
+                    return (
+                      <button
+                        key={level.id}
+                        type="button"
+                        onClick={() => setActiveLevelId(level.id)}
+                        style={{
+                          textAlign: "left",
+                          borderRadius: 16,
+                          border: "1px solid var(--tg-border)",
+                          background: "var(--tg-card)",
+                          padding: "12px 14px",
+                          color: "var(--tg-text)",
+                          display: "grid",
+                          gap: 6,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <div style={{ fontWeight: 700 }}>
+                          {"Уровень"} {level.order}
+                        </div>
+                        <div style={{ color: "var(--tg-subtle)", fontSize: 13 }}>
+                          {"Сниппетов"}: {level.snippetCount} {"·"} {"Награда"}: {level.xpReward} XP
+                        </div>
+                        <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
+                          {"Статус"}: {" "}
+                          {status === "COMPLETED"
+                            ? "Пройден"
+                            : status === "IN_PROGRESS"
+                              ? "В процессе"
+                              : "Не начат"}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeLevelId && (
+            <>
+              {levelReward !== null && (
+                <div style={{ color: "var(--tg-subtle)", alignSelf: "center" }}>
+                  {"Получено"}: {levelReward} XP
+                </div>
+              )}
+              <AudioPhraseGameContainer
+                userId={auth.profile?.id}
+                onXp={(xpPoints) => {
+                  if (!auth.profile) return;
+                  dispatch(setProfile({ ...auth.profile, xpPoints }));
+                }}
+                maxRounds={8}
+                showHeader={false}
+                levelId={activeLevelId}
+                onLevelComplete={(reward) => {
+                  if (!auth.profile) return;
+                  setLevelReward(reward);
+                  if (reward) {
+                    dispatch(
+                      setProfile({
+                        ...auth.profile,
+                        xpPoints: auth.profile.xpPoints + reward,
+                      })
+                    );
+                  }
+                }}
+              />
+            </>
+          )}
         </div>
       </PageShellContent>
     </PageShell>

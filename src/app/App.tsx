@@ -16,6 +16,7 @@ import AudioPhraseGamePage from "../pages/AudioPhraseGamePage";
 import ModerationPage from "../pages/ModerationPage";
 import UserAdminPage from "../pages/UserAdminPage";
 import GameSnippetsAdminPage from "../pages/GameSnippetsAdminPage";
+import AudioPhraseLevelsAdminPage from "../pages/AudioPhraseLevelsAdminPage";
 import UserDictionaryPage from "../pages/UserDictionaryPage";
 import WordProgressPage from "../pages/WordProgressPage";
 import StreakPage from "../pages/StreakPage";
@@ -126,7 +127,15 @@ function App() {
                   element={<GameSnippetsAdminPage />}
                 />
                 <Route
+                  path="/admin/audio-phrase-levels"
+                  element={<AudioPhraseLevelsAdminPage />}
+                />
+                <Route
                   path="/admin/audio-phrase-game"
+                  element={<AudioPhraseGamePage />}
+                />
+                <Route
+                  path="/audio-phrase-game"
                   element={<AudioPhraseGamePage />}
                 />
                 <Route path="/admin" element={<AdminContainer />} />
