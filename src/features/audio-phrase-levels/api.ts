@@ -23,6 +23,10 @@ export type AudioPhraseLevelSnippet = {
   endSeconds: number;
   videoUrl: string | null;
   videoName: string | null;
+  content?: {
+    videoUrl: string | null;
+    videoName: string | null;
+  } | null;
 };
 
 export type AudioPhraseLevelDetail = {

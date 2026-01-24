@@ -301,8 +301,8 @@ export function AudioPhraseGameContainer({
           level.levelSnippets?.map((entry) => ({
             id: entry.snippet.id,
             contentId: String(entry.snippet.contentId),
-            videoName: entry.snippet.videoName ?? '',
-            videoUrl: entry.snippet.videoUrl ?? '',
+            videoName: entry.snippet.videoName ?? entry.snippet.content?.videoName ?? '',
+            videoUrl: entry.snippet.videoUrl ?? entry.snippet.content?.videoUrl ?? '',
             startSeconds: entry.snippet.startSeconds,
             endSeconds: entry.snippet.endSeconds,
             phrase: entry.snippet.phrase,
