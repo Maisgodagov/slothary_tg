@@ -5,9 +5,9 @@ export const PlayerShell = styled.div`
   overflow: hidden;
   background: #000;
   border: 5px solid var(--tg-border);
-  height: 300px;
+  height: auto;
   aspect-ratio: 1 / 1;
-  width: auto;
+  width: 95%;
   max-width: 100%;
   margin: 12px auto 0;
   margin-bottom: 20px;

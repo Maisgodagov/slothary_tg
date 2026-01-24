@@ -74,7 +74,7 @@ export const GameCard = styled.div`
   width: 100%;
   height: calc(100% - 90px);
   margin: 20px auto;
-  padding-bottom: 160px;
+  /* padding-bottom: 160px; */
 `;
 
 export const HeaderRow = styled.div`
