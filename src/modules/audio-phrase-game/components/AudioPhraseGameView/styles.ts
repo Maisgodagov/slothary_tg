@@ -74,6 +74,7 @@ export const GameCard = styled.div`
   width: 100%;
   height: calc(100% - 90px);
   margin: 20px auto;
+  position: relative;
 `;
 
 export const HeaderRow = styled.div`
@@ -176,12 +177,7 @@ export const MissingSlot = styled.span<{
         ? "3px dashed rgba(53,199,89,0.9)"
         : "3px dashed rgba(255,107,107,0.9)"
       : "3px dashed rgba(76,196,255,0.55)"};
-  background: ${({ $showCheck, $correct }) =>
-    $showCheck
-      ? $correct
-        ? "rgba(53,199,89,0.12)"
-        : "rgba(255,107,107,0.12)"
-      : "rgba(76,196,255,0.1)"};
+  background: rgba(255, 255, 255, 0.02);
   cursor: ${({ $clickable }) => ($clickable ? "pointer" : "default")};
   line-height: 1.2;
   white-space: nowrap;
@@ -222,28 +218,58 @@ export const MissingOptionButton = styled.button`
   align-items: center;
 `;
 
-export const QuestionMessage = styled.div<{ $success?: boolean }>`
+export const ResultSheet = styled.div<{ $visible: boolean }>`
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 50px;
+  padding: 14px 16px;
+  border-radius: 32px 32px 0 0;
+  background: rgba(18, 26, 40, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 20;
+  transform: translateY(${({ $visible }) => ($visible ? "0" : "20px")});
+  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+  pointer-events: ${({ $visible }) => ($visible ? "auto" : "none")};
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+`;
+
+export const ResultMessage = styled.div<{ $success?: boolean }>`
   text-align: center;
-  font-weight: 500;
-  margin-top: 18px;
+  font-weight: 600;
   font-size: 22px;
   color: ${({ $success }) => ($success ? "#35c759" : "#ff6b6b")};
 `;
 
-export const PhraseReveal = styled.div`
+export const ResultLine = styled.div`
   text-align: center;
+  font-size: 18px;
+  color: var(--tg-text);
   display: grid;
-  gap: 6px;
+  gap: 4px;
+`;
+
+export const ResultLineEn = styled.div`
+  font-weight: 700;
+  font-size: 18px;
   color: var(--tg-text);
 `;
 
-export const PhraseLine = styled.div`
+export const ResultLineRu = styled.div`
   font-weight: 400;
-  font-size: 20px;
+  font-size: 18px;
+  color: var(--tg-subtle);
 `;
 
-export const PhraseTranslation = styled.div`
-  color: var(--tg-subtle);
+export const ResultActions = styled.div`
+  display: flex;
+  justify-content: center;
 `;
 
 export const CenteredRow = styled.div`
@@ -289,12 +315,12 @@ export const SlotBox = styled.div<{ $state: SlotState; $shake?: boolean }>`
   border-radius: 10px;
   border: ${({ $state }) =>
     $state === "correct"
-      ? "1px dashed rgba(53,199,89,0.9)"
+      ? "3px dashed rgba(53,199,89,0.9)"
       : $state === "wrong"
-        ? "1px dashed rgba(255,107,107,0.9)"
+        ? "3px dashed rgba(255,107,107,0.9)"
         : $state === "filled"
-          ? "1px dashed var(--tg-accent)"
-          : "1px dashed rgba(76,196,255,0.55)"};
+          ? "3px dashed var(--tg-accent)"
+          : "3px dashed rgba(76,196,255,0.55)"};
   background-color: ${({ $state }) =>
     $state === "correct"
       ? "rgba(53,199,89,0.12)"

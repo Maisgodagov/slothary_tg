@@ -3,7 +3,6 @@ import type { AudioPhraseGameViewProps } from "./types";
 import {
   AvailableWordsRow,
   CenteredGrid,
-  CenteredRow,
   FooterRow,
   GameCard,
   InfoText,
@@ -14,11 +13,14 @@ import {
   MissingSlot,
   NextButton,
   OptionButton,
-  PhraseLine,
-  PhraseReveal,
   PhaseTitle,
-  QuestionMessage,
   QuestionSection,
+  ResultActions,
+  ResultLine,
+  ResultLineEn,
+  ResultLineRu,
+  ResultMessage,
+  ResultSheet,
   SlotWord,
   SlotBox,
   SlotRow,
@@ -79,6 +81,17 @@ export function AudioPhraseGameView({
             ? TEXT.assembleTitle
             : TEXT.defaultTitle;
 
+  const resultMessage = questionMessage ?? message;
+  const resultIsCorrect =
+    typeof questionCorrect === "boolean"
+      ? questionCorrect
+      : typeof isCorrect === "boolean"
+        ? isCorrect
+        : null;
+  const showResult = Boolean(resultMessage);
+  const showResultNext = resultIsCorrect !== null;
+  const resultButtonLabel = resultIsCorrect === false ? TEXT.ok : TEXT.next;
+
   return (
     <>
       {/* <AudioPhraseGameGlobalStyles /> */}
@@ -128,34 +141,6 @@ export function AudioPhraseGameView({
                   );
                 })}
               </CenteredGrid>
-              {questionMessage && (
-                <QuestionMessage $success={Boolean(questionCorrect)}>
-                  {questionMessage}
-                </QuestionMessage>
-              )}
-              {questionCorrect !== null && (
-                <QuestionSection>
-                  {currentItem && (
-                    <PhraseReveal>
-                      <PhraseLine>
-                        {normalizeRevealPhrase(currentItem.phrase)}
-                        {currentItem.translation
-                          ? ` — ${currentItem.translation}`
-                          : ""}
-                      </PhraseLine>
-                    </PhraseReveal>
-                  )}
-                  <CenteredRow>
-                    <NextButton
-                      type="button"
-                      onClick={onAdvancePhase}
-                      className="apg-next"
-                    >
-                      {TEXT.next}
-                    </NextButton>
-                  </CenteredRow>
-                </QuestionSection>
-              )}
             </QuestionSection>
           )}
 
@@ -186,53 +171,23 @@ export function AudioPhraseGameView({
                       $shake={missingShake && isAnswerWrong}
                       $clickable={Boolean(slotValue)}
                     >
-                      {slotValue ?? "_____"}
+                      {slotValue ?? ""}
                     </MissingSlot>
                   );
                 })}
               </MissingSentence>
-              {questionCorrect === null && (
-                <MissingOptionsRow>
-                  {missingOptions.map((option) => (
-                    <MissingOptionButton
-                      key={`missing-option-${option}`}
-                      type="button"
-                      onClick={() => onMissingPick(option)}
-                      disabled={questionCorrect !== null}
-                    >
-                      {option}
-                    </MissingOptionButton>
-                  ))}
-                </MissingOptionsRow>
-              )}
-              {questionMessage && (
-                <QuestionMessage $success={Boolean(questionCorrect)}>
-                  {questionMessage}
-                </QuestionMessage>
-              )}
-              {questionCorrect !== null && (
-                <QuestionSection>
-                  {currentItem && (
-                    <PhraseReveal>
-                      <PhraseLine>
-                        {normalizeRevealPhrase(currentItem.phrase)}
-                        {currentItem.translation
-                          ? ` — ${currentItem.translation}`
-                          : ""}
-                      </PhraseLine>
-                    </PhraseReveal>
-                  )}
-                  <CenteredRow>
-                    <NextButton
-                      type="button"
-                      onClick={onAdvancePhase}
-                      className="apg-next"
-                    >
-                      {TEXT.next}
-                    </NextButton>
-                  </CenteredRow>
-                </QuestionSection>
-              )}
+              <MissingOptionsRow>
+                {missingOptions.map((option) => (
+                  <MissingOptionButton
+                    key={`missing-option-${option}`}
+                    type="button"
+                    onClick={() => onMissingPick(option)}
+                    disabled={questionCorrect !== null}
+                  >
+                    {option}
+                  </MissingOptionButton>
+                ))}
+              </MissingOptionsRow>
             </QuestionSection>
           )}
 
@@ -241,64 +196,35 @@ export function AudioPhraseGameView({
           phase === "oddword" &&
           showOddWordQuestion && (
             <QuestionSection>
-              {questionCorrect === null && (
-                <OddWordOptionsGrid>
-                  {oddWordOptions.map((option) => {
-                    const isCorrectOption =
-                      option === oddWordAnswer && questionCorrect;
-                    const isWrongOption =
-                      option === selectedOddWord && isAnswerWrong;
-                    const state = isCorrectOption
-                      ? "correct"
-                      : isWrongOption
-                        ? "wrong"
-                        : "normal";
-                    return (
-                      <OptionButton
-                        key={`odd-option-${option}`}
+              <OddWordOptionsGrid>
+                {oddWordOptions.map((option) => {
+                  const isCorrectOption =
+                    option === oddWordAnswer && questionCorrect;
+                  const isWrongOption =
+                    option === selectedOddWord && isAnswerWrong;
+                  const state = isCorrectOption
+                    ? "correct"
+                    : isWrongOption
+                      ? "wrong"
+                      : "normal";
+                  return (
+                    <OptionButton
+                      key={`odd-option-${option}`}
                       type="button"
                       onClick={() => onOddWordPick(option)}
                       disabled={questionCorrect !== null}
                       $state={state}
                       $shake={
                         oddWordShake &&
-                          option === selectedOddWord &&
-                          isAnswerWrong
-                        }
-                      >
-                        {option}
-                      </OptionButton>
-                    );
-                  })}
-                </OddWordOptionsGrid>
-              )}
-              {questionMessage && (
-                <QuestionMessage $success={Boolean(questionCorrect)}>
-                  {questionMessage}
-                </QuestionMessage>
-              )}
-              {questionCorrect && currentItem && (
-                <PhraseReveal>
-                  <PhraseLine>
-                    {normalizeRevealPhrase(currentItem.phrase)}
-                    {currentItem.translation
-                      ? ` — ${currentItem.translation}`
-                      : ""}
-                  </PhraseLine>
-                </PhraseReveal>
-              )}
-              {questionCorrect !== null && (
-                <CenteredRow>
-                  <NextButton
-                    type="button"
-                    onClick={onAdvancePhase}
-                    className="apg-next"
-                    $size={18}
-                  >
-                    {TEXT.next}
-                  </NextButton>
-                </CenteredRow>
-              )}
+                        option === selectedOddWord &&
+                        isAnswerWrong
+                      }
+                    >
+                      {option}
+                    </OptionButton>
+                  );
+                })}
+              </OddWordOptionsGrid>
             </QuestionSection>
           )}
 
@@ -379,34 +305,37 @@ export function AudioPhraseGameView({
               </AvailableWordsRow>
             )}
 
-            {message && (
-              <QuestionMessage $success={Boolean(isCorrect)}>
-                {message}
-              </QuestionMessage>
-            )}
-            {isCorrect && currentItem && (
-              <PhraseReveal>
-                <PhraseLine>
-                  {normalizeRevealPhrase(currentItem.phrase)}
-                  {currentItem.translation
-                    ? ` — ${currentItem.translation}`
-                    : ""}
-                </PhraseLine>
-              </PhraseReveal>
-            )}
-            <FooterRow>
-              {isCorrect && (
-                <NextButton
-                  type="button"
-                  onClick={onAdvancePhase}
-                  className="apg-next"
-                >
-                  {TEXT.next}
-                </NextButton>
-              )}
-            </FooterRow>
+            <FooterRow />
           </>
         )}
+        <ResultSheet $visible={showResult}>
+          {resultMessage && (
+            <ResultMessage $success={Boolean(resultIsCorrect)}>
+              {resultMessage}
+            </ResultMessage>
+          )}
+          {currentItem && (
+            <ResultLine>
+              <ResultLineEn>
+                {normalizeRevealPhrase(currentItem.phrase)}
+              </ResultLineEn>
+              {currentItem.translation && (
+                <ResultLineRu>{currentItem.translation}</ResultLineRu>
+              )}
+            </ResultLine>
+          )}
+          {showResultNext && (
+            <ResultActions>
+              <NextButton
+                type="button"
+                onClick={onAdvancePhase}
+                className="apg-next"
+              >
+                {resultButtonLabel}
+              </NextButton>
+            </ResultActions>
+          )}
+        </ResultSheet>
       </GameCard>
     </>
   );

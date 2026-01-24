@@ -51,6 +51,20 @@ const EXTRA_WORDS = [
 ];
 
 const TEXT = AUDIO_PHRASE_GAME_TEXT;
+const CORRECT_MESSAGES = [
+  "Верно!",
+  "Отлично!",
+  "Правильно!",
+  "Супер!",
+  "Класс!",
+  "Так держать!",
+  "Молодец!",
+  "Именно!",
+];
+
+const pickCorrectMessage = () =>
+  CORRECT_MESSAGES[Math.floor(Math.random() * CORRECT_MESSAGES.length)] ??
+  "Верно!";
 
 const normalizePhrase = (value: string) => value.replace(/[,.!?]/g, '');
 const countWords = (value: string) =>
@@ -352,26 +366,25 @@ export function AudioPhraseGameContainer({
   };
 
   const handleTranslationAnswer = (value: string) => {
-    if (!currentItem || questionCorrect) return;
+    if (!currentItem || questionCorrect !== null || hasAnswered) return;
     setQuestionMessage(null);
     setIsAnswerWrong(false);
     const correct = value === currentItem.translation;
     setSelectedTranslation(value);
     if (correct) {
       setQuestionCorrect(true);
-      setQuestionMessage(TEXT.correct);
+      setQuestionMessage(pickCorrectMessage());
       setIsAnswerWrong(false);
       return;
     }
     setQuestionMessage(TEXT.wrongAnswer);
     setIsAnswerWrong(true);
-    setTimeout(() => {
-      setIsAnswerWrong(false);
-    }, 2000);
+    setQuestionCorrect(false);
+    setHasAnswered(true);
   };
 
   const handleMissingPick = (value: string) => {
-    if (questionCorrect !== null) return;
+    if (questionCorrect !== null || hasAnswered) return;
     setQuestionMessage(null);
     setIsAnswerWrong(false);
     setMissingSlots((prev) => {
@@ -395,23 +408,23 @@ export function AudioPhraseGameContainer({
     );
     if (isCorrectMissing) {
       setQuestionCorrect(true);
-      setQuestionMessage(TEXT.correct);
+      setQuestionMessage(pickCorrectMessage());
       setIsAnswerWrong(false);
       return;
     }
     setQuestionMessage(TEXT.wrongAnswer);
     setIsAnswerWrong(true);
     setMissingShake(true);
+    setQuestionCorrect(false);
+    setHasAnswered(true);
     setTimeout(() => {
       setMissingShake(false);
       setIsAnswerWrong(false);
-      setMissingSlots((prev) => prev.map(() => null));
-      setMissingOptions([...missingOptionsRef.current]);
     }, 2000);
   }, [phase, questionCorrect, missingSlots, missingIndices, currentWords]);
 
   const handleMissingRemove = (slotIndex: number) => {
-    if (questionCorrect !== null) return;
+    if (questionCorrect !== null || hasAnswered) return;
     setQuestionMessage(null);
     setIsAnswerWrong(false);
     setMissingSlots((prev) => {
@@ -428,19 +441,21 @@ export function AudioPhraseGameContainer({
   };
 
   const handleOddWordPick = (value: string) => {
-    if (questionCorrect) return;
+    if (questionCorrect !== null || hasAnswered) return;
     setQuestionMessage(null);
     setIsAnswerWrong(false);
     const correct = value === oddWordAnswer;
     setSelectedOddWord(value);
     if (correct) {
       setQuestionCorrect(true);
-      setQuestionMessage(TEXT.correct);
+      setQuestionMessage(pickCorrectMessage());
       setIsAnswerWrong(false);
       return;
     }
     setQuestionMessage(TEXT.wrongAnswer);
     setIsAnswerWrong(true);
+    setQuestionCorrect(false);
+    setHasAnswered(true);
     setOddWordShake(true);
     setTimeout(() => {
       setOddWordShake(false);
@@ -449,6 +464,7 @@ export function AudioPhraseGameContainer({
   };
 
   const handleWordDrop = (word: string, slotIndex: number) => {
+    if (questionCorrect !== null || hasAnswered) return;
     setSlots((prev) => {
       if (prev[slotIndex]) return prev;
       const next = [...prev];
@@ -459,11 +475,13 @@ export function AudioPhraseGameContainer({
   };
 
   const handleReturnWord = (word: string) => {
+    if (questionCorrect !== null || hasAnswered) return;
     setSlots((prev) => prev.map((w) => (w === word ? null : w)));
     setAvailableWords((prev) => (prev.includes(word) ? prev : [...prev, word]));
   };
 
   const handleWordClick = (word: string) => {
+    if (questionCorrect !== null || hasAnswered) return;
     setSlots((prev) => {
       const idx = prev.findIndex((slot) => !slot);
       if (idx === -1) return prev;
@@ -475,6 +493,7 @@ export function AudioPhraseGameContainer({
   };
 
   const handleSlotClick = (slotIndex: number) => {
+    if (questionCorrect !== null || hasAnswered) return;
     setSlots((prev) => {
       const word = prev[slotIndex];
       if (!word) return prev;
@@ -494,16 +513,10 @@ export function AudioPhraseGameContainer({
     const target = currentWords.join(' ').toLowerCase();
     const correct = answer === target;
     setIsCorrect(correct);
-    setMessage(correct ? TEXT.correct : TEXT.wrongAnswer);
+    setMessage(correct ? pickCorrectMessage() : TEXT.wrongAnswer);
     if (!correct) {
       setShowCheck(true);
-      setTimeout(() => {
-        setMessage(null);
-        setSlots(currentWords.map(() => null));
-        setAvailableWords(shuffleWords(currentWords));
-        setIsCorrect(null);
-        setShowCheck(false);
-      }, 2500);
+      setHasAnswered(true);
       return;
     }
     setHasAnswered(true);
