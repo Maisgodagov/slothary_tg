@@ -12,14 +12,18 @@ import {
 
 import { TelegramProvider, useTelegram } from "./providers/TelegramProvider";
 import { store, persistor } from "./store";
-import AudioPhraseGamePage from "../pages/AudioPhraseGamePage";
-import ModerationPage from "../pages/ModerationPage";
 import UserAdminPage from "../pages/UserAdminPage";
 import GameSnippetsAdminPage from "../pages/GameSnippetsAdminPage";
-import AudioPhraseLevelsAdminPage from "../pages/AudioPhraseLevelsAdminPage";
 import UserDictionaryPage from "../pages/UserDictionaryPage";
 import WordProgressPage from "../pages/WordProgressPage";
 import StreakPage from "../pages/StreakPage";
+import LearningPathLessonPage from "../pages/LearningPathLessonPage";
+import LearningPathAdminPage from "../pages/LearningPathAdminPage";
+import LearningPathLessonEditorPage from "../pages/LearningPathLessonEditorPage";
+import LessonStepCardDemoPage from "../pages/LessonStepCardDemoPage";
+import LessonStepCardQuizDemoPage from "../pages/LessonStepCardQuizDemoPage";
+import LessonStepCardFillGapDemoPage from "../pages/LessonStepCardFillGapDemoPage";
+import LessonStepCardAssembleDemoPage from "../pages/LessonStepCardAssembleDemoPage";
 import { HomeContainer } from "../modules/home";
 import { VideoContainer } from "../modules/video";
 import { DictionaryContainer } from "../modules/dictionary";
@@ -118,7 +122,6 @@ function App() {
                   path="/video-dictionary"
                   element={<Navigate to="/dictionary" replace />}
                 />
-                <Route path="/admin/moderation" element={<ModerationPage />} />
                 <Route path="/admin/users" element={<UserAdminPage />} />
                 <Route path="/admin/word-progress" element={<WordProgressPage />} />
                 <Route path="/streak" element={<StreakPage />} />
@@ -127,16 +130,26 @@ function App() {
                   element={<GameSnippetsAdminPage />}
                 />
                 <Route
-                  path="/admin/audio-phrase-levels"
-                  element={<AudioPhraseLevelsAdminPage />}
+                  path="/admin/learning-path"
+                  element={<LearningPathAdminPage />}
                 />
                 <Route
-                  path="/admin/audio-phrase-game"
-                  element={<AudioPhraseGamePage />}
+                  path="/admin/learning-path/modules/:moduleId/lessons/:lessonId"
+                  element={<LearningPathLessonEditorPage />}
+                />
+                <Route path="/learn/lesson/:id" element={<LearningPathLessonPage />} />
+                <Route path="/demo/lesson-card" element={<LessonStepCardDemoPage />} />
+                <Route
+                  path="/demo/lesson-card-quiz"
+                  element={<LessonStepCardQuizDemoPage />}
                 />
                 <Route
-                  path="/audio-phrase-game"
-                  element={<AudioPhraseGamePage />}
+                  path="/demo/lesson-card-fill-gap"
+                  element={<LessonStepCardFillGapDemoPage />}
+                />
+                <Route
+                  path="/demo/lesson-card-assemble"
+                  element={<LessonStepCardAssembleDemoPage />}
                 />
                 <Route path="/admin" element={<AdminContainer />} />
                 <Route path="*" element={<Navigate to="/" replace />} />

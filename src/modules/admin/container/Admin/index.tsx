@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAppDispatch, useAppSelector } from '../../../../app/hooks';
@@ -43,19 +43,14 @@ export function AdminContainer() {
         </HeaderRow>
 
         <AdminNavCard
-          title="Модерация упражнений"
-          description="Проверяйте карточки упражнений, исправляйте ответы и перевод."
-          onClick={() => navigate('/admin/moderation')}
-        />
-        <AdminNavCard
           title="Модерация сниппетов"
           description="Редактируйте и подтверждайте игровые сниппеты."
           onClick={() => navigate('/admin/game-snippets')}
         />
         <AdminNavCard
-          title="Уровни аудиофраз"
-          description="Создавайте и редактируйте уровни для игры."
-          onClick={() => navigate('/admin/audio-phrase-levels')}
+          title="Learning Path"
+          description="Модули и уроки для нового пути обучения."
+          onClick={() => navigate('/admin/learning-path')}
         />
         <AdminNavCard
           title="Пользователи"

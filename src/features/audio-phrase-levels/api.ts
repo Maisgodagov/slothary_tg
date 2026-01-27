@@ -1,83 +1,58 @@
-﻿import { apiFetch } from "../../shared/api/client";
-
-export type AudioPhraseLevelProgress = {
-  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
-  completedAt: string | null;
-};
-
-export type AudioPhraseLevelListItem = {
-  id: string;
-  order: number;
-  xpReward: number;
-  isActive: boolean;
-  snippetCount: number;
-  progress: AudioPhraseLevelProgress | null;
-};
+import { apiFetch } from "../../shared/api/client";
 
 export type AudioPhraseLevelSnippet = {
   id: string;
-  phrase: string;
-  translation: string | null;
   contentId: number;
+  videoName?: string | null;
+  videoUrl?: string | null;
   startSeconds: number;
   endSeconds: number;
-  videoUrl: string | null;
-  videoName: string | null;
+  phrase: string;
+  translation?: string | null;
   content?: {
-    videoUrl: string | null;
-    videoName: string | null;
+    videoName?: string | null;
+    videoUrl?: string | null;
   } | null;
 };
 
-export type AudioPhraseLevelDetail = {
-  id: string;
-  order: number;
-  xpReward: number;
-  isActive: boolean;
-  levelSnippets: {
-    id: string;
-    order: number | null;
-    snippet: AudioPhraseLevelSnippet;
-  }[];
+export type AudioPhraseLevelSnippetEntry = {
+  snippet: AudioPhraseLevelSnippet;
 };
 
-export type AudioPhraseLevelProgressRecord = {
+export type AudioPhraseLevel = {
+  id: string;
+  levelSnippets?: AudioPhraseLevelSnippetEntry[];
+};
+
+export type AudioPhraseLevelProgressPayload = {
   snippetId: string;
   exerciseType: "MISSING" | "ASSEMBLE" | "ODDWORD" | "TRANSLATE";
   isCorrect: boolean;
 };
 
-export type AudioPhraseLevelProgressResponse = {
+export type AudioPhraseLevelProgressResult = {
   completed: boolean;
-  xpReward: number;
+  xpReward?: number | null;
 };
 
-const buildHeaders = (userId?: string | null) => {
-  const headers: Record<string, string> = {};
-  if (userId) headers["x-user-id"] = userId;
-  return headers;
-};
+const headersWithUser = (userId?: string | null) =>
+  userId ? { "x-user-id": userId } : undefined;
 
 export const audioPhraseLevelsApi = {
-  list(userId?: string | null) {
-    return apiFetch<{ items: AudioPhraseLevelListItem[] }>(
-      "audio-phrase-levels",
+  getLevel(levelId: string, userId?: string | null) {
+    return apiFetch<{ level: AudioPhraseLevel }>(
+      `audio-phrase-levels/${levelId}`,
       {
-        headers: buildHeaders(userId),
+        headers: headersWithUser(userId),
       }
-    );
+    ).then((response) => response.level);
   },
-  getLevel(id: string, userId?: string | null) {
-    return apiFetch<AudioPhraseLevelDetail>(`audio-phrase-levels/${id}`, {
-      headers: buildHeaders(userId),
-    });
-  },
-  recordProgress(id: string, payload: AudioPhraseLevelProgressRecord, userId?: string | null) {
-    return apiFetch<AudioPhraseLevelProgressResponse>(
-      `audio-phrase-levels/${id}/progress`,
+  recordProgress(levelId: string, payload: AudioPhraseLevelProgressPayload, userId?: string | null) {
+    return apiFetch<AudioPhraseLevelProgressResult>(
+      `audio-phrase-levels/${levelId}/progress`,
       {
         method: "POST",
-        headers: buildHeaders(userId),
+        headers: headersWithUser(userId),
         body: payload,
       }
     );

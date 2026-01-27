@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useLocation } from "react-router-dom";
 import { useAppSelector } from "../app/hooks";
@@ -10,24 +10,25 @@ import { PageShell } from "../shared/ui/PageShell";
 type FilterMode = "all" | "approved" | "pending";
 
 const TEXT = {
-  adminOnly:
-    "\u0414\u043e\u0441\u0442\u0443\u043f\u043d\u043e \u0442\u043e\u043b\u044c\u043a\u043e \u0434\u043b\u044f \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440\u0430.",
-  title: "\u041c\u043e\u0434\u0435\u0440\u0430\u0446\u0438\u044f \u0441\u043d\u0438\u043f\u043f\u0435\u0442\u043e\u0432",
-  all: "\u0412\u0441\u0435",
-  approved: "\u041e\u0434\u043e\u0431\u0440\u0435\u043d\u044b\u0435",
-  pending: "\u041d\u0430 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0435",
-  phrase: "\u0424\u0440\u0430\u0437\u0430",
-  translation: "\u041f\u0435\u0440\u0435\u0432\u043e\u0434",
-  start: "\u041d\u0430\u0447\u0430\u043b\u043e",
-  end: "\u041a\u043e\u043d\u0435\u0446",
-  approvedLabel: "\u041e\u0434\u043e\u0431\u0440\u0435\u043d\u043e",
-  activeLabel: "\u0410\u043a\u0442\u0438\u0432\u043d\u043e",
-  edit: "\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u044c",
-  save: "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c",
-  cancel: "\u041e\u0442\u043c\u0435\u043d\u0430",
-  remove: "\u0423\u0434\u0430\u043b\u0438\u0442\u044c",
-  empty: "\u0421\u043d\u0438\u043f\u043f\u0435\u0442\u044b \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b.",
-  loading: "\u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043c...",
+  adminOnly: "Доступно только для администратора.",
+  title: "Модерация сниппетов",
+  all: "Все",
+  approved: "Одобренные",
+  pending: "На проверке",
+  phrase: "Фраза",
+  translation: "Перевод",
+  start: "Начало",
+  end: "Конец",
+  approvedLabel: "Одобрено",
+  activeLabel: "Активно",
+  edit: "Изменить",
+  save: "Сохранить",
+  cancel: "Отмена",
+  remove: "Удалить",
+  empty: "Сниппеты не найдены.",
+  loading: "Загружаем...",
+  prev: "Предыдущая",
+  next: "Следующая",
 };
 
 const applyFilter = (filter: FilterMode) => {
@@ -291,7 +292,7 @@ export default function GameSnippetsAdminPage() {
                         </div>
                       )}
                       <div style={{ color: "var(--tg-subtle)", fontSize: 12 }}>
-                        {item.startSeconds.toFixed(2)}s —{" "}
+                        {item.startSeconds.toFixed(2)}s вЂ”{" "}
                         {item.endSeconds.toFixed(2)}s
                       </div>
                       <div style={{ color: "var(--tg-subtle)", fontSize: 12 }}>
@@ -365,7 +366,7 @@ export default function GameSnippetsAdminPage() {
                   style={ghostButtonStyle}
                   disabled={page <= 1}
                 >
-                  Назад
+                  {TEXT.prev}
                 </button>
                 <div style={{ alignSelf: "center", color: "var(--tg-subtle)" }}>
                   {page} / {totalPages}
@@ -378,7 +379,7 @@ export default function GameSnippetsAdminPage() {
                   style={ghostButtonStyle}
                   disabled={page >= totalPages}
                 >
-                  Вперед
+                  {TEXT.next}
                 </button>
               </div>
             )}

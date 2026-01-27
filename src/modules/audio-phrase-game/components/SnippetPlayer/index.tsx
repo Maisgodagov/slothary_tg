@@ -8,6 +8,25 @@ export function SnippetPlayer({ snippet }: SnippetPlayerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [ended, setEnded] = useState(false);
 
+  if (!snippet.videoUrl) {
+    return (
+      <PlayerShell>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "grid",
+            placeItems: "center",
+            color: "var(--tg-subtle)",
+            fontSize: 14,
+          }}
+        >
+          Видео недоступно
+        </div>
+      </PlayerShell>
+    );
+  }
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;

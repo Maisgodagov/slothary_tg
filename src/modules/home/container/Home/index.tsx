@@ -8,11 +8,11 @@ import { getLevelInfo } from "../../../../shared/lib/xp";
 import { PageShell } from "../../../../shared/ui/PageShell";
 import { homeApi } from "../../api";
 import type { DictionaryStats } from "../../api/types";
-import { AdminActionCard } from "../../components/AdminActionCard";
 import { HomeHeader } from "../../components/HomeHeader";
 import ProgressSummary from "../../components/ProgressSummary";
 import { setLastStatsUpdatedAt } from "../../store/slice";
 import { HomeWrapper } from "./styles";
+import { LearningPathSection } from "../../components/LearningPath";
 
 export function HomeContainer() {
   const auth = useAppSelector(selectAuth);
@@ -80,12 +80,72 @@ export function HomeContainer() {
           onDetails={() => navigate("/admin/word-progress")}
         />
 
+        {auth.profile?.role === "admin" && <LearningPathSection />}
+
         {auth.profile?.role === "admin" && (
-          <AdminActionCard
-            title="Мини-игра: Слушай и собери фразу"
-            description="Тренировка восприятия на слух. Собери фразу из слов."
-            onClick={() => navigate("/admin/audio-phrase-game")}
-          />
+          <div style={{ display: "grid", gap: 8 }}>
+            <div style={{ fontWeight: 600 }}>Демо</div>
+            <button
+              type="button"
+              onClick={() => navigate("/demo/lesson-card")}
+              style={{
+                borderRadius: 16,
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                padding: "12px 14px",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              Карточка шага урока
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/demo/lesson-card-quiz")}
+              style={{
+                borderRadius: 16,
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                padding: "12px 14px",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              Карточка шага урока — квиз
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/demo/lesson-card-fill-gap")}
+              style={{
+                borderRadius: 16,
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                padding: "12px 14px",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              Карточка шага урока — fill gap
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/demo/lesson-card-assemble")}
+              style={{
+                borderRadius: 16,
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                padding: "12px 14px",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              Карточка шага урока — assemble
+            </button>
+          </div>
         )}
       </HomeWrapper>
     </PageShell>

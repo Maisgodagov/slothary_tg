@@ -1,20 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+﻿import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
 import { useAppSelector } from "../app/hooks";
 import { useTelegram } from "../app/providers/TelegramProvider";
 import { selectAuth } from "../features/auth/slice";
 import { usersApi } from "../features/users/api";
-import { Icon } from "../shared/ui/Icon";
 import { PageShell } from "../shared/ui/PageShell";
 import {
   CalendarCard,
   CalendarHeader,
   DayCell,
   DaysGrid,
-  HeaderRow,
-  HeaderTitle,
-  IconButton,
   MonthLabel,
   PageWrap,
   StreakCard,
@@ -65,7 +60,6 @@ const formatDaysLabel = (value: number) => {
 
 export default function StreakPage() {
   const auth = useAppSelector(selectAuth);
-  const navigate = useNavigate();
   const { themeMode, theme } = useTelegram();
   const isLightTheme =
     themeMode === "light" || (themeMode === "system" && theme === "light");
@@ -117,17 +111,9 @@ export default function StreakPage() {
   return (
     <PageShell>
       <PageWrap>
-        <HeaderRow>
-          <IconButton
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="Назад"
-          >
-            <Icon name="back" size={18} />
-          </IconButton>
-          <HeaderTitle>Моя активность</HeaderTitle>
-          <div style={{ width: 36 }} />
-        </HeaderRow>
+        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 12 }}>
+          Моя активность
+        </div>
 
         <StreakCard>
           <StreakRow>
@@ -135,46 +121,48 @@ export default function StreakPage() {
               <StreakValue>{auth.profile?.streakDays ?? 0}</StreakValue>
               <StreakLabel>{formatDaysLabel(auth.profile?.streakDays ?? 0)}</StreakLabel>
             </div>
-            <Icon
-              name="flame-filled"
-              size={56}
-              color="#F97316"
-              fillColor={isLightTheme ? "#FDE68A" : "#442D22"}
-            />
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                display: "grid",
+                placeItems: "center",
+                background: isLightTheme ? "#FDE68A" : "#442D22",
+                color: "#F97316",
+                fontWeight: 700,
+              }}
+            >
+              🔥
+            </div>
           </StreakRow>
         </StreakCard>
 
         <CalendarCard>
           <CalendarHeader>
-            <IconButton
+            <button
               type="button"
               onClick={() =>
                 setMonth(
-                  (prev) =>
-                    new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
+                  (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
                 )
               }
-              aria-label="Предыдущий месяц"
+              style={ghostButtonStyle}
             >
-              <Icon name="back" size={18} />
-            </IconButton>
+              Предыдущий месяц
+            </button>
             <MonthLabel>{monthLabel}</MonthLabel>
-            <IconButton
+            <button
               type="button"
               onClick={() =>
                 setMonth(
-                  (prev) =>
-                    new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
+                  (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
                 )
               }
-              aria-label="Следующий месяц"
+              style={ghostButtonStyle}
             >
-              <Icon
-                name="back"
-                size={18}
-                style={{ transform: "rotate(180deg)" }}
-              />
-            </IconButton>
+              Следующий месяц
+            </button>
           </CalendarHeader>
 
           <Weekdays>
@@ -205,3 +193,14 @@ export default function StreakPage() {
     </PageShell>
   );
 }
+
+const ghostButtonStyle: CSSProperties = {
+  borderRadius: 999,
+  border: "1px solid var(--tg-border)",
+  background: "transparent",
+  color: "var(--tg-text)",
+  padding: "6px 12px",
+  cursor: "pointer",
+  fontWeight: 600,
+  fontSize: 12,
+};
