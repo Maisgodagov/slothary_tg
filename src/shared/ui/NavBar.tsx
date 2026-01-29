@@ -1,5 +1,7 @@
 ﻿import type { CSSProperties } from "react";
 import { NavLink } from "react-router-dom";
+import { useAppSelector } from "../../app/hooks";
+import { selectAuth } from "../../features/auth/slice";
 import { Icon } from "./Icon";
 
 const linkStyle: CSSProperties = {
@@ -18,9 +20,21 @@ const linkStyle: CSSProperties = {
 };
 
 export function NavBar() {
+  const auth = useAppSelector(selectAuth);
+  const isAdmin = auth.profile?.role === "admin";
   const items = [
     { to: "/", label: "Главная", icon: "home", iconActive: "home-filled" },
     { to: "/video", label: "Видео", icon: "video", iconActive: "video-filled" },
+    ...(isAdmin
+      ? [
+          {
+            to: "/reading",
+            label: "Чтение",
+            icon: "reading",
+            iconActive: "reading-filled",
+          },
+        ]
+      : []),
     {
       to: "/dictionary",
       label: "Словарь",
@@ -46,7 +60,7 @@ export function NavBar() {
         borderRadius: 0,
         padding: 2,
         display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
+        gridTemplateColumns: `repeat(${items.length}, 1fr)`,
         zIndex: 20,
       }}
     >
@@ -75,3 +89,4 @@ export function NavBar() {
     </nav>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+﻿import { useCallback, useEffect, useRef } from "react";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import {
@@ -26,6 +26,7 @@ import { VideoContainer } from "../modules/video";
 import { DictionaryContainer } from "../modules/dictionary";
 import { ProfileContainer } from "../modules/profile";
 import { AdminContainer } from "../modules/admin";
+import { BookDetailsContainer, ReadingContainer, ReaderContainer } from "../modules/reading";
 import { Loader } from "../shared/ui/Loader";
 import "../shared/styles/global.css";
 import { useAppDispatch, useAppSelector } from "./hooks";
@@ -60,9 +61,7 @@ function StreakRefresher() {
       .refreshStreak(userId)
       .then((result) => {
         if (!auth.profile) return;
-        dispatch(
-          setProfile({ ...auth.profile, streakDays: result.streakDays })
-        );
+        dispatch(setProfile({ ...auth.profile, streakDays: result.streakDays }));
       })
       .catch(() => {
         // ignore streak refresh failures
@@ -100,50 +99,74 @@ function BackHandler() {
   return null;
 }
 
+function AppRoutes() {
+  const auth = useAppSelector(selectAuth);
+  const isAdmin = auth.profile?.role === "admin";
+
+  return (
+    <>
+      <AutoTelegramAuth />
+      <StreakRefresher />
+      <div className="page">
+        <Routes>
+          <Route path="/" element={<HomeContainer />} />
+          <Route path="/profile" element={<ProfileContainer />} />
+          <Route path="/video" element={<VideoContainer />} />
+          <Route path="/dictionary" element={<DictionaryContainer />} />
+          {isAdmin ? (
+            <>
+              <Route path="/reading" element={<ReadingContainer />} />
+              <Route path="/reading/:id" element={<BookDetailsContainer />} />
+              <Route path="/reading/:id/read" element={<ReaderContainer />} />
+            </>
+          ) : (
+            <>
+              <Route path="/reading" element={<Navigate to="/" replace />} />
+              <Route path="/reading/:id" element={<Navigate to="/" replace />} />
+              <Route path="/reading/:id/read" element={<Navigate to="/" replace />} />
+            </>
+          )}
+          <Route path="/user-dictionary" element={<UserDictionaryPage />} />
+          <Route
+            path="/video-dictionary"
+            element={<Navigate to="/dictionary" replace />}
+          />
+          <Route path="/admin/users" element={<UserAdminPage />} />
+          <Route path="/admin/word-progress" element={<WordProgressPage />} />
+          <Route path="/streak" element={<StreakPage />} />
+          <Route
+            path="/admin/game-snippets"
+            element={<GameSnippetsAdminPage />}
+          />
+          <Route path="/demo/lesson-card" element={<LessonStepCardDemoPage />} />
+          <Route
+            path="/demo/lesson-card-quiz"
+            element={<LessonStepCardQuizDemoPage />}
+          />
+          <Route
+            path="/demo/lesson-card-fill-gap"
+            element={<LessonStepCardFillGapDemoPage />}
+          />
+          <Route
+            path="/demo/lesson-card-assemble"
+            element={<LessonStepCardAssembleDemoPage />}
+          />
+          <Route path="/admin" element={<AdminContainer />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+      <BackHandler />
+    </>
+  );
+}
+
 function App() {
   return (
     <TelegramProvider>
       <Provider store={store}>
         <PersistGate loading={<Loader />} persistor={persistor}>
           <HashRouter>
-            <AutoTelegramAuth />
-            <StreakRefresher />
-            <div className="page">
-              <Routes>
-                <Route path="/" element={<HomeContainer />} />
-                <Route path="/profile" element={<ProfileContainer />} />
-                <Route path="/video" element={<VideoContainer />} />
-                <Route path="/dictionary" element={<DictionaryContainer />} />
-                <Route path="/user-dictionary" element={<UserDictionaryPage />} />
-                <Route
-                  path="/video-dictionary"
-                  element={<Navigate to="/dictionary" replace />}
-                />
-                <Route path="/admin/users" element={<UserAdminPage />} />
-                <Route path="/admin/word-progress" element={<WordProgressPage />} />
-                <Route path="/streak" element={<StreakPage />} />
-                <Route
-                  path="/admin/game-snippets"
-                  element={<GameSnippetsAdminPage />}
-                />
-                <Route path="/demo/lesson-card" element={<LessonStepCardDemoPage />} />
-                <Route
-                  path="/demo/lesson-card-quiz"
-                  element={<LessonStepCardQuizDemoPage />}
-                />
-                <Route
-                  path="/demo/lesson-card-fill-gap"
-                  element={<LessonStepCardFillGapDemoPage />}
-                />
-                <Route
-                  path="/demo/lesson-card-assemble"
-                  element={<LessonStepCardAssembleDemoPage />}
-                />
-                <Route path="/admin" element={<AdminContainer />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </div>
-            <BackHandler />
+            <AppRoutes />
           </HashRouter>
         </PersistGate>
       </Provider>
@@ -152,3 +175,4 @@ function App() {
 }
 
 export default App;
+
