@@ -17,9 +17,6 @@ import GameSnippetsAdminPage from "../pages/GameSnippetsAdminPage";
 import UserDictionaryPage from "../pages/UserDictionaryPage";
 import WordProgressPage from "../pages/WordProgressPage";
 import StreakPage from "../pages/StreakPage";
-import LearningPathLessonPage from "../pages/LearningPathLessonPage";
-import LearningPathAdminPage from "../pages/LearningPathAdminPage";
-import LearningPathLessonEditorPage from "../pages/LearningPathLessonEditorPage";
 import LessonStepCardDemoPage from "../pages/LessonStepCardDemoPage";
 import LessonStepCardQuizDemoPage from "../pages/LessonStepCardQuizDemoPage";
 import LessonStepCardFillGapDemoPage from "../pages/LessonStepCardFillGapDemoPage";
@@ -129,15 +126,6 @@ function App() {
                   path="/admin/game-snippets"
                   element={<GameSnippetsAdminPage />}
                 />
-                <Route
-                  path="/admin/learning-path"
-                  element={<LearningPathAdminPage />}
-                />
-                <Route
-                  path="/admin/learning-path/modules/:moduleId/lessons/:lessonId"
-                  element={<LearningPathLessonEditorPage />}
-                />
-                <Route path="/learn/lesson/:id" element={<LearningPathLessonPage />} />
                 <Route path="/demo/lesson-card" element={<LessonStepCardDemoPage />} />
                 <Route
                   path="/demo/lesson-card-quiz"

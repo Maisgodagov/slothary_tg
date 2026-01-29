@@ -5,9 +5,7 @@ export const HeaderRow = styled.div`
   align-items: center;
   justify-content: space-between;
   margin-bottom: 14px;
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  position: static;
   padding: 8px 0 6px;
   gap: 12px;
 `;

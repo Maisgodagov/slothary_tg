@@ -48,11 +48,6 @@ export function AdminContainer() {
           onClick={() => navigate('/admin/game-snippets')}
         />
         <AdminNavCard
-          title="Learning Path"
-          description="Модули и уроки для нового пути обучения."
-          onClick={() => navigate('/admin/learning-path')}
-        />
-        <AdminNavCard
           title="Пользователи"
           description="Просматривайте активность и меняйте роли пользователей."
           onClick={() => navigate('/admin/users')}
