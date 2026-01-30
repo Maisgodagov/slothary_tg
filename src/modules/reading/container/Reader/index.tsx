@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 import { selectAuth } from "../../../../features/auth/slice";
@@ -11,12 +11,10 @@ import { resolveUserId } from "../../../../shared/lib/userId";
 import { Icon } from "../../../../shared/ui/Icon";
 import { WordCard } from "../../../../features/dictionary/components/WordCard";
 import { PageShell } from "../../../../shared/ui/PageShell";
-import { mockBooks } from "../../constants/mockBooks";
 import * as S from "./styles";
 
-const MOCK_TEXT = `Chapter 1\n\nIn my younger and more vulnerable years my father gave me some advice that I've been turning over in my mind ever since.\n\n“Whenever you feel like criticizing anyone,” he told me, “just remember that all the people in this world haven't had the advantages that you've had.”\n\nHe didn't say any more, but we've always been unusually communicative in a reserved way, and I understood that he meant a great deal more than that. In consequence, I'm inclined to reserve all judgments, a habit that has opened up many curious natures to me and also made me the victim of not a few veteran bores.`;
-
 export function ReaderContainer() {
+  const CHAPTER_BREAK = "__CHAPTER_BREAK__";
   const { id } = useParams();
   const navigate = useNavigate();
   const auth = useAppSelector(selectAuth);
@@ -31,6 +29,9 @@ export function ReaderContainer() {
   const [progress, setProgress] = useState<{ position: number; progress: number } | null>(
     null
   );
+  const [pages, setPages] = useState<string[][]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [fontOpen, setFontOpen] = useState(false);
   const [lookup, setLookup] = useState<{
     word: string;
     status: "idle" | "loading" | "ready" | "error";
@@ -46,9 +47,16 @@ export function ReaderContainer() {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const saveTimeoutRef = useRef<number | null>(null);
   const fontSaveTimeoutRef = useRef<number | null>(null);
+  const initialPageRef = useRef(false);
+
+  const withCacheBust = useCallback((url: string) => {
+    const stamp = Date.now();
+    return url.includes("?") ? `${url}&v=${stamp}` : `${url}?v=${stamp}`;
+  }, []);
 
   const fetchBook = useCallback(async () => {
     if (!id) return;
+    initialPageRef.current = false;
     setLoading(true);
     setError(null);
     try {
@@ -63,19 +71,80 @@ export function ReaderContainer() {
         setProgress({ position: progressData.position, progress: progressData.progress });
       }
       if (bookData.fileUrl) {
-        try {
-          const response = await fetch(bookData.fileUrl);
+        if (bookData.fileUrl.endsWith(".json")) {
+          const manifest = await fetch(withCacheBust(bookData.fileUrl)).then((res) =>
+            res.json(),
+          );
+          if (manifest?.chapters?.length) {
+            const chapterFiles = manifest.chapters.map((chapter: any) => chapter.file);
+            const base = bookData.fileUrl.replace("/book.json", "");
+            const totalWords = manifest.chapters.reduce(
+              (sum: number, chapter: any) => sum + (chapter?.wordCount ?? 0),
+              0,
+            );
+            let initialIndex = 0;
+            if (totalWords > 0 && typeof progressData?.progress === "number") {
+              const targetWord = totalWords * Math.min(Math.max(progressData.progress, 0), 1);
+              let acc = 0;
+              for (let i = 0; i < manifest.chapters.length; i += 1) {
+                acc += manifest.chapters[i]?.wordCount ?? 0;
+                if (acc >= targetWord) {
+                  initialIndex = i;
+                  break;
+                }
+              }
+            }
+
+            const initialFile = chapterFiles[initialIndex];
+            if (initialFile) {
+              const initialUrl = withCacheBust(`${base}/${initialFile.replace(/^\/+/, "")}`);
+              const initialChapter = await fetch(initialUrl).then((res) => res.json());
+              const initialTitle = initialChapter?.title ? [`${initialChapter.title}`] : [];
+              const initialParagraphs = Array.isArray(initialChapter?.paragraphs)
+                ? initialChapter.paragraphs
+                : [];
+              setText([...initialTitle, ...initialParagraphs, ""].join("\n\n"));
+              setLoading(false);
+            }
+
+            const loadAllChapters = async () => {
+              const chapters: any[] = new Array(chapterFiles.length);
+              if (initialFile) {
+                chapters[initialIndex] = await fetch(
+                  withCacheBust(`${base}/${initialFile.replace(/^\/+/, "")}`),
+                ).then((res) => res.json());
+              }
+              for (let i = 0; i < chapterFiles.length; i += 1) {
+                if (i === initialIndex) continue;
+                const file = chapterFiles[i];
+                const url = withCacheBust(`${base}/${file.replace(/^\/+/, "")}`);
+                chapters[i] = await fetch(url).then((res) => res.json());
+              }
+              const merged = chapters.flatMap((chapter: any, index: number) => {
+                const title = chapter?.title ? [`${chapter.title}`] : [];
+                const paragraphs = Array.isArray(chapter?.paragraphs) ? chapter.paragraphs : [];
+                const breakMarker = index < chapters.length - 1 ? [CHAPTER_BREAK] : [];
+                return [...title, ...paragraphs, "", ...breakMarker];
+              });
+              setText(merged.join("\n\n"));
+            };
+
+            loadAllChapters().catch(() => null);
+          } else if (Array.isArray(manifest?.paragraphs)) {
+            setText(manifest.paragraphs.join("\n\n"));
+          } else {
+            setText("");
+          }
+        } else {
+          const response = await fetch(withCacheBust(bookData.fileUrl));
           const fileText = await response.text();
           setText(fileText);
-        } catch {
-          setText(MOCK_TEXT);
         }
       }
     } catch (err: any) {
       setError(err?.message ?? "Не удалось загрузить книгу.");
-      const fallback = (mockBooks as ReadingBook[]).find((item) => item.id === id) ?? null;
-      setBook(fallback);
-      setText(MOCK_TEXT);
+      setBook(null);
+      setText("");
     } finally {
       setLoading(false);
     }
@@ -91,6 +160,7 @@ export function ReaderContainer() {
       const target = event.target as HTMLElement | null;
       if (!target) return;
       if (target.closest("[data-reading-popover]")) return;
+      if (target.closest("[data-reading-word]")) return;
       setPopover(null);
       setLookup(null);
     };
@@ -99,18 +169,95 @@ export function ReaderContainer() {
   }, [popover]);
 
   useEffect(() => {
-    if (!text || !contentRef.current) return;
-    if (!progress?.position) return;
-    contentRef.current.scrollTop = progress.position;
-  }, [text, progress?.position]);
+    if (!fontOpen) return;
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest("[data-font-panel]")) return;
+      if (target.closest("[data-font-toggle]")) return;
+      setFontOpen(false);
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [fontOpen]);
 
-  useEffect(() => {
-    if (!contentRef.current || !progress?.progress) return;
+  const englishParagraphs = useMemo(() => {
+    if (!text) return [];
+    return text
+      .split(/\n{2,}/)
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0 || p === CHAPTER_BREAK);
+  }, [text]);
+
+  useLayoutEffect(() => {
     const container = contentRef.current;
-    const maxScroll = container.scrollHeight - container.clientHeight;
-    if (maxScroll <= 0) return;
-    container.scrollTop = maxScroll * progress.progress;
-  }, [fontSize]);
+    if (!container || englishParagraphs.length === 0) {
+      setPages([]);
+      setCurrentPage(0);
+      return;
+    }
+
+    const maxHeight = container.clientHeight;
+    const width = container.clientWidth;
+    const measure = document.createElement("div");
+    measure.style.position = "fixed";
+    measure.style.visibility = "hidden";
+    measure.style.pointerEvents = "none";
+    measure.style.left = "-9999px";
+    measure.style.top = "0";
+    measure.style.width = `${width}px`;
+    measure.style.padding = "0";
+    measure.style.fontFamily =
+      "Plus Jakarta Sans, SF Pro Display, Roboto, system-ui, -apple-system, sans-serif";
+    document.body.appendChild(measure);
+
+    const nextPages: string[][] = [];
+    let current: string[] = [];
+    let currentHeight = 0;
+
+    for (const paragraph of englishParagraphs) {
+      if (paragraph === CHAPTER_BREAK) {
+        if (current.length > 0) nextPages.push(current);
+        current = [];
+        currentHeight = 0;
+        continue;
+      }
+      const p = document.createElement("p");
+      p.style.margin = "0 0 18px";
+      p.style.lineHeight = "1.7";
+      p.style.fontSize = `${fontSize}px`;
+      p.style.whiteSpace = "normal";
+      p.textContent = paragraph;
+      measure.appendChild(p);
+      const height = p.getBoundingClientRect().height;
+      measure.removeChild(p);
+
+      if (current.length === 0 || currentHeight + height <= maxHeight) {
+        current.push(paragraph);
+        currentHeight += height;
+      } else {
+        nextPages.push(current);
+        current = [paragraph];
+        currentHeight = height;
+      }
+    }
+    if (current.length > 0) nextPages.push(current);
+
+    document.body.removeChild(measure);
+
+    setPages(nextPages);
+    if (!initialPageRef.current && nextPages.length > 0) {
+      const ratio = Math.min(Math.max(progress?.progress ?? 0, 0), 1);
+      const initialIndex = Math.min(
+        nextPages.length - 1,
+        Math.floor(ratio * nextPages.length),
+      );
+      setCurrentPage(initialIndex);
+      initialPageRef.current = true;
+    } else {
+      setCurrentPage((prev) => Math.min(prev, Math.max(nextPages.length - 1, 0)));
+    }
+  }, [englishParagraphs, fontSize, progress?.progress]);
 
   const updateProgress = useCallback(
     (position: number, ratio: number) => {
@@ -128,13 +275,16 @@ export function ReaderContainer() {
     [id, userId]
   );
 
-  const handleScroll = useCallback(() => {
-    const container = contentRef.current;
-    if (!container) return;
-    const maxScroll = container.scrollHeight - container.clientHeight;
-    const ratio = maxScroll > 0 ? container.scrollTop / maxScroll : 0;
-    updateProgress(container.scrollTop, ratio);
-  }, [updateProgress]);
+  const goToPage = useCallback(
+    (next: number) => {
+      if (pages.length === 0) return;
+      const clamped = Math.min(Math.max(next, 0), pages.length - 1);
+      setCurrentPage(clamped);
+      const ratio = pages.length > 1 ? clamped / (pages.length - 1) : 0;
+      updateProgress(clamped, ratio);
+    },
+    [pages.length, updateProgress],
+  );
 
   const handleFontChange = async (next: number) => {
     setFontSize(next);
@@ -145,14 +295,6 @@ export function ReaderContainer() {
       readingApi.updatePreferences(userId, { readerFontSize: next }).catch(() => null);
     }, 500);
   };
-
-  const englishParagraphs = useMemo(() => {
-    if (!text) return [];
-    return text
-      .split(/\n{2,}/)
-      .map((p) => p.trim())
-      .filter(Boolean);
-  }, [text]);
 
   const handleWordClick = async (word: string, rect: DOMRect) => {
     const normalized = word.toLowerCase();
@@ -210,6 +352,7 @@ export function ReaderContainer() {
           return (
             <S.Word
               key={`${idx}-${index}`}
+              data-reading-word
               onClick={(event) => {
                 const rect = (event.target as HTMLElement).getBoundingClientRect();
                 handleWordClick(part, rect);
@@ -257,7 +400,7 @@ export function ReaderContainer() {
             <Icon name="back" size={18} />
           </S.BackButton>
           <S.HeaderTitle>{book?.title ?? "THE GREAT GATSBY"}</S.HeaderTitle>
-          <S.FontButton>
+          <S.FontButton data-font-toggle onClick={() => setFontOpen((prev) => !prev)}>
             <span>Tt</span>
           </S.FontButton>
         </S.ReaderHeader>
@@ -269,19 +412,25 @@ export function ReaderContainer() {
           <S.ProgressText>{progressPercent}%</S.ProgressText>
         </S.ReaderProgress>
 
-        <S.ReaderBody ref={contentRef} onScroll={handleScroll}>
-          {englishParagraphs.map(renderParagraph)}
+        <S.ReaderBody ref={contentRef}>
+          {(pages[currentPage] ?? []).map(renderParagraph)}
         </S.ReaderBody>
 
         <S.ReaderFooter>
-          <S.FooterButton>
+          <S.FooterButton
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage <= 0}
+          >
             <Icon name="back" size={14} />
             Предыдущая
           </S.FooterButton>
           <S.PageIndicator>
-            стр. {Math.max(1, Math.round((progress?.progress ?? 0) * 124))} из 124
+            {currentPage + 1}/{pages.length || 1} · {progressPercent}%
           </S.PageIndicator>
-          <S.FooterButton>
+          <S.FooterButton
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage >= (pages.length || 1) - 1}
+          >
             Следующая
             <Icon name="chevron-down" size={14} style={{ transform: "rotate(-90deg)" }} />
           </S.FooterButton>
@@ -334,18 +483,24 @@ export function ReaderContainer() {
           </S.Popover>
         )}
 
-        <S.FontPanel>
-          <S.FontLabel>Размер</S.FontLabel>
-          <S.Range
-            type="range"
-            min={12}
-            max={28}
-            value={fontSize}
-            onChange={(e) => handleFontChange(Number(e.target.value))}
-          />
-        </S.FontPanel>
+        {fontOpen && (
+          <S.FontPanel data-font-panel>
+            <S.FontLabel>Размер</S.FontLabel>
+            <S.Range
+              type="range"
+              min={12}
+              max={28}
+              value={fontSize}
+              onChange={(e) => handleFontChange(Number(e.target.value))}
+            />
+          </S.FontPanel>
+        )}
       </S.ReaderShell>
     </PageShell>
   );
 }
+
+
+
+
 

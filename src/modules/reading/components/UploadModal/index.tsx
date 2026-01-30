@@ -1,12 +1,12 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import * as S from "./styles";
 
 type UploadPayload = {
-  title: string;
+  file: File;
+  title?: string;
   author?: string;
   description?: string;
-  coverUrl?: string;
-  fileUrl: string;
   language?: string;
 };
 
@@ -20,30 +20,27 @@ export function UploadModal({ open, onClose, onSubmit }: UploadModalProps) {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [description, setDescription] = useState("");
-  const [coverUrl, setCoverUrl] = useState("");
-  const [fileUrl, setFileUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [language, setLanguage] = useState("en");
   const [loading, setLoading] = useState(false);
 
   if (!open) return null;
 
   const handleSubmit = async () => {
-    if (!title.trim() || !fileUrl.trim()) return;
+    if (!file) return;
     setLoading(true);
     try {
       await onSubmit({
-        title: title.trim(),
+        file,
+        title: title.trim() || undefined,
         author: author.trim() || undefined,
         description: description.trim() || undefined,
-        coverUrl: coverUrl.trim() || undefined,
-        fileUrl: fileUrl.trim(),
         language: language.trim() || "en",
       });
       setTitle("");
       setAuthor("");
       setDescription("");
-      setCoverUrl("");
-      setFileUrl("");
+      setFile(null);
       setLanguage("en");
       onClose();
     } finally {
@@ -51,47 +48,46 @@ export function UploadModal({ open, onClose, onSubmit }: UploadModalProps) {
     }
   };
 
-  return (
+  const modal = (
     <S.Backdrop onClick={onClose}>
       <S.Card onClick={(event) => event.stopPropagation()}>
-        <S.Title>Р”РѕР±Р°РІРёС‚СЊ РєРЅРёРіСѓ</S.Title>
+        <S.Title>Добавить книгу</S.Title>
         <S.Label>
-          РќР°Р·РІР°РЅРёРµ
+          EPUB файл
+          <S.Input
+            type="file"
+            accept=".epub"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+        </S.Label>
+        <S.Label>
+          Название (опционально)
           <S.Input value={title} onChange={(e) => setTitle(e.target.value)} />
         </S.Label>
         <S.Label>
-          РђРІС‚РѕСЂ
+          Автор
           <S.Input value={author} onChange={(e) => setAuthor(e.target.value)} />
         </S.Label>
         <S.Label>
-          РћР±Р»РѕР¶РєР° (URL)
-          <S.Input value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} />
-        </S.Label>
-        <S.Label>
-          Р¤Р°Р№Р» РєРЅРёРіРё (URL)
-          <S.Input value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} />
-        </S.Label>
-        <S.Hint>
-          РџРѕРєР° РёСЃРїРѕР»СЊР·СѓРµРј РїСЂСЏРјРѕР№ URL РЅР° С„Р°Р№Р». Р”Р»СЏ S3 РјРѕР¶РЅРѕ РїРѕРґРєР»СЋС‡РёС‚СЊ presigned URL.
-        </S.Hint>
-        <S.Label>
-          РћРїРёСЃР°РЅРёРµ
+          Описание
           <S.Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
         </S.Label>
         <S.Label>
-          РЇР·С‹Рє
+          Язык
           <S.Input value={language} onChange={(e) => setLanguage(e.target.value)} />
         </S.Label>
         <S.Actions>
-          <S.Button onClick={onClose}>РћС‚РјРµРЅР°</S.Button>
+          <S.Button onClick={onClose}>Отмена</S.Button>
           <S.Button $primary onClick={handleSubmit} disabled={loading}>
-            {loading ? "РЎРѕС…СЂР°РЅСЏРµРј..." : "РЎРѕС…СЂР°РЅРёС‚СЊ"}
+            {loading ? "Сохраняем..." : "Сохранить"}
           </S.Button>
         </S.Actions>
       </S.Card>
     </S.Backdrop>
   );
+
+  return typeof document === "undefined" ? modal : createPortal(modal, document.body);
 }

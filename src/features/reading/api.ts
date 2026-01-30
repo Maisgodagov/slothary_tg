@@ -42,6 +42,29 @@ export const readingApi = {
       body: payload,
     });
   },
+  uploadBook(
+    payload: {
+      file: File;
+      title?: string;
+      author?: string;
+      description?: string;
+      language?: string;
+    },
+    userId?: string | null,
+    role?: string | null
+  ) {
+    const form = new FormData();
+    form.append("file", payload.file);
+    if (payload.title) form.append("title", payload.title);
+    if (payload.author) form.append("author", payload.author);
+    if (payload.description) form.append("description", payload.description);
+    if (payload.language) form.append("language", payload.language);
+    return apiFetch<ReadingBook>("reading/books/upload", {
+      method: "POST",
+      headers: headersWithUserRole(userId, role),
+      body: form,
+    });
+  },
   getShelf(userId: string) {
     return apiFetch<{ items: ReadingBook[] }>("reading/shelf", {
       headers: headersWithUser(userId),

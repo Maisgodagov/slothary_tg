@@ -78,8 +78,8 @@ export const ProgressText = styled.div`
 
 export const ReaderBody = styled.div`
   flex: 1;
-  overflow: auto;
-  padding: 12px 18px 120px;
+  overflow: hidden;
+  padding: 12px 18px 24px;
 `;
 
 export const Paragraph = styled.p`

@@ -7,12 +7,12 @@ import type { ReadingBook } from "../../../../features/reading/types";
 import { PageShell } from "../../../../shared/ui/PageShell";
 import { resolveUserId } from "../../../../shared/lib/userId";
 import { Icon } from "../../../../shared/ui/Icon";
-import { mockBooks } from "../../constants/mockBooks";
+import { UploadModal } from "../../components/UploadModal";
 import * as S from "./styles";
 
 type TabKey = "library" | "shelf";
 
-type MockBook = ReadingBook & {
+type ReadingBookMeta = ReadingBook & {
   level?: string;
   minutes?: number;
   difficulty?: string;
@@ -25,11 +25,12 @@ export function ReadingContainer() {
   const auth = useAppSelector(selectAuth);
   const userId = useMemo(() => resolveUserId(auth.profile?.id), [auth.profile?.id]);
   const [tab, setTab] = useState<TabKey>("library");
-  const [books, setBooks] = useState<MockBook[]>([]);
-  const [shelf, setShelf] = useState<MockBook[]>([]);
+  const [books, setBooks] = useState<ReadingBookMeta[]>([]);
+  const [shelf, setShelf] = useState<ReadingBookMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [shelfLoading, setShelfLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const navigate = useNavigate();
 
   const isAdmin = auth.profile?.role === "admin";
@@ -39,11 +40,11 @@ export function ReadingContainer() {
     setError(null);
     try {
       const data = await readingApi.listBooks(userId);
-      const items = (data.items ?? []) as MockBook[];
-      setBooks(items.length ? items : (mockBooks as MockBook[]));
+      const items = (data.items ?? []) as ReadingBookMeta[];
+      setBooks(items);
     } catch (err: any) {
       setError(err?.message ?? "Не удалось загрузить книги.");
-      setBooks(mockBooks as MockBook[]);
+      setBooks([]);
     } finally {
       setLoading(false);
     }
@@ -54,11 +55,11 @@ export function ReadingContainer() {
     setError(null);
     try {
       const data = await readingApi.getShelf(userId);
-      const items = (data.items ?? []) as MockBook[];
-      setShelf(items.length ? items : (mockBooks as MockBook[]).filter((book) => book.inShelf));
+      const items = (data.items ?? []) as ReadingBookMeta[];
+      setShelf(items);
     } catch (err: any) {
       setError(err?.message ?? "Не удалось загрузить полку.");
-      setShelf((mockBooks as MockBook[]).filter((book) => book.inShelf));
+      setShelf([]);
     } finally {
       setShelfLoading(false);
     }
@@ -78,10 +79,26 @@ export function ReadingContainer() {
     navigate(`/reading/${bookId}`);
   };
 
-  const beginnerBooks = books.filter((book) => book.category === "Для начинающих");
-  const classicBooks = books.filter((book) => book.category === "Классика");
+  const handleUpload = async (payload: {
+    file: File;
+    title?: string;
+    author?: string;
+    description?: string;
+    language?: string;
+  }) => {
+    await readingApi.uploadBook(payload, userId, auth.profile?.role ?? null);
+    await loadBooks();
+  };
 
-  const renderShelf = (items: MockBook[]) => {
+  const hasCategories = books.some((book) => book.category);
+  const beginnerBooks = hasCategories
+    ? books.filter((book) => book.category === "Для начинающих")
+    : books;
+  const classicBooks = hasCategories
+    ? books.filter((book) => book.category === "Классика")
+    : [];
+
+  const renderShelf = (items: ReadingBookMeta[]) => {
     if (!items.length && !loading && !shelfLoading) {
       return <S.EmptyState>Пока здесь пусто.</S.EmptyState>;
     }
@@ -101,7 +118,7 @@ export function ReadingContainer() {
     );
   };
 
-  const renderCards = (items: MockBook[]) => {
+  const renderCards = (items: ReadingBookMeta[]) => {
     if (!items.length && !loading && !shelfLoading) {
       return <S.EmptyState>Пока здесь пусто.</S.EmptyState>;
     }
@@ -133,31 +150,51 @@ export function ReadingContainer() {
             <Icon name="back" size={18} />
           </S.BackButton>
           <S.TopTitle>Чтение</S.TopTitle>
-          <S.IconButton>
-            <Icon name="search" size={18} />
-          </S.IconButton>
+          {isAdmin ? (
+            <S.IconButton onClick={() => setUploadOpen(true)}>
+              <Icon name="edit" size={18} />
+            </S.IconButton>
+          ) : (
+            <S.IconButton>
+              <Icon name="search" size={18} />
+            </S.IconButton>
+          )}
         </S.TopBar>
 
         <S.SectionHeader>
           <div>Моя полка</div>
           <S.SectionLink onClick={() => setTab("shelf")}>Все</S.SectionLink>
         </S.SectionHeader>
-        {renderShelf(shelf.length ? shelf : (mockBooks as MockBook[]).filter((b) => b.inShelf))}
+        {renderShelf(shelf)}
 
-        <S.SectionHeader>
-          <div>Для начинающих</div>
-          <S.SectionLink>Смотреть все</S.SectionLink>
-        </S.SectionHeader>
-        {renderCards(beginnerBooks.length ? beginnerBooks : (mockBooks as MockBook[]).filter((b) => b.category === "Для начинающих"))}
+        {beginnerBooks.length > 0 && (
+          <>
+            <S.SectionHeader>
+              <div>Для начинающих</div>
+              <S.SectionLink>Смотреть все</S.SectionLink>
+            </S.SectionHeader>
+            {renderCards(beginnerBooks)}
+          </>
+        )}
 
-        <S.SectionHeader>
-          <div>Классика</div>
-          <S.SectionLink>Смотреть все</S.SectionLink>
-        </S.SectionHeader>
-        {renderCards(classicBooks.length ? classicBooks : (mockBooks as MockBook[]).filter((b) => b.category === "Классика"))}
+        {classicBooks.length > 0 && (
+          <>
+            <S.SectionHeader>
+              <div>Классика</div>
+              <S.SectionLink>Смотреть все</S.SectionLink>
+            </S.SectionHeader>
+            {renderCards(classicBooks)}
+          </>
+        )}
 
         {isAdmin && error && <S.EmptyState>{error}</S.EmptyState>}
       </S.ReadingWrapper>
+
+      <UploadModal
+        open={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        onSubmit={handleUpload}
+      />
     </PageShell>
   );
 }

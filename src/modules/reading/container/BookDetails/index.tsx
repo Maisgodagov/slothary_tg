@@ -7,10 +7,9 @@ import type { ReadingBook } from "../../../../features/reading/types";
 import { resolveUserId } from "../../../../shared/lib/userId";
 import { PageShell } from "../../../../shared/ui/PageShell";
 import { Icon } from "../../../../shared/ui/Icon";
-import { mockBooks } from "../../constants/mockBooks";
 import * as S from "./styles";
 
-type MockBook = ReadingBook & {
+type ReadingBookMeta = ReadingBook & {
   level?: string;
   minutes?: number;
   difficulty?: string;
@@ -29,18 +28,18 @@ export function BookDetailsContainer() {
   const navigate = useNavigate();
   const auth = useAppSelector(selectAuth);
   const userId = useMemo(() => resolveUserId(auth.profile?.id), [auth.profile?.id]);
-  const [book, setBook] = useState<MockBook | null>(null);
+  const [book, setBook] = useState<ReadingBookMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
     const load = async () => {
       try {
-        const data = (await readingApi.getBook(id, userId)) as MockBook;
+        const data = (await readingApi.getBook(id, userId)) as ReadingBookMeta;
         setBook(data ?? null);
       } catch (err: any) {
         setError(err?.message ?? "Не удалось загрузить книгу.");
-        setBook((mockBooks as MockBook[]).find((item) => item.id === id) ?? null);
+        setBook(null);
       }
     };
     load();
@@ -87,41 +86,48 @@ export function BookDetailsContainer() {
               <S.HeroCover $url={book.coverUrl} />
             </S.Hero>
             <S.InfoCard>
-              {book.level ? <S.LevelTag>{book.level} INTERMEDIATE</S.LevelTag> : null}
+              {book.level ? <S.LevelTag>{book.level}</S.LevelTag> : null}
               <S.Title>{book.title}</S.Title>
               <S.Subtitle>{book.author ?? "Без автора"}</S.Subtitle>
-              <S.StatsRow>
-                <S.StatCard>
-                  <S.StatValue>{book.minutes ?? 20} мин</S.StatValue>
-                  <S.StatLabel>Время</S.StatLabel>
-                </S.StatCard>
-                <S.StatCard>
-                  <S.StatValue>{book.wordCount ? book.wordCount.toLocaleString("ru-RU") : "47,000"}</S.StatValue>
-                  <S.StatLabel>Слов</S.StatLabel>
-                </S.StatCard>
-                <S.StatCard>
-                  <S.StatValue>{book.difficulty ?? "Средняя"}</S.StatValue>
-                  <S.StatLabel>Сложность</S.StatLabel>
-                </S.StatCard>
-              </S.StatsRow>
+              {(book.minutes || book.wordCount || book.difficulty) && (
+                <S.StatsRow>
+                  {book.minutes ? (
+                    <S.StatCard>
+                      <S.StatValue>{book.minutes} мин</S.StatValue>
+                      <S.StatLabel>Время</S.StatLabel>
+                    </S.StatCard>
+                  ) : null}
+                  {book.wordCount ? (
+                    <S.StatCard>
+                      <S.StatValue>{book.wordCount.toLocaleString("ru-RU")}</S.StatValue>
+                      <S.StatLabel>Слов</S.StatLabel>
+                    </S.StatCard>
+                  ) : null}
+                  {book.difficulty ? (
+                    <S.StatCard>
+                      <S.StatValue>{book.difficulty}</S.StatValue>
+                      <S.StatLabel>Сложность</S.StatLabel>
+                    </S.StatCard>
+                  ) : null}
+                </S.StatsRow>
+              )}
               {book.progress ? <S.Progress>{formatProgress(book.progress)}</S.Progress> : null}
             </S.InfoCard>
 
             <S.AboutCard>
               <S.SectionTitle>О книге</S.SectionTitle>
-              <S.Description>
-                {book.description ??
-                  "В этой классической истории вы найдете живые эмоции, сильных персонажей и незабываемую атмосферу."}
-              </S.Description>
-              <S.ReaderRow>
-                <S.ReaderAvatars>
-                  <S.Avatar />
-                  <S.Avatar />
-                  <S.Avatar />
-                </S.ReaderAvatars>
-                <S.ReaderMeta>+{book.readers ?? 1200} читают</S.ReaderMeta>
-                <S.Rating>? {book.rating ?? 4.8}</S.Rating>
-              </S.ReaderRow>
+              {book.description ? <S.Description>{book.description}</S.Description> : null}
+              {(book.readers || book.rating) && (
+                <S.ReaderRow>
+                  <S.ReaderAvatars>
+                    <S.Avatar />
+                    <S.Avatar />
+                    <S.Avatar />
+                  </S.ReaderAvatars>
+                  {book.readers ? <S.ReaderMeta>+{book.readers} читают</S.ReaderMeta> : null}
+                  {book.rating ? <S.Rating>★ {book.rating}</S.Rating> : null}
+                </S.ReaderRow>
+              )}
               <S.Actions>
                 <S.Button $primary onClick={handleRead}>
                   Читать

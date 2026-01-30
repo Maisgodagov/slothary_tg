@@ -6,9 +6,10 @@ export const Backdrop = styled.div`
   background: rgba(0, 0, 0, 0.6);
   z-index: 1200;
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 16px;
+  align-items: flex-start;
+  padding: 16px 12px;
+  overflow-y: auto;
 `;
 
 export const Card = styled.div`
@@ -21,6 +22,9 @@ export const Card = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin: auto 0;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
 `;
 
 export const Title = styled.div`

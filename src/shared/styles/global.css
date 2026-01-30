@@ -146,6 +146,13 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
 body {
   margin: 0;
   font-family: "Plus Jakarta Sans", "SF Pro Display", "Roboto", system-ui,
@@ -154,13 +161,8 @@ body {
   color: var(--tg-text);
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
-  height: calc(
-    100vh -
-      (
-        var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top) +
-          var(--tg-safe-area-inset-bottom)
-      )
-  );
+  min-height: 100vh;
+  height: auto;
   overflow: hidden;
 }
 

@@ -19,9 +19,13 @@ export async function apiFetch<TResponse, TBody = unknown>(
   const fullUrl = `${API_URL}/${endpoint.replace(/^\//, '')}`;
 
   const requestHeaders = new Headers({
-    'Content-Type': 'application/json',
     ...headers,
   });
+  const isFormData =
+    typeof FormData !== 'undefined' && body instanceof FormData;
+  if (!isFormData) {
+    requestHeaders.set('Content-Type', 'application/json');
+  }
 
   if (token) {
     requestHeaders.set('Authorization', `Bearer ${token}`);
@@ -30,7 +34,11 @@ export async function apiFetch<TResponse, TBody = unknown>(
   const response = await fetch(fullUrl, {
     method,
     headers: requestHeaders,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body
+      ? isFormData
+        ? (body as any)
+        : JSON.stringify(body)
+      : undefined,
     signal,
   });
 
