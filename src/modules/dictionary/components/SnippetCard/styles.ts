@@ -1,16 +1,20 @@
 import styled from 'styled-components';
 
-export const CardPlaceholder = styled.div`
-  width: clamp(220px, 72vw, 360px);
-  height: clamp(260px, 52vh, 420px);
+export const CardPlaceholder = styled.div<{ $compact?: boolean }>`
+  width: ${({ $compact }) =>
+    $compact ? "clamp(200px, 62vw, 260px)" : "clamp(220px, 72vw, 360px)"};
+  height: ${({ $compact }) =>
+    $compact ? "clamp(220px, 38vh, 300px)" : "clamp(260px, 52vh, 420px)"};
   border-radius: 22px;
   background: var(--tg-card);
   border: 1px solid var(--tg-border);
 `;
 
-export const CardShell = styled.div`
-  width: clamp(220px, 72vw, 360px);
-  height: clamp(260px, 52vh, 420px);
+export const CardShell = styled.div<{ $compact?: boolean }>`
+  width: ${({ $compact }) =>
+    $compact ? "clamp(200px, 62vw, 260px)" : "clamp(220px, 72vw, 360px)"};
+  height: ${({ $compact }) =>
+    $compact ? "clamp(220px, 38vh, 300px)" : "clamp(260px, 52vh, 420px)"};
   border-radius: 22px;
   overflow: hidden;
   background: #000;

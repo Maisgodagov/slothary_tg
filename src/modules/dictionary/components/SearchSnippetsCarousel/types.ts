@@ -10,4 +10,5 @@ export type SearchSnippetsCarouselProps = {
   sliderRef: RefObject<HTMLDivElement | null>;
   onCardRef: (index: number, node: HTMLDivElement | null) => void;
   onFirstCardRef: (node: HTMLDivElement | null) => void;
+  cardSize?: "default" | "compact";
 };

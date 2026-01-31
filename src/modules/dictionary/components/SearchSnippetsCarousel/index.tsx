@@ -22,6 +22,7 @@ export function SearchSnippetsCarousel({
   sliderRef,
   onCardRef,
   onFirstCardRef,
+  cardSize = "default",
 }: SearchSnippetsCarouselProps) {
   return (
     <>
@@ -39,13 +40,14 @@ export function SearchSnippetsCarousel({
               }}
               $active={isActive}
             >
-              <SnippetCard
-                snippet={snippet}
-                isActive={isActive}
-                shouldRender={shouldRender}
-                highlight={highlight}
-                onOpenFullVideo={onOpenFullVideo}
-              />
+            <SnippetCard
+              snippet={snippet}
+              isActive={isActive}
+              shouldRender={shouldRender}
+              highlight={highlight}
+              onOpenFullVideo={onOpenFullVideo}
+              compact={cardSize === "compact"}
+            />
             </SliderItem>
           );
         })}

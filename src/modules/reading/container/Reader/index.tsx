@@ -9,11 +9,15 @@ import { readingApi } from "../../../../features/reading/api";
 import type { ReadingBook } from "../../../../features/reading/types";
 import { resolveUserId } from "../../../../shared/lib/userId";
 import { WordCard } from "../../../../features/dictionary/components/WordCard";
+import { videoDictionaryApi, type PhraseSnippet } from "../../../../features/video-dictionary/api";
+import { SearchSnippetsCarousel } from "../../../dictionary/components/SearchSnippetsCarousel";
 import { PageShell } from "../../../../shared/ui/PageShell";
 import * as S from "./styles";
 
 export function ReaderContainer() {
   const CHAPTER_BREAK = "__CHAPTER_BREAK__";
+  const EXAMPLE_CARD_WIDTH = 260;
+  const EXAMPLE_POPOVER_WIDTH = 320;
   const { id } = useParams();
   const auth = useAppSelector(selectAuth);
   const dictionary = useAppSelector(selectDictionary);
@@ -36,6 +40,14 @@ export function ReaderContainer() {
     entry?: MuellerEntry;
     error?: string;
   } | null>(null);
+  const [examplesOpen, setExamplesOpen] = useState(false);
+  const [snippetState, setSnippetState] = useState<{
+    status: "idle" | "loading" | "ready" | "error";
+    items: PhraseSnippet[];
+    total: number;
+    error?: string;
+  }>({ status: "idle", items: [], total: 0 });
+  const [activeSnippetIndex, setActiveSnippetIndex] = useState(0);
   const [popover, setPopover] = useState<{
     top: number;
     left: number;
@@ -43,6 +55,9 @@ export function ReaderContainer() {
     placement: "top" | "bottom";
   } | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const firstCardRef = useRef<HTMLDivElement | null>(null);
   const saveTimeoutRef = useRef<number | null>(null);
   const fontSaveTimeoutRef = useRef<number | null>(null);
   const initialPageRef = useRef(false);
@@ -128,6 +143,18 @@ export function ReaderContainer() {
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
   }, [popover]);
+
+  useEffect(() => {
+    setExamplesOpen(false);
+    setSnippetState({ status: "idle", items: [], total: 0 });
+    setActiveSnippetIndex(0);
+  }, [lookup?.word]);
+
+  useEffect(() => {
+    if (!popover) return;
+    if (!examplesOpen) return;
+    setPopover((prev) => (prev ? { ...prev, width: EXAMPLE_POPOVER_WIDTH } : prev));
+  }, [examplesOpen, popover]);
 
   useEffect(() => {
     if (!fontOpen) return;
@@ -330,6 +357,57 @@ export function ReaderContainer() {
     }
   };
 
+  const loadExamples = useCallback(
+    async (phrase: string) => {
+      setSnippetState({ status: "loading", items: [], total: 0 });
+      try {
+        const response = await videoDictionaryApi.searchPhrase({
+          phrase,
+          limit: 12,
+          userId,
+        });
+        setSnippetState({
+          status: "ready",
+          items: response.items,
+          total: response.total,
+        });
+        setActiveSnippetIndex(0);
+      } catch (err: any) {
+        setSnippetState({
+          status: "error",
+          items: [],
+          total: 0,
+          error: err?.message ?? "Не удалось загрузить примеры.",
+        });
+      }
+    },
+    [userId]
+  );
+
+  useEffect(() => {
+    if (!examplesOpen || !sliderRef.current || snippetState.items.length === 0) return;
+    const node = sliderRef.current;
+    const handleScroll = () => {
+      if (!node) return;
+      const center = node.scrollLeft + node.clientWidth / 2;
+      let closest = 0;
+      let minDist = Number.POSITIVE_INFINITY;
+      cardRefs.current.forEach((card, index) => {
+        if (!card) return;
+        const rect = card.getBoundingClientRect();
+        const cardCenter = card.offsetLeft + rect.width / 2;
+        const dist = Math.abs(cardCenter - center);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = index;
+        }
+      });
+      setActiveSnippetIndex(closest);
+    };
+    node.addEventListener("scroll", handleScroll, { passive: true });
+    return () => node.removeEventListener("scroll", handleScroll);
+  }, [examplesOpen, snippetState.items.length]);
+
   const renderParagraph = (paragraph: string, idx: number) => {
     const parts = paragraph.match(/([A-Za-z']+|[^A-Za-z']+)/g) ?? [paragraph];
     return (
@@ -357,16 +435,6 @@ export function ReaderContainer() {
   };
 
   const lookupEntry = lookup?.entry;
-  const lookupInDictionary = Boolean(
-    lookupEntry &&
-      dictionary.items.find(
-        (item) =>
-          item.word.toLowerCase() === lookupEntry.word.toLowerCase() &&
-          item.translation.toLowerCase() ===
-            (lookupEntry.translations?.[0] ?? "").toLowerCase()
-      )
-  );
-
   const progressPercent = Math.round((progress?.progress ?? 0) * 100);
 
   if (loading)
@@ -419,40 +487,91 @@ export function ReaderContainer() {
           >
             {lookup?.status === "loading" && <div>Ищем перевод...</div>}
             {lookup?.status === "error" && <div>{lookup.error}</div>}
-            {lookup?.status === "ready" && lookupEntry && (
-              <>
+            {lookup?.status === "ready" && lookupEntry && (() => {
+              const translation =
+                lookupEntry.translations?.find((value) => value.trim().length > 0) ?? "";
+              const otherTranslations = (lookupEntry.translations ?? [])
+                .filter((value) => value && value !== translation)
+                .slice(0, 4);
+              const normalizedWord = lookupEntry.word.toLowerCase();
+              const normalizedTranslation = translation.toLowerCase();
+              const existingEntry = dictionary.items.find(
+                (item) =>
+                  item.word.toLowerCase() === normalizedWord &&
+                  item.translation.toLowerCase() === normalizedTranslation
+              );
+              const isInDictionary = Boolean(existingEntry);
+              const dictionaryActionLabel = isInDictionary ? "в словаре" : "+ в словарь";
+
+              return (
                 <WordCard
                   word={lookupEntry.word}
-                  translation={lookupEntry.translations?.[0] ?? ""}
-                  size="subtitle"
-                  showExamplesButton={false}
-                  examplesOpen={false}
-                  onToggleExamples={() => null}
-                  dictionaryActionMode="none"
-                />
-                <S.PopoverActions>
-                  <S.PopoverButton
-                    $primary
-                    disabled={lookupInDictionary}
-                    onClick={() => {
-                      if (!lookupEntry?.word || !lookupEntry.translations?.[0]) return;
-                      if (lookupInDictionary) return;
-                      dispatch(
-                        addWord({
-                          query: lookupEntry.word,
-                          lang: "en",
-                          word: lookupEntry.word,
-                          translation: lookupEntry.translations[0],
-                        })
+                  translation={translation}
+                  otherTranslationsRu={otherTranslations}
+                  showExamplesButton={true}
+                  examplesOpen={examplesOpen}
+                  onToggleExamples={() => {
+                    const next = !examplesOpen;
+                    setExamplesOpen(next);
+                    if (next && lookupEntry.word && snippetState.status !== "ready") {
+                      loadExamples(lookupEntry.word);
+                      sliderRef.current?.style.setProperty(
+                        "--card-width",
+                        `${EXAMPLE_CARD_WIDTH}px`
                       );
-                    }}
-                  >
-                    {lookupInDictionary ? "В словаре" : "В словарь"}
-                  </S.PopoverButton>
-                  <S.PopoverButton onClick={() => setPopover(null)}>Закрыть</S.PopoverButton>
-                </S.PopoverActions>
-              </>
-            )}
+                    }
+                  }}
+                  dictionaryActionLabel={dictionaryActionLabel}
+                  dictionaryActionMode={isInDictionary ? "tag" : "button"}
+                  dictionaryActionDisabled={isInDictionary}
+                  onDictionaryAction={() => {
+                    if (!lookupEntry?.word || !translation) return;
+                    if (isInDictionary) return;
+                    dispatch(
+                      addWord({
+                        query: lookupEntry.word,
+                        lang: "en",
+                        word: lookupEntry.word,
+                        translation,
+                      })
+                    );
+                  }}
+                  variant="compact"
+                  size="subtitle"
+                  reading
+                >
+                  {examplesOpen && snippetState.status === "ready" && snippetState.items.length > 0 && (
+                    <SearchSnippetsCarousel
+                      items={snippetState.items}
+                      highlight={lookupEntry.word}
+                      activeIndex={activeSnippetIndex}
+                      onOpenFullVideo={(snippet) => {
+                        window.open(snippet.videoUrl, "_blank");
+                      }}
+                      total={snippetState.total}
+                      sliderRef={sliderRef}
+                      cardSize="compact"
+                      onCardRef={(index, node) => {
+                        cardRefs.current[index] = node;
+                      }}
+                      onFirstCardRef={(node) => {
+                        firstCardRef.current = node;
+                      }}
+                    />
+                  )}
+                  {examplesOpen && snippetState.status === "loading" && (
+                    <div style={{ color: "var(--tg-subtle)", fontSize: 12 }}>
+                      Загружаем примеры...
+                    </div>
+                  )}
+                  {examplesOpen && snippetState.status === "error" && (
+                    <div style={{ color: "var(--tg-danger)", fontSize: 12 }}>
+                      {snippetState.error ?? "Не удалось загрузить примеры."}
+                    </div>
+                  )}
+                </WordCard>
+              );
+            })()}
           </S.Popover>
         )}
 

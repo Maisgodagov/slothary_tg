@@ -5,7 +5,7 @@ export const ReadingWrapper = styled.div`
   flex-direction: column;
   gap: 16px;
   padding: 8px 12px 20px;
-  background: linear-gradient(180deg, #0f1729 0%, #0c1322 100%);
+  background: var(--tg-bg);
 `;
 
 export const TopBar = styled.div`

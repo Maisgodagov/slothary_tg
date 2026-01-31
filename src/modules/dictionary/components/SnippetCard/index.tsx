@@ -55,6 +55,7 @@ export function SnippetCard({
   shouldRender,
   highlight,
   onOpenFullVideo,
+  compact = false,
 }: SnippetCardProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -134,11 +135,11 @@ export function SnippetCard({
   }, [isActive, snippet.endSeconds, snippet.startSeconds]);
 
   if (!shouldRender) {
-    return <CardPlaceholder className="page-header" />;
+    return <CardPlaceholder className="page-header" $compact={compact} />;
   }
 
   return (
-    <CardShell>
+    <CardShell $compact={compact}>
       <FullVideoButton
         type="button"
         onClick={(event) => {

@@ -4,7 +4,7 @@ export const ReaderShell = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #0f1a2b;
+  background: var(--tg-bg);
 `;
 
 export const ReaderHeader = styled.div`
@@ -79,7 +79,7 @@ export const ProgressText = styled.div`
 export const ReaderBody = styled.div`
   flex: 1;
   overflow: hidden;
-  padding: 12px 18px 24px;
+  padding: 12px 18px 44px;
 `;
 
 export const Paragraph = styled.p`
@@ -105,7 +105,7 @@ export const ReaderFooter = styled.div`
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: #0f1a2b;
+  background: var(--tg-bg);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 `;
 

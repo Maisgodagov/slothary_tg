@@ -22,6 +22,7 @@ type WordCardProps = {
   layoutMode?: "default" | "tight";
   variant?: "default" | "compact";
   summary?: boolean;
+  reading?: boolean;
   children?: ReactNode;
 };
 
@@ -45,6 +46,7 @@ export function WordCard({
   layoutMode = "default",
   variant = "default",
   summary = false,
+  reading = false,
   children,
 }: WordCardProps) {
   const showOtherTranslations = Boolean(
@@ -68,13 +70,23 @@ export function WordCard({
 
   const wordFontSize = isSubtitle ? 16 : isCompact ? 18 : 28;
   const metaFontSize = isSubtitle ? 12 : isCompact ? 13 : 14;
-  const buttonFontSize = isSubtitle ? 12 : isCompact ? 12 : 14;
+  const buttonFontSize = reading ? 11 : isSubtitle ? 12 : isCompact ? 12 : 14;
   const actionsJustify =
-    isSubtitle && !showExamplesButton
+    reading
+      ? "space-between"
+      : isSubtitle && !showExamplesButton
       ? "flex-end"
       : isCompact
         ? "flex-start"
         : "space-between";
+
+  const examplesLabel = reading
+    ? examplesOpen
+      ? "Скрыть примеры"
+      : "Видео примеры"
+    : examplesOpen
+      ? "Скрыть примеры"
+      : "Показать примеры";
 
   return (
     <div
@@ -216,7 +228,7 @@ export function WordCard({
             gap: isCompact ? 10 : 14,
             justifyContent: actionsJustify,
             alignItems: "center",
-            flexWrap: "wrap",
+            flexWrap: reading ? "nowrap" : "wrap",
             width: "100%",
           }}
         >
@@ -238,7 +250,7 @@ export function WordCard({
                 cursor: "pointer",
               }}
             >
-              {examplesOpen ? "Скрыть примеры" : "Показать примеры"}
+              {examplesLabel}
               <Icon
                 name="chevron-down"
                 size={16}
