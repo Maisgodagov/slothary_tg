@@ -30,6 +30,13 @@ export function BookDetailsContainer() {
   const userId = useMemo(() => resolveUserId(auth.profile?.id), [auth.profile?.id]);
   const [book, setBook] = useState<ReadingBookMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editAuthor, setEditAuthor] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const isAdmin = auth.profile?.role === "admin";
 
   useEffect(() => {
     if (!id) return;
@@ -37,6 +44,9 @@ export function BookDetailsContainer() {
       try {
         const data = (await readingApi.getBook(id, userId)) as ReadingBookMeta;
         setBook(data ?? null);
+        setEditTitle(data?.title ?? "");
+        setEditAuthor(data?.author ?? "");
+        setEditDescription(data?.description ?? "");
       } catch (err: any) {
         setError(err?.message ?? "Не удалось загрузить книгу.");
         setBook(null);
@@ -65,17 +75,52 @@ export function BookDetailsContainer() {
     }
   };
 
+  const handleSave = async () => {
+    if (!id) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await readingApi.updateBook(
+        id,
+        {
+          title: editTitle.trim() || undefined,
+          author: editAuthor.trim() ? editAuthor.trim() : null,
+          description: editDescription.trim() ? editDescription.trim() : null,
+        },
+        userId,
+        auth.profile?.role ?? null,
+      );
+      setBook(updated as ReadingBookMeta);
+      setEditOpen(false);
+    } catch (err: any) {
+      setError(err?.message ?? "Не удалось сохранить изменения.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    if (!window.confirm("Удалить книгу? Это действие необратимо.")) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await readingApi.deleteBook(id, userId, auth.profile?.role ?? null);
+      navigate("/reading");
+    } catch (err: any) {
+      setError(err?.message ?? "Не удалось удалить книгу.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <PageShell withNav={false}>
       <S.DetailWrapper>
         <S.Header>
-          <S.BackButton onClick={() => navigate(-1)}>
-            <Icon name="back" size={18} />
-          </S.BackButton>
+          <div />
           <S.HeaderTitle>Чтение</S.HeaderTitle>
-          <S.IconButton>
-            <Icon name="bookmark" size={18} />
-          </S.IconButton>
+          <div />
         </S.Header>
 
         {error && <S.Card>{error}</S.Card>}
@@ -89,18 +134,12 @@ export function BookDetailsContainer() {
               {book.level ? <S.LevelTag>{book.level}</S.LevelTag> : null}
               <S.Title>{book.title}</S.Title>
               <S.Subtitle>{book.author ?? "Без автора"}</S.Subtitle>
-              {(book.minutes || book.wordCount || book.difficulty) && (
+              {(book.minutes || book.difficulty) && (
                 <S.StatsRow>
                   {book.minutes ? (
                     <S.StatCard>
                       <S.StatValue>{book.minutes} мин</S.StatValue>
                       <S.StatLabel>Время</S.StatLabel>
-                    </S.StatCard>
-                  ) : null}
-                  {book.wordCount ? (
-                    <S.StatCard>
-                      <S.StatValue>{book.wordCount.toLocaleString("ru-RU")}</S.StatValue>
-                      <S.StatLabel>Слов</S.StatLabel>
                     </S.StatCard>
                   ) : null}
                   {book.difficulty ? (
@@ -137,9 +176,51 @@ export function BookDetailsContainer() {
                 </S.Button>
               </S.Actions>
             </S.AboutCard>
+
+            {isAdmin && editOpen && (
+              <S.EditModalBackdrop onClick={() => setEditOpen(false)}>
+                <S.EditModalCard onClick={(event) => event.stopPropagation()}>
+                  <S.SectionTitle>Редактировать книгу</S.SectionTitle>
+                  <S.AdminLabel>
+                    Название
+                    <S.AdminInput value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                  </S.AdminLabel>
+                  <S.AdminLabel>
+                    Автор
+                    <S.AdminInput value={editAuthor} onChange={(e) => setEditAuthor(e.target.value)} />
+                  </S.AdminLabel>
+                  <S.AdminLabel>
+                    Описание
+                    <S.AdminTextarea
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                    />
+                  </S.AdminLabel>
+                  <S.AdminActions>
+                    <S.Button onClick={() => setEditOpen(false)} disabled={saving}>
+                      Отмена
+                    </S.Button>
+                    <S.Button $primary onClick={handleSave} disabled={saving}>
+                      {saving ? "Сохраняем..." : "Сохранить"}
+                    </S.Button>
+                  </S.AdminActions>
+                </S.EditModalCard>
+              </S.EditModalBackdrop>
+            )}
           </>
         )}
       </S.DetailWrapper>
+
+      {isAdmin && (
+        <S.AdminTopActions>
+          <S.IconAction onClick={() => setEditOpen(true)} aria-label="Редактировать книгу">
+            <Icon name="edit" size={18} />
+          </S.IconAction>
+          <S.IconDanger onClick={handleDelete} disabled={deleting || saving} aria-label="Удалить книгу">
+            <Icon name="close" size={18} />
+          </S.IconDanger>
+        </S.AdminTopActions>
+      )}
     </PageShell>
   );
 }

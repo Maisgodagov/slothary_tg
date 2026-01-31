@@ -1,5 +1,5 @@
 ﻿import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 import { selectAuth } from "../../../../features/auth/slice";
 import { dictionaryApi } from "../../../../features/dictionary/api";
@@ -8,7 +8,6 @@ import { muellerApi, type MuellerEntry } from "../../../../features/mueller/api"
 import { readingApi } from "../../../../features/reading/api";
 import type { ReadingBook } from "../../../../features/reading/types";
 import { resolveUserId } from "../../../../shared/lib/userId";
-import { Icon } from "../../../../shared/ui/Icon";
 import { WordCard } from "../../../../features/dictionary/components/WordCard";
 import { PageShell } from "../../../../shared/ui/PageShell";
 import * as S from "./styles";
@@ -16,7 +15,6 @@ import * as S from "./styles";
 export function ReaderContainer() {
   const CHAPTER_BREAK = "__CHAPTER_BREAK__";
   const { id } = useParams();
-  const navigate = useNavigate();
   const auth = useAppSelector(selectAuth);
   const dictionary = useAppSelector(selectDictionary);
   const dispatch = useAppDispatch();
@@ -48,6 +46,8 @@ export function ReaderContainer() {
   const saveTimeoutRef = useRef<number | null>(null);
   const fontSaveTimeoutRef = useRef<number | null>(null);
   const initialPageRef = useRef(false);
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
 
   const withCacheBust = useCallback((url: string) => {
     const stamp = Date.now();
@@ -78,58 +78,19 @@ export function ReaderContainer() {
           if (manifest?.chapters?.length) {
             const chapterFiles = manifest.chapters.map((chapter: any) => chapter.file);
             const base = bookData.fileUrl.replace("/book.json", "");
-            const totalWords = manifest.chapters.reduce(
-              (sum: number, chapter: any) => sum + (chapter?.wordCount ?? 0),
-              0,
-            );
-            let initialIndex = 0;
-            if (totalWords > 0 && typeof progressData?.progress === "number") {
-              const targetWord = totalWords * Math.min(Math.max(progressData.progress, 0), 1);
-              let acc = 0;
-              for (let i = 0; i < manifest.chapters.length; i += 1) {
-                acc += manifest.chapters[i]?.wordCount ?? 0;
-                if (acc >= targetWord) {
-                  initialIndex = i;
-                  break;
-                }
-              }
+            const chapters: any[] = [];
+            for (const file of chapterFiles) {
+              const url = withCacheBust(`${base}/${file.replace(/^\/+/, "")}`);
+              const chapter = await fetch(url).then((res) => res.json());
+              chapters.push(chapter);
             }
-
-            const initialFile = chapterFiles[initialIndex];
-            if (initialFile) {
-              const initialUrl = withCacheBust(`${base}/${initialFile.replace(/^\/+/, "")}`);
-              const initialChapter = await fetch(initialUrl).then((res) => res.json());
-              const initialTitle = initialChapter?.title ? [`${initialChapter.title}`] : [];
-              const initialParagraphs = Array.isArray(initialChapter?.paragraphs)
-                ? initialChapter.paragraphs
-                : [];
-              setText([...initialTitle, ...initialParagraphs, ""].join("\n\n"));
-              setLoading(false);
-            }
-
-            const loadAllChapters = async () => {
-              const chapters: any[] = new Array(chapterFiles.length);
-              if (initialFile) {
-                chapters[initialIndex] = await fetch(
-                  withCacheBust(`${base}/${initialFile.replace(/^\/+/, "")}`),
-                ).then((res) => res.json());
-              }
-              for (let i = 0; i < chapterFiles.length; i += 1) {
-                if (i === initialIndex) continue;
-                const file = chapterFiles[i];
-                const url = withCacheBust(`${base}/${file.replace(/^\/+/, "")}`);
-                chapters[i] = await fetch(url).then((res) => res.json());
-              }
-              const merged = chapters.flatMap((chapter: any, index: number) => {
-                const title = chapter?.title ? [`${chapter.title}`] : [];
-                const paragraphs = Array.isArray(chapter?.paragraphs) ? chapter.paragraphs : [];
-                const breakMarker = index < chapters.length - 1 ? [CHAPTER_BREAK] : [];
-                return [...title, ...paragraphs, "", ...breakMarker];
-              });
-              setText(merged.join("\n\n"));
-            };
-
-            loadAllChapters().catch(() => null);
+            const merged = chapters.flatMap((chapter: any, index: number) => {
+              const title = chapter?.title ? [`${chapter.title}`] : [];
+              const paragraphs = Array.isArray(chapter?.paragraphs) ? chapter.paragraphs : [];
+              const breakMarker = index < chapters.length - 1 ? [CHAPTER_BREAK] : [];
+              return [...title, ...paragraphs, "", ...breakMarker];
+            });
+            setText(merged.join("\n\n"));
           } else if (Array.isArray(manifest?.paragraphs)) {
             setText(manifest.paragraphs.join("\n\n"));
           } else {
@@ -286,6 +247,35 @@ export function ReaderContainer() {
     [pages.length, updateProgress],
   );
 
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchStartXRef.current = touch.clientX;
+    touchStartYRef.current = touch.clientY;
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    const startX = touchStartXRef.current;
+    const startY = touchStartYRef.current;
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+    if (startX === null || startY === null) return;
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    if (popover) {
+      setPopover(null);
+      setLookup(null);
+    }
+    if (dx < 0) {
+      goToPage(currentPage + 1);
+    } else {
+      goToPage(currentPage - 1);
+    }
+  };
+
   const handleFontChange = async (next: number) => {
     setFontSize(next);
     if (fontSaveTimeoutRef.current) {
@@ -396,44 +386,27 @@ export function ReaderContainer() {
     <PageShell withNav={false} scroll={false} pullToRefresh={false}>
       <S.ReaderShell>
         <S.ReaderHeader>
-          <S.BackButton onClick={() => navigate(-1)}>
-            <Icon name="back" size={18} />
-          </S.BackButton>
+          <div />
           <S.HeaderTitle>{book?.title ?? "THE GREAT GATSBY"}</S.HeaderTitle>
           <S.FontButton data-font-toggle onClick={() => setFontOpen((prev) => !prev)}>
-            <span>Tt</span>
+            <span>Tt+</span>
           </S.FontButton>
         </S.ReaderHeader>
 
-        <S.ReaderProgress>
-          <S.ProgressBar>
-            <span style={{ width: `${progressPercent}%` }} />
-          </S.ProgressBar>
-          <S.ProgressText>{progressPercent}%</S.ProgressText>
-        </S.ReaderProgress>
 
-        <S.ReaderBody ref={contentRef}>
+
+        <S.ReaderBody
+          ref={contentRef}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {(pages[currentPage] ?? []).map(renderParagraph)}
         </S.ReaderBody>
 
         <S.ReaderFooter>
-          <S.FooterButton
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage <= 0}
-          >
-            <Icon name="back" size={14} />
-            Предыдущая
-          </S.FooterButton>
           <S.PageIndicator>
             {currentPage + 1}/{pages.length || 1} · {progressPercent}%
           </S.PageIndicator>
-          <S.FooterButton
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage >= (pages.length || 1) - 1}
-          >
-            Следующая
-            <Icon name="chevron-down" size={14} style={{ transform: "rotate(-90deg)" }} />
-          </S.FooterButton>
         </S.ReaderFooter>
 
         {popover && (
@@ -485,7 +458,7 @@ export function ReaderContainer() {
 
         {fontOpen && (
           <S.FontPanel data-font-panel>
-            <S.FontLabel>Размер</S.FontLabel>
+            <S.FontLabel>Размер шрифта</S.FontLabel>
             <S.Range
               type="range"
               min={12}

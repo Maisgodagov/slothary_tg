@@ -100,8 +100,8 @@ export const Word = styled.span`
 export const ReaderFooter = styled.div`
   position: sticky;
   bottom: 0;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  justify-content: center;
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
@@ -129,18 +129,18 @@ export const PageIndicator = styled.div`
 export const FontPanel = styled.div`
   position: fixed;
   right: 12px;
-  top: 120px;
+  top: 64px;
   background: rgba(20, 30, 50, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
-  padding: 10px 12px;
+  padding: 14px 16px;
   display: grid;
   gap: 8px;
-  width: 140px;
+  width: 180px;
 `;
 
 export const FontLabel = styled.div`
-  font-size: 11px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
 `;
 

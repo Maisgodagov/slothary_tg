@@ -209,3 +209,106 @@ export const Card = styled.div`
   color: var(--tg-text-secondary);
 `;
 
+export const AdminLabel = styled.label`
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tg-text);
+`;
+
+export const AdminInput = styled.input`
+  border-radius: 12px;
+  border: 1px solid var(--tg-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--tg-text);
+  padding: 10px 12px;
+  font-size: 14px;
+`;
+
+export const AdminTextarea = styled.textarea`
+  border-radius: 12px;
+  border: 1px solid var(--tg-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--tg-text);
+  padding: 10px 12px;
+  font-size: 14px;
+  min-height: 120px;
+  resize: vertical;
+`;
+
+export const AdminActions = styled.div`
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+export const AdminDanger = styled.button`
+  border-radius: 12px;
+  border: 1px solid rgba(255, 95, 109, 0.6);
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(255, 95, 109, 0.12);
+  color: #ff5f6d;
+`;
+
+export const EditModalBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1300;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px 12px;
+  overflow-y: auto;
+`;
+
+export const EditModalCard = styled.div`
+  width: 100%;
+  max-width: 520px;
+  background: #141b2f;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  margin: 40px 0 0;
+`;
+
+export const AdminTopActions = styled.div`
+  position: fixed;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 1400;
+`;
+
+export const IconAction = styled.button`
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--tg-text);
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+`;
+
+export const IconDanger = styled.button`
+  border: none;
+  background: rgba(255, 95, 109, 0.16);
+  color: #ff5f6d;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+`;
+

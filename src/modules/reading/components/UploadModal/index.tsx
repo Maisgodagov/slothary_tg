@@ -4,85 +4,60 @@ import * as S from "./styles";
 
 type UploadPayload = {
   file: File;
-  title?: string;
-  author?: string;
-  description?: string;
-  language?: string;
 };
 
 interface UploadModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (payload: UploadPayload) => Promise<void> | void;
+  onSubmit: (payload: UploadPayload) => Promise<void>;
 }
 
 export function UploadModal({ open, onClose, onSubmit }: UploadModalProps) {
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
-  const [description, setDescription] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [language, setLanguage] = useState("en");
+  const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploaded, setUploaded] = useState(0);
 
   if (!open) return null;
 
   const handleSubmit = async () => {
-    if (!file) return;
+    if (!files.length) return;
     setLoading(true);
+    setUploaded(0);
     try {
-      await onSubmit({
-        file,
-        title: title.trim() || undefined,
-        author: author.trim() || undefined,
-        description: description.trim() || undefined,
-        language: language.trim() || "en",
-      });
-      setTitle("");
-      setAuthor("");
-      setDescription("");
-      setFile(null);
-      setLanguage("en");
-      onClose();
+      for (let i = 0; i < files.length; i += 1) {
+        await onSubmit({ file: files[i] });
+        setUploaded((prev) => prev + 1);
+      }
     } finally {
       setLoading(false);
+      onClose();
+      setFiles([]);
+      setUploaded(0);
     }
   };
 
   const modal = (
     <S.Backdrop onClick={onClose}>
       <S.Card onClick={(event) => event.stopPropagation()}>
-        <S.Title>Добавить книгу</S.Title>
+        <S.Title>Р”РѕР±Р°РІРёС‚СЊ РєРЅРёРіСѓ</S.Title>
         <S.Label>
-          EPUB файл
+          EPUB С„Р°Р№Р»
           <S.Input
             type="file"
             accept=".epub"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            multiple
+            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
           />
         </S.Label>
-        <S.Label>
-          Название (опционально)
-          <S.Input value={title} onChange={(e) => setTitle(e.target.value)} />
-        </S.Label>
-        <S.Label>
-          Автор
-          <S.Input value={author} onChange={(e) => setAuthor(e.target.value)} />
-        </S.Label>
-        <S.Label>
-          Описание
-          <S.Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </S.Label>
-        <S.Label>
-          Язык
-          <S.Input value={language} onChange={(e) => setLanguage(e.target.value)} />
-        </S.Label>
+        {loading && (
+          <S.Hint>
+            Р—Р°РіСЂСѓР¶РµРЅРѕ {uploaded}/{files.length}
+          </S.Hint>
+        )}
         <S.Actions>
-          <S.Button onClick={onClose}>Отмена</S.Button>
+          <S.Button onClick={onClose}>РћС‚РјРµРЅР°</S.Button>
           <S.Button $primary onClick={handleSubmit} disabled={loading}>
-            {loading ? "Сохраняем..." : "Сохранить"}
+            {loading ? "Р—Р°РіСЂСѓР¶Р°РµРј..." : "Р—Р°РіСЂСѓР·РёС‚СЊ"}
           </S.Button>
         </S.Actions>
       </S.Card>

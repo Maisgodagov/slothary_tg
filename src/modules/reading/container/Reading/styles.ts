@@ -118,55 +118,46 @@ export const ShelfTitle = styled.div`
   max-width: 92px;
 `;
 
-export const List = styled.div`
+export const Grid = styled.div`
   display: grid;
-  gap: 10px;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 `;
 
-export const ListCard = styled.button`
+export const GridCard = styled.button`
   border: none;
-  background: #1a2236;
-  border-radius: 16px;
-  padding: 10px;
-  display: grid;
-  grid-template-columns: 54px 1fr auto;
-  gap: 10px;
-  align-items: center;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   color: var(--tg-text);
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  text-align: left;
 `;
 
-export const ListCover = styled.div<{ $url?: string | null }>`
-  width: 54px;
-  height: 72px;
-  border-radius: 10px;
+export const GridCover = styled.div<{ $url?: string | null }>`
+  width: 100%;
+  aspect-ratio: 3 / 4.2;
+  border-radius: 14px;
   background: ${({ $url }) =>
     $url
-      ? `linear-gradient(135deg, rgba(0,0,0,0.2), rgba(0,0,0,0.45)), url(${$url})`
+      ? `linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.55)), url(${$url})`
       : "linear-gradient(135deg, #1a1f2b, #2c364d)"};
   background-size: cover;
   background-position: center;
+  position: relative;
   border: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
-export const ListBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-export const ListTitle = styled.div`
+export const GridTitle = styled.div`
   font-size: 14px;
   font-weight: 800;
+  line-height: 1.25;
 `;
 
-export const ListMeta = styled.div`
+export const GridAuthor = styled.div`
   font-size: 12px;
   color: var(--tg-text-secondary);
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
 `;
 
 export const LevelTag = styled.div`

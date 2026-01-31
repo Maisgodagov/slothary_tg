@@ -70,6 +70,11 @@ export function ReadingContainer() {
   }, [loadBooks]);
 
   useEffect(() => {
+    if (!userId) return;
+    loadShelf();
+  }, [userId, loadShelf]);
+
+  useEffect(() => {
     if (tab === "shelf") {
       loadShelf();
     }
@@ -79,13 +84,7 @@ export function ReadingContainer() {
     navigate(`/reading/${bookId}`);
   };
 
-  const handleUpload = async (payload: {
-    file: File;
-    title?: string;
-    author?: string;
-    description?: string;
-    language?: string;
-  }) => {
+  const handleUpload = async (payload: { file: File }) => {
     await readingApi.uploadBook(payload, userId, auth.profile?.role ?? null);
     await loadBooks();
   };
@@ -123,22 +122,17 @@ export function ReadingContainer() {
       return <S.EmptyState>Пока здесь пусто.</S.EmptyState>;
     }
     return (
-      <S.List>
+      <S.Grid>
         {items.map((book) => (
-          <S.ListCard key={book.id} onClick={() => handleOpen(book.id)}>
-            <S.ListCover $url={book.coverUrl} />
-            <S.ListBody>
-              <S.ListTitle>{book.title}</S.ListTitle>
-              <S.ListMeta>{book.author ?? "Без автора"}</S.ListMeta>
-              <S.ListMeta>
-                <span>{book.minutes ? `${book.minutes} мин` : ""}</span>
-                <span>{book.wordCount ? `${book.wordCount.toLocaleString("ru-RU")} слов` : ""}</span>
-              </S.ListMeta>
-            </S.ListBody>
-            {book.level ? <S.LevelTag>{book.level}</S.LevelTag> : null}
-          </S.ListCard>
+          <S.GridCard key={book.id} onClick={() => handleOpen(book.id)}>
+            <S.GridCover $url={book.coverUrl}>
+              {book.level ? <S.LevelTag>{book.level}</S.LevelTag> : null}
+            </S.GridCover>
+            <S.GridTitle>{book.title}</S.GridTitle>
+            <S.GridAuthor>{book.author ?? "Без автора"}</S.GridAuthor>
+          </S.GridCard>
         ))}
-      </S.List>
+      </S.Grid>
     );
   };
 
@@ -146,9 +140,7 @@ export function ReadingContainer() {
     <PageShell>
       <S.ReadingWrapper>
         <S.TopBar>
-          <S.BackButton onClick={() => navigate(-1)}>
-            <Icon name="back" size={18} />
-          </S.BackButton>
+          <div />
           <S.TopTitle>Чтение</S.TopTitle>
           {isAdmin ? (
             <S.IconButton onClick={() => setUploadOpen(true)}>
