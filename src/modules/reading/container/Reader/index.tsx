@@ -309,7 +309,12 @@ export function ReaderContainer() {
     const safetyPadding = 62;
     const maxHeight = Math.max(
       0,
-      shell.clientHeight - padTop - padBottom - footerHeight - safetyPadding,
+      shell.clientHeight -
+        padTop -
+        padBottom -
+        footerHeight -
+        safetyPadding -
+        20,
     );
     const width = Math.max(0, container.clientWidth - padLeft - padRight);
     const paragraphSpacing = 18;
