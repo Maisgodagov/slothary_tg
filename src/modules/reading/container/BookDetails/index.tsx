@@ -118,7 +118,7 @@ export function BookDetailsContainer() {
   };
 
   return (
-    <PageShell withNav={false}>
+    <PageShell>
       <S.DetailWrapper>
         <S.Header>
           <div />

@@ -9,11 +9,13 @@ export const ReaderShell = styled.div`
 `;
 
 export const ReaderHeader = styled.div`
-  display: grid;
-  grid-template-columns: 36px 1fr 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
 export const BackButton = styled.button`
@@ -30,11 +32,18 @@ export const BackButton = styled.button`
 `;
 
 export const HeaderTitle = styled.div`
-  text-align: center;
-  font-size: 11px;
+  text-align: left;
+  font-size: 15px;
   letter-spacing: 1px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.7);
+  min-width: 0;
+`;
+
+export const HeaderActions = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 `;
 
 export const FontButton = styled.button`
@@ -100,15 +109,7 @@ export const Word = styled.span`
 `;
 
 export const ReaderFooter = styled.div`
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: var(--tg-bg);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: none;
 `;
 
 export const FooterButton = styled.button`

@@ -29,6 +29,7 @@ import {
 } from "../../../../features/video-dictionary/api";
 import { SearchSnippetsCarousel } from "../../../dictionary/components/SearchSnippetsCarousel";
 import { PageShell } from "../../../../shared/ui/PageShell";
+import { Icon } from "../../../../shared/ui/Icon";
 import * as S from "./styles";
 
 export function ReaderContainer() {
@@ -165,9 +166,10 @@ export function ReaderContainer() {
             const titleLabel = tocMap.get(entry.id);
             const title = titleLabel ? [titleLabel] : [];
             const paragraphs = extractParagraphsFromHtml(chapter?.html ?? "");
-            const breakMarker =
-              i < spine.length - 1 ? ["", CHAPTER_BREAK] : [""];
-            merged.push(...title, ...paragraphs, ...breakMarker);
+            if (i > 0) {
+              merged.push(CHAPTER_BREAK);
+            }
+            merged.push(...title, ...paragraphs, "");
           }
           setText(merged.join("\n\n"));
           if (typeof fb2.destroy === "function") {
@@ -574,14 +576,18 @@ export function ReaderContainer() {
     <PageShell withNav={false} scroll={false} pullToRefresh={false}>
       <S.ReaderShell>
         <S.ReaderHeader>
-          <div />
           <S.HeaderTitle>{book?.title ?? "THE GREAT GATSBY"}</S.HeaderTitle>
-          <S.FontButton
-            data-font-toggle
-            onClick={() => setFontOpen((prev) => !prev)}
-          >
-            <span>Tt+</span>
-          </S.FontButton>
+          <S.HeaderActions>
+            <S.PageIndicator>
+              {currentPage + 1}/{pages.length || 1} · {progressPercent}%
+            </S.PageIndicator>
+            <S.FontButton
+              data-font-toggle
+              onClick={() => setFontOpen((prev) => !prev)}
+            >
+              <Icon name="font" size={18} />
+            </S.FontButton>
+          </S.HeaderActions>
         </S.ReaderHeader>
 
         <S.ReaderBody
@@ -592,11 +598,7 @@ export function ReaderContainer() {
           {(pages[currentPage] ?? []).map(renderParagraph)}
         </S.ReaderBody>
 
-        <S.ReaderFooter ref={footerRef}>
-          <S.PageIndicator>
-            {currentPage + 1}/{pages.length || 1} · {progressPercent}%
-          </S.PageIndicator>
-        </S.ReaderFooter>
+        <S.ReaderFooter ref={footerRef} />
 
         {popover && (
           <S.Popover

@@ -5,7 +5,7 @@ export const DetailWrapper = styled.div`
   flex-direction: column;
   gap: 16px;
   padding: 8px 12px 20px;
-  background: linear-gradient(180deg, #0e1422 0%, #0b111c 100%);
+  background: var(--tg-bg);
 `;
 
 export const Header = styled.div`
@@ -71,7 +71,7 @@ export const HeroCover = styled.div<{ $url?: string | null }>`
 `;
 
 export const InfoCard = styled.div`
-  background: #141b2f;
+  background: var(--tg-surface);
   border-radius: 20px;
   padding: 16px;
   display: grid;
@@ -130,7 +130,7 @@ export const Progress = styled.div`
 `;
 
 export const AboutCard = styled.div`
-  background: #141b2f;
+  background: var(--tg-surface);
   border-radius: 20px;
   padding: 16px;
   display: grid;
@@ -203,7 +203,7 @@ export const Button = styled.button<{ $primary?: boolean }>`
 `;
 
 export const Card = styled.div`
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--tg-surface);
   border-radius: 16px;
   padding: 14px;
   color: var(--tg-text-secondary);
@@ -277,7 +277,7 @@ export const EditModalBackdrop = styled.div`
 export const EditModalCard = styled.div`
   width: 100%;
   max-width: 520px;
-  background: #141b2f;
+  background: var(--tg-surface);
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 16px;

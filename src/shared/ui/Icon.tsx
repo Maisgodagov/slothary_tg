@@ -27,6 +27,7 @@ import {
   Flame,
   History,
   RotateCcw,
+  Type,
 } from "lucide-react";
 
 type IconName =
@@ -63,7 +64,8 @@ type IconName =
   | "replay"
   | "trophy"
   | "translate"
-  | "bookmark";
+  | "bookmark"
+  | "font";
 
 const ICON_MAP: Record<
   IconName,
@@ -109,6 +111,7 @@ const ICON_MAP: Record<
   trophy: Trophy,
   translate: Languages,
   bookmark: Bookmark,
+  font: Type,
 };
 
 interface IconProps {
