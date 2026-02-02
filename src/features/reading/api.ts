@@ -30,6 +30,7 @@ export const readingApi = {
       coverUrl?: string | null;
       fileUrl: string;
       language?: string;
+      cefrLevel?: string | null;
       wordCount?: number;
       isPublished?: boolean;
     },
@@ -45,12 +46,16 @@ export const readingApi = {
   uploadBook(
     payload: {
       file: File;
+      cefrLevel?: string | null;
     },
     userId?: string | null,
     role?: string | null
   ) {
     const form = new FormData();
     form.append("file", payload.file);
+    if (payload.cefrLevel) {
+      form.append("cefrLevel", payload.cefrLevel);
+    }
     return apiFetch<ReadingBook>("reading/books/upload", {
       method: "POST",
       headers: headersWithUserRole(userId, role),
@@ -59,7 +64,12 @@ export const readingApi = {
   },
   updateBook(
     bookId: string,
-    payload: { title?: string; author?: string | null; description?: string | null },
+    payload: {
+      title?: string;
+      author?: string | null;
+      description?: string | null;
+      cefrLevel?: string | null;
+    },
     userId?: string | null,
     role?: string | null
   ) {

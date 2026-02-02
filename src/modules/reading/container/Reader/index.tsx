@@ -1,15 +1,32 @@
-﻿import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+﻿import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useParams } from "react-router-dom";
+import { initFb2File } from "@lingo-reader/fb2-parser";
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 import { selectAuth } from "../../../../features/auth/slice";
 import { dictionaryApi } from "../../../../features/dictionary/api";
-import { addWord, selectDictionary } from "../../../../features/dictionary/slice";
-import { muellerApi, type MuellerEntry } from "../../../../features/mueller/api";
+import {
+  addWord,
+  selectDictionary,
+} from "../../../../features/dictionary/slice";
+import {
+  muellerApi,
+  type MuellerEntry,
+} from "../../../../features/mueller/api";
 import { readingApi } from "../../../../features/reading/api";
 import type { ReadingBook } from "../../../../features/reading/types";
 import { resolveUserId } from "../../../../shared/lib/userId";
 import { WordCard } from "../../../../features/dictionary/components/WordCard";
-import { videoDictionaryApi, type PhraseSnippet } from "../../../../features/video-dictionary/api";
+import {
+  videoDictionaryApi,
+  type PhraseSnippet,
+} from "../../../../features/video-dictionary/api";
 import { SearchSnippetsCarousel } from "../../../dictionary/components/SearchSnippetsCarousel";
 import { PageShell } from "../../../../shared/ui/PageShell";
 import * as S from "./styles";
@@ -22,18 +39,23 @@ export function ReaderContainer() {
   const auth = useAppSelector(selectAuth);
   const dictionary = useAppSelector(selectDictionary);
   const dispatch = useAppDispatch();
-  const userId = useMemo(() => resolveUserId(auth.profile?.id), [auth.profile?.id]);
+  const userId = useMemo(
+    () => resolveUserId(auth.profile?.id),
+    [auth.profile?.id],
+  );
   const [book, setBook] = useState<ReadingBook | null>(null);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fontSize, setFontSize] = useState(18);
-  const [progress, setProgress] = useState<{ position: number; progress: number } | null>(
-    null
-  );
+  const [progress, setProgress] = useState<{
+    position: number;
+    progress: number;
+  } | null>(null);
   const [pages, setPages] = useState<string[][]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [fontOpen, setFontOpen] = useState(false);
+  const [layoutTick, setLayoutTick] = useState(0);
   const [lookup, setLookup] = useState<{
     word: string;
     status: "idle" | "loading" | "ready" | "error";
@@ -55,6 +77,7 @@ export function ReaderContainer() {
     placement: "top" | "bottom";
   } | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const footerRef = useRef<HTMLDivElement | null>(null);
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const firstCardRef = useRef<HTMLDivElement | null>(null);
@@ -68,6 +91,38 @@ export function ReaderContainer() {
     const stamp = Date.now();
     return url.includes("?") ? `${url}&v=${stamp}` : `${url}?v=${stamp}`;
   }, []);
+
+  const normalizeText = useCallback((value: string): string => {
+    return value
+      .replace(/\u00a0/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }, []);
+
+  const extractParagraphsFromHtml = useCallback(
+    (html: string): string[] => {
+      const normalized = html.replace(/<br\s*\/?>(\s*)/gi, "\n");
+      const doc = new DOMParser().parseFromString(normalized, "text/html");
+      const paragraphs: string[] = [];
+
+      doc.querySelectorAll("p").forEach((node) => {
+        const text = normalizeText(node.textContent ?? "");
+        if (text.length > 0) paragraphs.push(text);
+      });
+
+      if (paragraphs.length > 0) return paragraphs;
+
+      const bodyText = normalizeText(doc.body?.textContent ?? "");
+      if (!bodyText) return [];
+
+      return bodyText
+        .replace(/\r/g, "")
+        .split(/\n{2,}/)
+        .map((chunk) => normalizeText(chunk))
+        .filter(Boolean);
+    },
+    [normalizeText],
+  );
 
   const fetchBook = useCallback(async () => {
     if (!id) return;
@@ -83,33 +138,40 @@ export function ReaderContainer() {
       setBook(bookData);
       setFontSize(pref.readerFontSize ?? 18);
       if (progressData) {
-        setProgress({ position: progressData.position, progress: progressData.progress });
+        setProgress({
+          position: progressData.position,
+          progress: progressData.progress,
+        });
       }
       if (bookData.fileUrl) {
-        if (bookData.fileUrl.endsWith(".json")) {
-          const manifest = await fetch(withCacheBust(bookData.fileUrl)).then((res) =>
-            res.json(),
+        if (bookData.fileUrl.endsWith(".fb2")) {
+          const response = await fetch(withCacheBust(bookData.fileUrl));
+          const buffer = await response.arrayBuffer();
+          const blob = new Blob([buffer], { type: "application/xml" });
+          const file =
+            typeof File === "function"
+              ? new File([blob], "book.fb2", { type: "application/xml" })
+              : blob;
+          const fb2 = await initFb2File(file as any);
+          const spine = fb2.getSpine();
+          const toc = fb2.getToc();
+          const tocMap = new Map(
+            toc.map((item) => [item.href.replace(/^fb2:/, ""), item.label])
           );
-          if (manifest?.chapters?.length) {
-            const chapterFiles = manifest.chapters.map((chapter: any) => chapter.file);
-            const base = bookData.fileUrl.replace("/book.json", "");
-            const chapters: any[] = [];
-            for (const file of chapterFiles) {
-              const url = withCacheBust(`${base}/${file.replace(/^\/+/, "")}`);
-              const chapter = await fetch(url).then((res) => res.json());
-              chapters.push(chapter);
-            }
-            const merged = chapters.flatMap((chapter: any, index: number) => {
-              const title = chapter?.title ? [`${chapter.title}`] : [];
-              const paragraphs = Array.isArray(chapter?.paragraphs) ? chapter.paragraphs : [];
-              const breakMarker = index < chapters.length - 1 ? [CHAPTER_BREAK] : [];
-              return [...title, ...paragraphs, "", ...breakMarker];
-            });
-            setText(merged.join("\n\n"));
-          } else if (Array.isArray(manifest?.paragraphs)) {
-            setText(manifest.paragraphs.join("\n\n"));
-          } else {
-            setText("");
+          const merged: string[] = [];
+          for (let i = 0; i < spine.length; i += 1) {
+            const entry = spine[i];
+            const chapter = await fb2.loadChapter(entry.id);
+            const titleLabel = tocMap.get(entry.id);
+            const title = titleLabel ? [titleLabel] : [];
+            const paragraphs = extractParagraphsFromHtml(chapter?.html ?? "");
+            const breakMarker =
+              i < spine.length - 1 ? ["", CHAPTER_BREAK] : [""];
+            merged.push(...title, ...paragraphs, ...breakMarker);
+          }
+          setText(merged.join("\n\n"));
+          if (typeof fb2.destroy === "function") {
+            fb2.destroy();
           }
         } else {
           const response = await fetch(withCacheBust(bookData.fileUrl));
@@ -129,6 +191,37 @@ export function ReaderContainer() {
   useEffect(() => {
     fetchBook();
   }, [fetchBook]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (document?.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!cancelled) setLayoutTick((prev) => prev + 1);
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const observed: Element[] = [];
+    const observer = new ResizeObserver(() => {
+      setLayoutTick((prev) => prev + 1);
+    });
+    if (contentRef.current) {
+      observer.observe(contentRef.current);
+      observed.push(contentRef.current);
+    }
+    if (footerRef.current) {
+      observer.observe(footerRef.current);
+      observed.push(footerRef.current);
+    }
+    return () => {
+      observed.forEach((node) => observer.unobserve(node));
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (!popover) return;
@@ -153,7 +246,9 @@ export function ReaderContainer() {
   useEffect(() => {
     if (!popover) return;
     if (!examplesOpen) return;
-    setPopover((prev) => (prev ? { ...prev, width: EXAMPLE_POPOVER_WIDTH } : prev));
+    setPopover((prev) =>
+      prev ? { ...prev, width: EXAMPLE_POPOVER_WIDTH } : prev,
+    );
   }, [examplesOpen, popover]);
 
   useEffect(() => {
@@ -185,8 +280,23 @@ export function ReaderContainer() {
       return;
     }
 
-    const maxHeight = container.clientHeight;
-    const width = container.clientWidth;
+    const styles = window.getComputedStyle(container);
+    const padTop = parseFloat(styles.paddingTop || "0");
+    const padBottom = parseFloat(styles.paddingBottom || "0");
+    const padLeft = parseFloat(styles.paddingLeft || "0");
+    const padRight = parseFloat(styles.paddingRight || "0");
+    const footerHeight = footerRef.current?.getBoundingClientRect().height ?? 0;
+    const safetyPadding = 6;
+    const maxHeight = Math.max(
+      0,
+      container.clientHeight -
+        padTop -
+        padBottom -
+        footerHeight -
+        safetyPadding -
+        62,
+    );
+    const width = Math.max(0, container.clientWidth - padLeft - padRight);
     const measure = document.createElement("div");
     measure.style.position = "fixed";
     measure.style.visibility = "hidden";
@@ -243,9 +353,11 @@ export function ReaderContainer() {
       setCurrentPage(initialIndex);
       initialPageRef.current = true;
     } else {
-      setCurrentPage((prev) => Math.min(prev, Math.max(nextPages.length - 1, 0)));
+      setCurrentPage((prev) =>
+        Math.min(prev, Math.max(nextPages.length - 1, 0)),
+      );
     }
-  }, [englishParagraphs, fontSize, progress?.progress]);
+  }, [englishParagraphs, fontSize, progress?.progress, layoutTick]);
 
   const updateProgress = useCallback(
     (position: number, ratio: number) => {
@@ -260,7 +372,7 @@ export function ReaderContainer() {
           .catch(() => null);
       }, 700);
     },
-    [id, userId]
+    [id, userId],
   );
 
   const goToPage = useCallback(
@@ -309,7 +421,9 @@ export function ReaderContainer() {
       window.clearTimeout(fontSaveTimeoutRef.current);
     }
     fontSaveTimeoutRef.current = window.setTimeout(() => {
-      readingApi.updatePreferences(userId, { readerFontSize: next }).catch(() => null);
+      readingApi
+        .updatePreferences(userId, { readerFontSize: next })
+        .catch(() => null);
     }, 500);
   };
 
@@ -323,12 +437,15 @@ export function ReaderContainer() {
     const centeredLeft = rect.left + rect.width / 2;
     const clampedLeft = Math.min(
       viewportWidth - margin - popoverWidth / 2,
-      Math.max(margin + popoverWidth / 2, centeredLeft)
+      Math.max(margin + popoverWidth / 2, centeredLeft),
     );
     const estimatedHeight = 220;
     let placement: "top" | "bottom" = "top";
     if (rect.top < estimatedHeight + margin) placement = "bottom";
-    if (placement === "bottom" && rect.bottom + estimatedHeight + margin > viewportHeight) {
+    if (
+      placement === "bottom" &&
+      rect.bottom + estimatedHeight + margin > viewportHeight
+    ) {
       placement = "top";
     }
     const top = placement === "top" ? rect.top - 8 : rect.bottom + 8;
@@ -381,11 +498,12 @@ export function ReaderContainer() {
         });
       }
     },
-    [userId]
+    [userId],
   );
 
   useEffect(() => {
-    if (!examplesOpen || !sliderRef.current || snippetState.items.length === 0) return;
+    if (!examplesOpen || !sliderRef.current || snippetState.items.length === 0)
+      return;
     const node = sliderRef.current;
     const handleScroll = () => {
       if (!node) return;
@@ -422,7 +540,9 @@ export function ReaderContainer() {
               key={`${idx}-${index}`}
               data-reading-word
               onClick={(event) => {
-                const rect = (event.target as HTMLElement).getBoundingClientRect();
+                const rect = (
+                  event.target as HTMLElement
+                ).getBoundingClientRect();
                 handleWordClick(part, rect);
               }}
             >
@@ -456,12 +576,13 @@ export function ReaderContainer() {
         <S.ReaderHeader>
           <div />
           <S.HeaderTitle>{book?.title ?? "THE GREAT GATSBY"}</S.HeaderTitle>
-          <S.FontButton data-font-toggle onClick={() => setFontOpen((prev) => !prev)}>
+          <S.FontButton
+            data-font-toggle
+            onClick={() => setFontOpen((prev) => !prev)}
+          >
             <span>Tt+</span>
           </S.FontButton>
         </S.ReaderHeader>
-
-
 
         <S.ReaderBody
           ref={contentRef}
@@ -471,7 +592,7 @@ export function ReaderContainer() {
           {(pages[currentPage] ?? []).map(renderParagraph)}
         </S.ReaderBody>
 
-        <S.ReaderFooter>
+        <S.ReaderFooter ref={footerRef}>
           <S.PageIndicator>
             {currentPage + 1}/{pages.length || 1} · {progressPercent}%
           </S.PageIndicator>
@@ -487,91 +608,103 @@ export function ReaderContainer() {
           >
             {lookup?.status === "loading" && <div>Ищем перевод...</div>}
             {lookup?.status === "error" && <div>{lookup.error}</div>}
-            {lookup?.status === "ready" && lookupEntry && (() => {
-              const translation =
-                lookupEntry.translations?.find((value) => value.trim().length > 0) ?? "";
-              const otherTranslations = (lookupEntry.translations ?? [])
-                .filter((value) => value && value !== translation)
-                .slice(0, 4);
-              const normalizedWord = lookupEntry.word.toLowerCase();
-              const normalizedTranslation = translation.toLowerCase();
-              const existingEntry = dictionary.items.find(
-                (item) =>
-                  item.word.toLowerCase() === normalizedWord &&
-                  item.translation.toLowerCase() === normalizedTranslation
-              );
-              const isInDictionary = Boolean(existingEntry);
-              const dictionaryActionLabel = isInDictionary ? "в словаре" : "+ в словарь";
+            {lookup?.status === "ready" &&
+              lookupEntry &&
+              (() => {
+                const translation =
+                  lookupEntry.translations?.find(
+                    (value) => value.trim().length > 0,
+                  ) ?? "";
+                const otherTranslations = (lookupEntry.translations ?? [])
+                  .filter((value) => value && value !== translation)
+                  .slice(0, 4);
+                const normalizedWord = lookupEntry.word.toLowerCase();
+                const normalizedTranslation = translation.toLowerCase();
+                const existingEntry = dictionary.items.find(
+                  (item) =>
+                    item.word.toLowerCase() === normalizedWord &&
+                    item.translation.toLowerCase() === normalizedTranslation,
+                );
+                const isInDictionary = Boolean(existingEntry);
+                const dictionaryActionLabel = isInDictionary
+                  ? "в словаре"
+                  : "+ в словарь";
 
-              return (
-                <WordCard
-                  word={lookupEntry.word}
-                  translation={translation}
-                  otherTranslationsRu={otherTranslations}
-                  showExamplesButton={true}
-                  examplesOpen={examplesOpen}
-                  onToggleExamples={() => {
-                    const next = !examplesOpen;
-                    setExamplesOpen(next);
-                    if (next && lookupEntry.word && snippetState.status !== "ready") {
-                      loadExamples(lookupEntry.word);
-                      sliderRef.current?.style.setProperty(
-                        "--card-width",
-                        `${EXAMPLE_CARD_WIDTH}px`
+                return (
+                  <WordCard
+                    word={lookupEntry.word}
+                    translation={translation}
+                    otherTranslationsRu={otherTranslations}
+                    showExamplesButton={true}
+                    examplesOpen={examplesOpen}
+                    onToggleExamples={() => {
+                      const next = !examplesOpen;
+                      setExamplesOpen(next);
+                      if (
+                        next &&
+                        lookupEntry.word &&
+                        snippetState.status !== "ready"
+                      ) {
+                        loadExamples(lookupEntry.word);
+                        sliderRef.current?.style.setProperty(
+                          "--card-width",
+                          `${EXAMPLE_CARD_WIDTH}px`,
+                        );
+                      }
+                    }}
+                    dictionaryActionLabel={dictionaryActionLabel}
+                    dictionaryActionMode={isInDictionary ? "tag" : "button"}
+                    dictionaryActionDisabled={isInDictionary}
+                    onDictionaryAction={() => {
+                      if (!lookupEntry?.word || !translation) return;
+                      if (isInDictionary) return;
+                      dispatch(
+                        addWord({
+                          query: lookupEntry.word,
+                          lang: "en",
+                          word: lookupEntry.word,
+                          translation,
+                        }),
                       );
-                    }
-                  }}
-                  dictionaryActionLabel={dictionaryActionLabel}
-                  dictionaryActionMode={isInDictionary ? "tag" : "button"}
-                  dictionaryActionDisabled={isInDictionary}
-                  onDictionaryAction={() => {
-                    if (!lookupEntry?.word || !translation) return;
-                    if (isInDictionary) return;
-                    dispatch(
-                      addWord({
-                        query: lookupEntry.word,
-                        lang: "en",
-                        word: lookupEntry.word,
-                        translation,
-                      })
-                    );
-                  }}
-                  variant="compact"
-                  size="subtitle"
-                  reading
-                >
-                  {examplesOpen && snippetState.status === "ready" && snippetState.items.length > 0 && (
-                    <SearchSnippetsCarousel
-                      items={snippetState.items}
-                      highlight={lookupEntry.word}
-                      activeIndex={activeSnippetIndex}
-                      onOpenFullVideo={(snippet) => {
-                        window.open(snippet.videoUrl, "_blank");
-                      }}
-                      total={snippetState.total}
-                      sliderRef={sliderRef}
-                      cardSize="compact"
-                      onCardRef={(index, node) => {
-                        cardRefs.current[index] = node;
-                      }}
-                      onFirstCardRef={(node) => {
-                        firstCardRef.current = node;
-                      }}
-                    />
-                  )}
-                  {examplesOpen && snippetState.status === "loading" && (
-                    <div style={{ color: "var(--tg-subtle)", fontSize: 12 }}>
-                      Загружаем примеры...
-                    </div>
-                  )}
-                  {examplesOpen && snippetState.status === "error" && (
-                    <div style={{ color: "var(--tg-danger)", fontSize: 12 }}>
-                      {snippetState.error ?? "Не удалось загрузить примеры."}
-                    </div>
-                  )}
-                </WordCard>
-              );
-            })()}
+                    }}
+                    variant="compact"
+                    size="subtitle"
+                    reading
+                  >
+                    {examplesOpen &&
+                      snippetState.status === "ready" &&
+                      snippetState.items.length > 0 && (
+                        <SearchSnippetsCarousel
+                          items={snippetState.items}
+                          highlight={lookupEntry.word}
+                          activeIndex={activeSnippetIndex}
+                          onOpenFullVideo={(snippet) => {
+                            window.open(snippet.videoUrl, "_blank");
+                          }}
+                          total={snippetState.total}
+                          sliderRef={sliderRef}
+                          cardSize="compact"
+                          onCardRef={(index, node) => {
+                            cardRefs.current[index] = node;
+                          }}
+                          onFirstCardRef={(node) => {
+                            firstCardRef.current = node;
+                          }}
+                        />
+                      )}
+                    {examplesOpen && snippetState.status === "loading" && (
+                      <div style={{ color: "var(--tg-subtle)", fontSize: 12 }}>
+                        Загружаем примеры...
+                      </div>
+                    )}
+                    {examplesOpen && snippetState.status === "error" && (
+                      <div style={{ color: "var(--tg-danger)", fontSize: 12 }}>
+                        {snippetState.error ?? "Не удалось загрузить примеры."}
+                      </div>
+                    )}
+                  </WordCard>
+                );
+              })()}
           </S.Popover>
         )}
 
@@ -591,8 +724,3 @@ export function ReaderContainer() {
     </PageShell>
   );
 }
-
-
-
-
-

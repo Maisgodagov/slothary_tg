@@ -33,6 +33,7 @@ export function BookDetailsContainer() {
   const [editTitle, setEditTitle] = useState("");
   const [editAuthor, setEditAuthor] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editCefrLevel, setEditCefrLevel] = useState("");
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -47,6 +48,7 @@ export function BookDetailsContainer() {
         setEditTitle(data?.title ?? "");
         setEditAuthor(data?.author ?? "");
         setEditDescription(data?.description ?? "");
+        setEditCefrLevel(data?.cefrLevel ?? "");
       } catch (err: any) {
         setError(err?.message ?? "Не удалось загрузить книгу.");
         setBook(null);
@@ -86,6 +88,7 @@ export function BookDetailsContainer() {
           title: editTitle.trim() || undefined,
           author: editAuthor.trim() ? editAuthor.trim() : null,
           description: editDescription.trim() ? editDescription.trim() : null,
+          cefrLevel: editCefrLevel.trim() ? editCefrLevel.trim() : null,
         },
         userId,
         auth.profile?.role ?? null,
@@ -150,6 +153,7 @@ export function BookDetailsContainer() {
                   ) : null}
                 </S.StatsRow>
               )}
+              {book.cefrLevel ? <S.Progress>Уровень: {book.cefrLevel}</S.Progress> : null}
               {book.progress ? <S.Progress>{formatProgress(book.progress)}</S.Progress> : null}
             </S.InfoCard>
 
@@ -195,6 +199,21 @@ export function BookDetailsContainer() {
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                     />
+                  </S.AdminLabel>
+                  <S.AdminLabel>
+                    Уровень CEFR
+                    <S.AdminSelect
+                      value={editCefrLevel}
+                      onChange={(e) => setEditCefrLevel(e.target.value)}
+                    >
+                      <option value="">Не указан</option>
+                      <option value="A1">A1</option>
+                      <option value="A2">A2</option>
+                      <option value="B1">B1</option>
+                      <option value="B2">B2</option>
+                      <option value="C1">C1</option>
+                      <option value="C2">C2</option>
+                    </S.AdminSelect>
                   </S.AdminLabel>
                   <S.AdminActions>
                     <S.Button onClick={() => setEditOpen(false)} disabled={saving}>

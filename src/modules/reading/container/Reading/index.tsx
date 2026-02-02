@@ -84,7 +84,7 @@ export function ReadingContainer() {
     navigate(`/reading/${bookId}`);
   };
 
-  const handleUpload = async (payload: { file: File }) => {
+  const handleUpload = async (payload: { file: File; cefrLevel?: string | null }) => {
     await readingApi.uploadBook(payload, userId, auth.profile?.role ?? null);
     await loadBooks();
   };

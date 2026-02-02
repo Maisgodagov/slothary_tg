@@ -5,6 +5,7 @@ export const ReaderShell = styled.div`
   flex-direction: column;
   height: 100%;
   background: var(--tg-bg);
+  min-height: 0;
 `;
 
 export const ReaderHeader = styled.div`
@@ -80,6 +81,7 @@ export const ReaderBody = styled.div`
   flex: 1;
   overflow: hidden;
   padding: 12px 18px 44px;
+  min-height: 0;
 `;
 
 export const Paragraph = styled.p`

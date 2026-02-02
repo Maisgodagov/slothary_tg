@@ -4,6 +4,7 @@ import * as S from "./styles";
 
 type UploadPayload = {
   file: File;
+  cefrLevel?: string | null;
 };
 
 interface UploadModalProps {
@@ -14,6 +15,7 @@ interface UploadModalProps {
 
 export function UploadModal({ open, onClose, onSubmit }: UploadModalProps) {
   const [files, setFiles] = useState<File[]>([]);
+  const [cefrLevel, setCefrLevel] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [uploaded, setUploaded] = useState(0);
 
@@ -25,7 +27,7 @@ export function UploadModal({ open, onClose, onSubmit }: UploadModalProps) {
     setUploaded(0);
     try {
       for (let i = 0; i < files.length; i += 1) {
-        await onSubmit({ file: files[i] });
+        await onSubmit({ file: files[i], cefrLevel: cefrLevel || null });
         setUploaded((prev) => prev + 1);
       }
     } finally {
@@ -33,6 +35,7 @@ export function UploadModal({ open, onClose, onSubmit }: UploadModalProps) {
       onClose();
       setFiles([]);
       setUploaded(0);
+      setCefrLevel("");
     }
   };
 
@@ -41,13 +44,25 @@ export function UploadModal({ open, onClose, onSubmit }: UploadModalProps) {
       <S.Card onClick={(event) => event.stopPropagation()}>
         <S.Title>Добавить книгу</S.Title>
         <S.Label>
-          EPUB файл
+          FB2 файл
           <S.Input
             type="file"
-            accept=".epub"
+            accept=".fb2"
             multiple
             onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
           />
+        </S.Label>
+        <S.Label>
+          Уровень CEFR
+          <S.Select value={cefrLevel} onChange={(e) => setCefrLevel(e.target.value)}>
+            <option value="">Не указан</option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+          </S.Select>
         </S.Label>
         {loading && (
           <S.Hint>

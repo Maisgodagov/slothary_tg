@@ -237,6 +237,15 @@ export const AdminTextarea = styled.textarea`
   resize: vertical;
 `;
 
+export const AdminSelect = styled.select`
+  border-radius: 12px;
+  border: 1px solid var(--tg-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--tg-text);
+  padding: 10px 12px;
+  font-size: 14px;
+`;
+
 export const AdminActions = styled.div`
   display: flex;
   gap: 10px;

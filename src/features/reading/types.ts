@@ -6,6 +6,7 @@ export interface ReadingBook {
   coverUrl?: string | null;
   fileUrl: string;
   language: string;
+  cefrLevel?: string | null;
   wordCount?: number | null;
   isPublished?: boolean;
   createdAt?: string;

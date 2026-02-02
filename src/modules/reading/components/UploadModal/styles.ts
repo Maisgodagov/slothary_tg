@@ -50,6 +50,15 @@ export const Input = styled.input`
   font-size: 14px;
 `;
 
+export const Select = styled.select`
+  border-radius: 12px;
+  border: 1px solid var(--tg-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--tg-text);
+  padding: 10px 12px;
+  font-size: 14px;
+`;
+
 export const Textarea = styled.textarea`
   border-radius: 12px;
   border: 1px solid var(--tg-border);
