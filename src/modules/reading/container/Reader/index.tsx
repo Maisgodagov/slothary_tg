@@ -79,6 +79,7 @@ export function ReaderContainer() {
     width: number;
     placement: "top" | "bottom";
   } | null>(null);
+  const shellRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const footerRef = useRef<HTMLDivElement | null>(null);
   const measureRef = useRef<HTMLDivElement | null>(null);
@@ -289,7 +290,8 @@ export function ReaderContainer() {
 
   useLayoutEffect(() => {
     const container = contentRef.current;
-    if (!container || englishParagraphs.length === 0) {
+    const shell = shellRef.current;
+    if (!container || !shell || englishParagraphs.length === 0) {
       setPages([]);
       setCurrentPage(0);
       return;
@@ -304,7 +306,7 @@ export function ReaderContainer() {
     const safetyPadding = 62;
     const maxHeight = Math.max(
       0,
-      container.clientHeight - padTop - padBottom - footerHeight - safetyPadding,
+      shell.clientHeight - padTop - padBottom - footerHeight - safetyPadding,
     );
     const width = Math.max(0, container.clientWidth - padLeft - padRight);
     const paragraphSpacing = 18;
@@ -587,7 +589,7 @@ export function ReaderContainer() {
 
   return (
     <PageShell scroll={false} pullToRefresh={false}>
-      <S.ReaderShell>
+      <S.ReaderShell ref={shellRef}>
         <S.ReaderHeader>
           <S.HeaderTitle>{book?.title ?? "THE GREAT GATSBY"}</S.HeaderTitle>
           <S.HeaderActions>
