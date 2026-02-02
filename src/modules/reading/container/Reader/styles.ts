@@ -33,7 +33,7 @@ export const BackButton = styled.button`
 
 export const HeaderTitle = styled.div`
   text-align: left;
-  font-size: 15px;
+  font-size: 17px;
   letter-spacing: 1px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.7);
@@ -164,11 +164,14 @@ export const Popover = styled.div<{
   transform: ${({ $placement }) =>
     $placement === "top" ? "translate(-50%, -100%)" : "translate(-50%, 0)"};
   width: ${({ $width }) => `${$width}px`};
+  max-width: 280px;
   background: var(--tg-surface);
   border: 1px solid var(--tg-border);
   border-radius: 16px;
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
   z-index: 1400;
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
 `;
 
 export const PopoverActions = styled.div`

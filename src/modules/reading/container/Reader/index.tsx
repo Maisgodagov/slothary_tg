@@ -309,12 +309,7 @@ export function ReaderContainer() {
     const safetyPadding = 62;
     const maxHeight = Math.max(
       0,
-      shell.clientHeight -
-        padTop -
-        padBottom -
-        footerHeight -
-        safetyPadding -
-        20,
+      shell.clientHeight - padTop - padBottom - footerHeight - safetyPadding,
     );
     const width = Math.max(0, container.clientWidth - padLeft - padRight);
     const paragraphSpacing = 18;
@@ -463,7 +458,7 @@ export function ReaderContainer() {
       viewportWidth - margin - popoverWidth / 2,
       Math.max(margin + popoverWidth / 2, centeredLeft),
     );
-    const estimatedHeight = 220;
+    const estimatedHeight = Math.min(520, Math.round(viewportHeight * 0.6));
     let placement: "top" | "bottom" = "top";
     if (rect.top < estimatedHeight + margin) placement = "bottom";
     if (
@@ -472,8 +467,19 @@ export function ReaderContainer() {
     ) {
       placement = "top";
     }
-    const top = placement === "top" ? rect.top - 8 : rect.bottom + 8;
-    setPopover({ top, left: clampedLeft, width: popoverWidth, placement });
+    const baseTop = placement === "top" ? rect.top - 8 : rect.bottom + 8;
+    const minTop = margin;
+    const maxTop =
+      placement === "top"
+        ? viewportHeight - margin
+        : viewportHeight - margin - estimatedHeight;
+    const clampedTop = Math.min(Math.max(baseTop, minTop), maxTop);
+    setPopover({
+      top: clampedTop,
+      left: clampedLeft,
+      width: popoverWidth,
+      placement,
+    });
     setLookup({ word: normalized, status: "loading" });
     try {
       const entries = await muellerApi.lookup({ word: normalized, lang: "en" });
@@ -504,13 +510,13 @@ export function ReaderContainer() {
       try {
         const response = await videoDictionaryApi.searchPhrase({
           phrase,
-          limit: 12,
+          limit: 10,
           userId,
         });
         setSnippetState({
           status: "ready",
           items: response.items,
-          total: response.total,
+          total: Math.min(response.total, 10),
         });
         setActiveSnippetIndex(0);
       } catch (err: any) {
