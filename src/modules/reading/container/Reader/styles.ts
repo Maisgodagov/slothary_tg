@@ -89,7 +89,8 @@ export const ProgressText = styled.div`
 export const ReaderBody = styled.div`
   flex: 1;
   overflow: hidden;
-  padding: 12px 18px 44px;
+  padding: 12px 18px;
+  margin-bottom: 60px;
   min-height: 0;
 `;
 
@@ -151,7 +152,12 @@ export const Range = styled.input`
   width: 100%;
 `;
 
-export const Popover = styled.div<{ $top: number; $left: number; $width: number; $placement: "top" | "bottom" }>`
+export const Popover = styled.div<{
+  $top: number;
+  $left: number;
+  $width: number;
+  $placement: "top" | "bottom";
+}>`
   position: fixed;
   left: ${({ $left }) => `${$left}px`};
   top: ${({ $top }) => `${$top}px`};
@@ -194,4 +200,3 @@ export const Error = styled.div`
   text-align: center;
   color: var(--tg-text-secondary);
 `;
-

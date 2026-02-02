@@ -34,6 +34,8 @@ import * as S from "./styles";
 
 export function ReaderContainer() {
   const CHAPTER_BREAK = "__CHAPTER_BREAK__";
+  const BOOK_FOOTER =
+    "Hope you have enjoyed the reading!\n\nCome back to http://english-e-books.net/ to find more fascinating and exciting stories!";
   const EXAMPLE_CARD_WIDTH = 260;
   const EXAMPLE_POPOVER_WIDTH = 320;
   const { id } = useParams();
@@ -125,6 +127,16 @@ export function ReaderContainer() {
     [normalizeText],
   );
 
+  const stripBookFooter = useCallback(
+    (value: string): string => {
+      const trimmed = value.replace(/\s+$/g, "");
+      if (!trimmed.endsWith(BOOK_FOOTER)) return value;
+      const withoutFooter = trimmed.slice(0, trimmed.length - BOOK_FOOTER.length);
+      return withoutFooter.replace(/\s+$/g, "");
+    },
+    [BOOK_FOOTER],
+  );
+
   const fetchBook = useCallback(async () => {
     if (!id) return;
     initialPageRef.current = false;
@@ -171,14 +183,14 @@ export function ReaderContainer() {
             }
             merged.push(...title, ...paragraphs, "");
           }
-          setText(merged.join("\n\n"));
+          setText(stripBookFooter(merged.join("\n\n")));
           if (typeof fb2.destroy === "function") {
             fb2.destroy();
           }
         } else {
           const response = await fetch(withCacheBust(bookData.fileUrl));
           const fileText = await response.text();
-          setText(fileText);
+          setText(stripBookFooter(fileText));
         }
       }
     } catch (err: any) {
@@ -573,7 +585,7 @@ export function ReaderContainer() {
     );
 
   return (
-    <PageShell withNav={false} scroll={false} pullToRefresh={false}>
+    <PageShell scroll={false} pullToRefresh={false}>
       <S.ReaderShell>
         <S.ReaderHeader>
           <S.HeaderTitle>{book?.title ?? "THE GREAT GATSBY"}</S.HeaderTitle>
