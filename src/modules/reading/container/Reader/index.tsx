@@ -81,6 +81,7 @@ export function ReaderContainer() {
   } | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const footerRef = useRef<HTMLDivElement | null>(null);
+  const measureRef = useRef<HTMLDivElement | null>(null);
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const firstCardRef = useRef<HTMLDivElement | null>(null);
@@ -300,28 +301,34 @@ export function ReaderContainer() {
     const padLeft = parseFloat(styles.paddingLeft || "0");
     const padRight = parseFloat(styles.paddingRight || "0");
     const footerHeight = footerRef.current?.getBoundingClientRect().height ?? 0;
-    const safetyPadding = 6;
+    const safetyPadding = 62;
     const maxHeight = Math.max(
       0,
-      container.clientHeight -
-        padTop -
-        padBottom -
-        footerHeight -
-        safetyPadding -
-        62,
+      container.clientHeight - padTop - padBottom - footerHeight - safetyPadding,
     );
     const width = Math.max(0, container.clientWidth - padLeft - padRight);
-    const measure = document.createElement("div");
-    measure.style.position = "fixed";
-    measure.style.visibility = "hidden";
-    measure.style.pointerEvents = "none";
-    measure.style.left = "-9999px";
-    measure.style.top = "0";
+    const paragraphSpacing = 18;
+
+    if (!measureRef.current) {
+      const node = document.createElement("div");
+      node.style.position = "fixed";
+      node.style.visibility = "hidden";
+      node.style.pointerEvents = "none";
+      node.style.left = "-9999px";
+      node.style.top = "0";
+      node.style.whiteSpace = "normal";
+      node.style.wordBreak = "normal";
+      node.style.overflowWrap = "break-word";
+      document.body.appendChild(node);
+      measureRef.current = node;
+    }
+
+    const measure = measureRef.current;
     measure.style.width = `${width}px`;
-    measure.style.padding = "0";
     measure.style.fontFamily =
       "Plus Jakarta Sans, SF Pro Display, Roboto, system-ui, -apple-system, sans-serif";
-    document.body.appendChild(measure);
+    measure.style.fontSize = `${fontSize}px`;
+    measure.style.lineHeight = "1.7";
 
     const nextPages: string[][] = [];
     let current: string[] = [];
@@ -334,28 +341,21 @@ export function ReaderContainer() {
         currentHeight = 0;
         continue;
       }
-      const p = document.createElement("p");
-      p.style.margin = "0 0 18px";
-      p.style.lineHeight = "1.7";
-      p.style.fontSize = `${fontSize}px`;
-      p.style.whiteSpace = "normal";
-      p.textContent = paragraph;
-      measure.appendChild(p);
-      const height = p.getBoundingClientRect().height;
-      measure.removeChild(p);
 
-      if (current.length === 0 || currentHeight + height <= maxHeight) {
+      measure.textContent = paragraph;
+      const height = measure.getBoundingClientRect().height;
+      const blockHeight = height + paragraphSpacing;
+
+      if (current.length === 0 || currentHeight + blockHeight <= maxHeight) {
         current.push(paragraph);
-        currentHeight += height;
+        currentHeight += blockHeight;
       } else {
         nextPages.push(current);
         current = [paragraph];
-        currentHeight = height;
+        currentHeight = blockHeight;
       }
     }
     if (current.length > 0) nextPages.push(current);
-
-    document.body.removeChild(measure);
 
     setPages(nextPages);
     if (!initialPageRef.current && nextPages.length > 0) {
@@ -570,6 +570,7 @@ export function ReaderContainer() {
 
   const lookupEntry = lookup?.entry;
   const progressPercent = Math.round((progress?.progress ?? 0) * 100);
+  const handleScroll = useCallback(() => {}, []);
 
   if (loading)
     return (
@@ -597,7 +598,7 @@ export function ReaderContainer() {
               data-font-toggle
               onClick={() => setFontOpen((prev) => !prev)}
             >
-              <Icon name="font" size={18} />
+              <Icon name="case-sensitive" size={18} />
             </S.FontButton>
           </S.HeaderActions>
         </S.ReaderHeader>

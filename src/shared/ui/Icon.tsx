@@ -28,6 +28,7 @@ import {
   History,
   RotateCcw,
   Type,
+  CaseSensitive,
 } from "lucide-react";
 
 type IconName =
@@ -65,7 +66,8 @@ type IconName =
   | "trophy"
   | "translate"
   | "bookmark"
-  | "font";
+  | "font"
+  | "case-sensitive";
 
 const ICON_MAP: Record<
   IconName,
@@ -112,6 +114,7 @@ const ICON_MAP: Record<
   translate: Languages,
   bookmark: Bookmark,
   font: Type,
+  "case-sensitive": CaseSensitive,
 };
 
 interface IconProps {

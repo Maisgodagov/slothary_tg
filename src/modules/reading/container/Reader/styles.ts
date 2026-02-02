@@ -168,7 +168,6 @@ export const Popover = styled.div<{
   border: 1px solid var(--tg-border);
   border-radius: 16px;
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
-  padding: 12px;
   z-index: 1400;
 `;
 
