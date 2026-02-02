@@ -133,7 +133,10 @@ export function ReaderContainer() {
     (value: string): string => {
       const trimmed = value.replace(/\s+$/g, "");
       if (!trimmed.endsWith(BOOK_FOOTER)) return value;
-      const withoutFooter = trimmed.slice(0, trimmed.length - BOOK_FOOTER.length);
+      const withoutFooter = trimmed.slice(
+        0,
+        trimmed.length - BOOK_FOOTER.length,
+      );
       return withoutFooter.replace(/\s+$/g, "");
     },
     [BOOK_FOOTER],
@@ -171,7 +174,7 @@ export function ReaderContainer() {
           const spine = fb2.getSpine();
           const toc = fb2.getToc();
           const tocMap = new Map(
-            toc.map((item) => [item.href.replace(/^fb2:/, ""), item.label])
+            toc.map((item) => [item.href.replace(/^fb2:/, ""), item.label]),
           );
           const merged: string[] = [];
           for (let i = 0; i < spine.length; i += 1) {
@@ -572,7 +575,6 @@ export function ReaderContainer() {
 
   const lookupEntry = lookup?.entry;
   const progressPercent = Math.round((progress?.progress ?? 0) * 100);
-  const handleScroll = useCallback(() => {}, []);
 
   if (loading)
     return (
