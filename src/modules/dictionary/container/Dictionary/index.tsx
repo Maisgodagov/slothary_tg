@@ -90,25 +90,6 @@ const detectLanguage = (value: string) => /[а-яё]/i.test(value);
 const filterPureTranslations = (list: string[]) =>
   list.filter((value) => !/[a-z]/i.test(value));
 
-const SHARE_BASE_URL = 'https://api.slothary.ru/share/word';
-
-const buildShareUrl = (word: string, translation?: string) => {
-  const params = new URLSearchParams();
-  if (translation) params.set('translation', translation);
-  const query = params.toString();
-  return `${SHARE_BASE_URL}/${encodeURIComponent(word)}${query ? `?${query}` : ''}`;
-};
-
-const openTelegramShare = (shareUrl: string, text: string) => {
-  const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
-  const webApp = (window as any).Telegram?.WebApp;
-  if (webApp?.openTelegramLink) {
-    webApp.openTelegramLink(tgUrl);
-    return;
-  }
-  window.open(tgUrl, '_blank', 'noopener,noreferrer');
-};
-
 const sendShareToBot = async (payload: {
   initData: string;
   word: string;
@@ -123,9 +104,17 @@ const sendShareToBot = async (payload: {
   });
 };
 
+const showShareError = (webAppInstance: any, message: string) => {
+  if (webAppInstance?.showAlert) {
+    webAppInstance.showAlert(message);
+    return;
+  }
+  window.alert(message);
+};
+
 export function DictionaryContainer() {
   const auth = useAppSelector(selectAuth);
-  const { initData } = useTelegram();
+  const { initData, webApp } = useTelegram();
   const dictionary = useAppSelector(selectDictionary);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -415,9 +404,13 @@ export function DictionaryContainer() {
   useEffect(() => {
     if (startParamHandledRef.current) return;
     const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
-    if (typeof startParam !== 'string') return;
-    if (!startParam.startsWith('word_')) return;
-    const word = startParam.slice('word_'.length).trim();
+    const urlWord = new URLSearchParams(window.location.search).get('word');
+    let word = '';
+    if (typeof startParam === 'string' && startParam.startsWith('word_')) {
+      word = startParam.slice('word_'.length).trim();
+    } else if (typeof urlWord === 'string' && urlWord.trim()) {
+      word = urlWord.trim();
+    }
     if (!word) return;
     startParamHandledRef.current = true;
     setQuery(word);
@@ -844,9 +837,8 @@ export function DictionaryContainer() {
                 }}
                 shareActionLabel='Поделиться'
                 onShare={async () => {
-                  const shareUrl = buildShareUrl(primaryEnglish, primaryRussian);
                   if (!initData) {
-                    openTelegramShare(shareUrl, `${primaryEnglish} — ${primaryRussian}`);
+                    showShareError(webApp, 'Откройте приложение через Telegram, чтобы поделиться.');
                     return;
                   }
                   try {
@@ -858,8 +850,15 @@ export function DictionaryContainer() {
                       synonyms,
                       videoUrl: items[0]?.videoUrl,
                     });
-                  } catch {
-                    openTelegramShare(shareUrl, `${primaryEnglish} — ${primaryRussian}`);
+                    if (webApp?.showAlert) {
+                      webApp.showAlert('Сообщение отправлено в бот. Перешлите его нужному человеку.');
+                    }
+                  } catch (error: any) {
+                    const message =
+                      typeof error?.message === 'string'
+                        ? `Не удалось отправить: ${error.message}`
+                        : 'Не удалось отправить сообщение.';
+                    showShareError(webApp, message);
                   }
                 }}
               >
