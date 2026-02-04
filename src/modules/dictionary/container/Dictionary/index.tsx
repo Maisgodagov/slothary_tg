@@ -8,6 +8,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 import { useAppDispatch, useAppSelector } from '../../../../app/hooks';
+import { useTelegram } from '../../../../app/providers/TelegramProvider';
 import { selectAuth } from '../../../../features/auth/slice';
 import {
   addWord,
@@ -19,6 +20,7 @@ import { WordCard } from '../../../../features/dictionary/components/WordCard';
 import { Icon } from '../../../../shared/ui/Icon';
 import { Loader } from '../../../../shared/ui/Loader';
 import { PageShell } from '../../../../shared/ui/PageShell';
+import { apiFetch } from '../../../../shared/api/client';
 import { dictionaryModuleApi } from '../../api';
 import type { MuellerEntry, PhraseSnippet, UserDictionaryEntry } from '../../api/types';
 import { DeleteModal } from '../../components/DeleteModal';
@@ -107,8 +109,23 @@ const openTelegramShare = (shareUrl: string, text: string) => {
   window.open(tgUrl, '_blank', 'noopener,noreferrer');
 };
 
+const sendShareToBot = async (payload: {
+  initData: string;
+  word: string;
+  translation?: string;
+  extraTranslations?: string[];
+  synonyms?: string[];
+  videoUrl?: string;
+}) => {
+  return apiFetch('share/word/send', {
+    method: 'POST',
+    body: payload,
+  });
+};
+
 export function DictionaryContainer() {
   const auth = useAppSelector(selectAuth);
+  const { initData } = useTelegram();
   const dictionary = useAppSelector(selectDictionary);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -163,6 +180,7 @@ export function DictionaryContainer() {
   } | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const startParamHandledRef = useRef(false);
 
   const abortRef = useRef<AbortController | null>(null);
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -212,6 +230,18 @@ export function DictionaryContainer() {
       // ignore restore errors
     }
   }, []);
+
+  useEffect(() => {
+    if (startParamHandledRef.current) return;
+    const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
+    if (typeof startParam !== 'string') return;
+    if (!startParam.startsWith('word_')) return;
+    const word = startParam.slice('word_'.length).trim();
+    if (!word) return;
+    startParamHandledRef.current = true;
+    setQuery(word);
+    handleSearch(word);
+  }, [handleSearch]);
 
   useEffect(() => {
     try {
@@ -813,9 +843,24 @@ export function DictionaryContainer() {
                   );
                 }}
                 shareActionLabel='Поделиться'
-                onShare={() => {
+                onShare={async () => {
                   const shareUrl = buildShareUrl(primaryEnglish, primaryRussian);
-                  openTelegramShare(shareUrl, `${primaryEnglish} — ${primaryRussian}`);
+                  if (!initData) {
+                    openTelegramShare(shareUrl, `${primaryEnglish} — ${primaryRussian}`);
+                    return;
+                  }
+                  try {
+                    await sendShareToBot({
+                      initData,
+                      word: primaryEnglish,
+                      translation: primaryRussian,
+                      extraTranslations: otherTranslationsRu,
+                      synonyms,
+                      videoUrl: items[0]?.videoUrl,
+                    });
+                  } catch {
+                    openTelegramShare(shareUrl, `${primaryEnglish} — ${primaryRussian}`);
+                  }
                 }}
               >
                 {showSnippets && (
