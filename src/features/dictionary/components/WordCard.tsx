@@ -23,6 +23,8 @@ type WordCardProps = {
   variant?: "default" | "compact";
   summary?: boolean;
   reading?: boolean;
+  shareActionLabel?: string;
+  onShare?: () => void;
   children?: ReactNode;
 };
 
@@ -47,6 +49,8 @@ export function WordCard({
   variant = "default",
   summary = false,
   reading = false,
+  shareActionLabel,
+  onShare,
   children,
 }: WordCardProps) {
   const showOtherTranslations = Boolean(
@@ -64,6 +68,7 @@ export function WordCard({
     showDictionaryAction && dictionaryActionPlacement === "inline";
   const showFooterAction =
     showDictionaryAction && dictionaryActionPlacement !== "inline";
+  const showShareAction = Boolean(shareActionLabel && onShare);
   const displayWord = word.toLowerCase();
   const effectiveLayout = summary ? "tight" : layoutMode;
   const outerGap = effectiveLayout === "tight" ? 5 : isSubtitle ? 8 : isCompact ? 10 : 14;
@@ -221,7 +226,7 @@ export function WordCard({
         )}
       </div>
 
-      {(showExamplesButton || showFooterAction) && !summary && (
+      {(showExamplesButton || showFooterAction || showShareAction) && !summary && (
         <div
           style={{
             display: "flex",
@@ -305,6 +310,27 @@ export function WordCard({
                 {dictionaryActionLabel}
               </button>
             ))}
+          {showShareAction && (
+            <button
+              type="button"
+              onClick={onShare}
+              style={{
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                fontWeight: 700,
+                fontSize: buttonFontSize,
+                borderRadius: 999,
+                padding: isCompact ? "6px 12px" : "8px 14px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                cursor: "pointer",
+              }}
+            >
+              {shareActionLabel}
+            </button>
+          )}
         </div>
       )}
 

@@ -88,6 +88,25 @@ const detectLanguage = (value: string) => /[а-яё]/i.test(value);
 const filterPureTranslations = (list: string[]) =>
   list.filter((value) => !/[a-z]/i.test(value));
 
+const SHARE_BASE_URL = 'https://api.slothary.ru/share/word';
+
+const buildShareUrl = (word: string, translation?: string) => {
+  const params = new URLSearchParams();
+  if (translation) params.set('translation', translation);
+  const query = params.toString();
+  return `${SHARE_BASE_URL}/${encodeURIComponent(word)}${query ? `?${query}` : ''}`;
+};
+
+const openTelegramShare = (shareUrl: string, text: string) => {
+  const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
+  const webApp = (window as any).Telegram?.WebApp;
+  if (webApp?.openTelegramLink) {
+    webApp.openTelegramLink(tgUrl);
+    return;
+  }
+  window.open(tgUrl, '_blank', 'noopener,noreferrer');
+};
+
 export function DictionaryContainer() {
   const auth = useAppSelector(selectAuth);
   const dictionary = useAppSelector(selectDictionary);
@@ -792,6 +811,11 @@ export function DictionaryContainer() {
                       translation: primaryRussian,
                     }),
                   );
+                }}
+                shareActionLabel='Поделиться'
+                onShare={() => {
+                  const shareUrl = buildShareUrl(primaryEnglish, primaryRussian);
+                  openTelegramShare(shareUrl, `${primaryEnglish} — ${primaryRussian}`);
                 }}
               >
                 {showSnippets && (
