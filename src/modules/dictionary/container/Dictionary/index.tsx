@@ -100,6 +100,8 @@ const sendShareToBot = async (payload: {
   startSeconds?: number;
   endSeconds?: number;
   exampleText?: string;
+  exampleIndex?: number;
+  examplesTotal?: number;
 }) => {
   return apiFetch('share/word/send', {
     method: 'POST',
@@ -850,6 +852,8 @@ export function DictionaryContainer() {
                     activeSnippet?.matchedText ||
                     activeSnippet?.translationContextText ||
                     '';
+                  const exampleIndex = activeIndex + 1;
+                  const examplesTotal = total || 0;
                   try {
                     await sendShareToBot({
                       initData,
@@ -861,6 +865,8 @@ export function DictionaryContainer() {
                       startSeconds: activeSnippet?.startSeconds,
                       endSeconds: activeSnippet?.endSeconds,
                       exampleText,
+                      exampleIndex,
+                      examplesTotal,
                     });
                     if (webApp?.showAlert) {
                       webApp.showAlert('Сообщение отправлено в бот. Перешлите его нужному человеку.');
