@@ -99,6 +99,7 @@ const sendShareToBot = async (payload: {
   videoUrl?: string;
   startSeconds?: number;
   endSeconds?: number;
+  exampleText?: string;
 }) => {
   return apiFetch('share/word/send', {
     method: 'POST',
@@ -843,6 +844,12 @@ export function DictionaryContainer() {
                     showShareError(webApp, 'Откройте приложение через Telegram, чтобы поделиться.');
                     return;
                   }
+                  const activeSnippet = items[activeIndex];
+                  const exampleText =
+                    activeSnippet?.contextText ||
+                    activeSnippet?.matchedText ||
+                    activeSnippet?.translationContextText ||
+                    '';
                   try {
                     await sendShareToBot({
                       initData,
@@ -850,9 +857,10 @@ export function DictionaryContainer() {
                       translation: primaryRussian,
                       extraTranslations: otherTranslationsRu,
                       synonyms,
-                      videoUrl: items[0]?.videoUrl,
-                      startSeconds: items[0]?.startSeconds,
-                      endSeconds: items[0]?.endSeconds,
+                      videoUrl: activeSnippet?.videoUrl,
+                      startSeconds: activeSnippet?.startSeconds,
+                      endSeconds: activeSnippet?.endSeconds,
+                      exampleText,
                     });
                     if (webApp?.showAlert) {
                       webApp.showAlert('Сообщение отправлено в бот. Перешлите его нужному человеку.');
