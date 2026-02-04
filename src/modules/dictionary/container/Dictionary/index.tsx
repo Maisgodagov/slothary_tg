@@ -232,18 +232,6 @@ export function DictionaryContainer() {
   }, []);
 
   useEffect(() => {
-    if (startParamHandledRef.current) return;
-    const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
-    if (typeof startParam !== 'string') return;
-    if (!startParam.startsWith('word_')) return;
-    const word = startParam.slice('word_'.length).trim();
-    if (!word) return;
-    startParamHandledRef.current = true;
-    setQuery(word);
-    handleSearch(word);
-  }, [handleSearch]);
-
-  useEffect(() => {
     try {
       const rawHistory = localStorage.getItem(HISTORY_KEY);
       if (!rawHistory) return;
@@ -423,6 +411,18 @@ export function DictionaryContainer() {
     },
     [auth.profile?.id, dispatch, query],
   );
+
+  useEffect(() => {
+    if (startParamHandledRef.current) return;
+    const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
+    if (typeof startParam !== 'string') return;
+    if (!startParam.startsWith('word_')) return;
+    const word = startParam.slice('word_'.length).trim();
+    if (!word) return;
+    startParamHandledRef.current = true;
+    setQuery(word);
+    handleSearch(word);
+  }, [handleSearch]);
 
   const handleLoadMore = useCallback(async () => {
     if (!hasMore || !nextCursor || isLoadingMore) return;
