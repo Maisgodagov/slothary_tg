@@ -97,6 +97,8 @@ const sendShareToBot = async (payload: {
   extraTranslations?: string[];
   synonyms?: string[];
   videoUrl?: string;
+  startSeconds?: number;
+  endSeconds?: number;
 }) => {
   return apiFetch('share/word/send', {
     method: 'POST',
@@ -849,6 +851,8 @@ export function DictionaryContainer() {
                       extraTranslations: otherTranslationsRu,
                       synonyms,
                       videoUrl: items[0]?.videoUrl,
+                      startSeconds: items[0]?.startSeconds,
+                      endSeconds: items[0]?.endSeconds,
                     });
                     if (webApp?.showAlert) {
                       webApp.showAlert('Сообщение отправлено в бот. Перешлите его нужному человеку.');
