@@ -134,7 +134,6 @@ function AppRoutes() {
     const params = new URLSearchParams(window.location.search);
     const urlWord = params.get("word");
     const urlPhrase = params.get("phrase");
-    const urlStartApp = params.get("startapp");
     let rawValue = "";
     let mode: "word" | "phrase" = "word";
     if (typeof startParam === "string" && startParam.startsWith("word_")) {
@@ -142,12 +141,6 @@ function AppRoutes() {
       mode = "word";
     } else if (typeof startParam === "string" && startParam.startsWith("phrase_")) {
       rawValue = startParam.slice("phrase_".length);
-      mode = "phrase";
-    } else if (typeof urlStartApp === "string" && urlStartApp.startsWith("word_")) {
-      rawValue = urlStartApp.slice("word_".length);
-      mode = "word";
-    } else if (typeof urlStartApp === "string" && urlStartApp.startsWith("phrase_")) {
-      rawValue = urlStartApp.slice("phrase_".length);
       mode = "phrase";
     } else if (typeof urlPhrase === "string" && urlPhrase.trim()) {
       rawValue = urlPhrase;
