@@ -13,7 +13,7 @@ export interface AddToHomeBannerProps {
 export function AddToHomeBanner({
   title = "Установите Slothary на главный экран",
   description = "Открывайте веб‑приложение быстрее и без поиска бота в чате.",
-  actionLabel = "Добавить на экран",
+  actionLabel = "Установить",
   onInstall,
   installing = false,
 }: AddToHomeBannerProps) {
