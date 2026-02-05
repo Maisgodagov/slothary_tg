@@ -23,7 +23,7 @@ type WordCardProps = {
   variant?: "default" | "compact";
   summary?: boolean;
   reading?: boolean;
-  shareActionLabel?: string;
+  shareActionLabel?: ReactNode;
   onShare?: () => void;
   children?: ReactNode;
 };

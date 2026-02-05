@@ -29,6 +29,7 @@ import {
   RotateCcw,
   Type,
   CaseSensitive,
+  Share2,
 } from "lucide-react";
 
 type IconName =
@@ -66,6 +67,7 @@ type IconName =
   | "trophy"
   | "translate"
   | "bookmark"
+  | "share"
   | "font"
   | "case-sensitive";
 
@@ -113,6 +115,7 @@ const ICON_MAP: Record<
   trophy: Trophy,
   translate: Languages,
   bookmark: Bookmark,
+  share: Share2,
   font: Type,
   "case-sensitive": CaseSensitive,
 };
