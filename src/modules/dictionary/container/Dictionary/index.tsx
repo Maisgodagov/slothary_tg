@@ -173,6 +173,7 @@ export function DictionaryContainer() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [userExamplesOpenId, setUserExamplesOpenId] = useState<string | null>(null);
   const [userExpandedTranslationsId, setUserExpandedTranslationsId] = useState<string | null>(null);
+  const [userExpandedPhraseId, setUserExpandedPhraseId] = useState<string | null>(null);
   const [userExampleState, setUserExampleState] = useState<
     Record<
       string,
@@ -1184,6 +1185,7 @@ export function DictionaryContainer() {
                 items: [],
               };
               const expanded = !isPhraseEntry && userExpandedTranslationsId === entry.id;
+              const phraseExpanded = isPhraseEntry && userExpandedPhraseId === entry.id;
               const otherTranslations = expanded ? entry.otherTranslations : undefined;
               const hasRuTranslations = expanded && Boolean(otherTranslations?.some((value) => detectLanguage(value)));
               const otherTranslationsRu = hasRuTranslations ? otherTranslations : undefined;
@@ -1196,7 +1198,7 @@ export function DictionaryContainer() {
 
               return (
                 <UserEntryWrapper key={entry.id}>
-                  {(expanded || isPhraseEntry) && (
+                  {(expanded || phraseExpanded) && (
                     <DeleteEntryButton
                       type='button'
                       onClick={(event) => {
@@ -1218,7 +1220,13 @@ export function DictionaryContainer() {
                     onClick={(event) => {
                       if ((event.target as HTMLElement).closest('button')) return;
                       if (isPhraseEntry) {
-                        toggleUserExamples(entry.id, displayWord);
+                        setUserExpandedPhraseId((prev) => {
+                          const nextValue = prev === entry.id ? null : entry.id;
+                          if (prev === entry.id) {
+                            setUserExamplesOpenId(null);
+                          }
+                          return nextValue;
+                        });
                       } else {
                         toggleUserTranslations(entry.id);
                       }
@@ -1229,9 +1237,12 @@ export function DictionaryContainer() {
                       translation={displayTranslation}
                       otherTranslationsRu={detailsTranslations ?? otherTranslationsRu}
                       synonyms={detailsSynonyms ?? synonyms}
-                      showExamplesButton={isPhraseEntry ? true : expanded}
+                      showExamplesButton={isPhraseEntry ? phraseExpanded : expanded}
                       examplesOpen={open}
-                      onToggleExamples={() => toggleUserExamples(entry.id, displayWord)}
+                      onToggleExamples={() => {
+                        if (isPhraseEntry && !phraseExpanded) return;
+                        toggleUserExamples(entry.id, displayWord);
+                      }}
                       dictionaryActionMode='none'
                       variant='compact'
                     >
