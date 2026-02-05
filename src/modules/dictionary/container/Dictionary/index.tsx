@@ -45,6 +45,7 @@ import {
 } from './styles';
 
 const PAGE_SIZE = 6;
+const INITIAL_PAGE_SIZE = 2;
 const STORAGE_KEY = 'videoDictionaryState';
 const HISTORY_KEY = 'dictionarySearchHistory';
 const HISTORY_LIMIT = 5;
@@ -427,7 +428,7 @@ export function DictionaryContainer() {
 
         const response = await dictionaryModuleApi.getVideoDictionary({
           phrase: nextVideoQuery,
-          limit: PAGE_SIZE,
+          limit: INITIAL_PAGE_SIZE,
           cursor: null,
           paddingSeconds: computePaddingSeconds(nextVideoQuery),
           userId: auth.profile?.id ?? null,
@@ -441,6 +442,37 @@ export function DictionaryContainer() {
         setNextCursor(nextHasMore ? response.nextCursor : null);
         setTotal(nextHasMore ? response.total : deduped.length);
         setStatus('ready');
+
+        if (nextHasMore && response.nextCursor && deduped.length < PAGE_SIZE) {
+          if (!isLoadingMoreRef.current) {
+            isLoadingMoreRef.current = true;
+            setIsLoadingMore(true);
+            try {
+              const followUp = await dictionaryModuleApi.getVideoDictionary({
+                phrase: nextVideoQuery,
+                limit: PAGE_SIZE,
+                cursor: response.nextCursor,
+                paddingSeconds: computePaddingSeconds(nextVideoQuery),
+                userId: auth.profile?.id ?? null,
+                signal: controller.signal,
+              });
+              setItems((prev) => {
+                const merged = mergeSnippets(prev, followUp.items);
+                const added = merged.length - prev.length;
+                const followHasMore = followUp.hasMore && added > 0;
+                setHasMore(followHasMore);
+                setNextCursor(followHasMore ? followUp.nextCursor : null);
+                setTotal(followHasMore ? followUp.total : merged.length);
+                return merged;
+              });
+            } catch {
+              // ignore prefetch errors
+            } finally {
+              isLoadingMoreRef.current = false;
+              setIsLoadingMore(false);
+            }
+          }
+        }
       } catch (err: any) {
         if (err?.name === 'AbortError') return;
         const message = err?.message ?? 'Не удалось выполнить поиск';
