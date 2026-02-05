@@ -95,33 +95,16 @@ export function HomeContainer() {
       setInstalling(false);
     };
 
-    const handleFailed = (event: unknown) => {
-      if (!active) return;
-      const error = (event as any)?.error;
-      if (error === "UNSUPPORTED") {
-        setHomeScreenStatus("unsupported");
-      }
-      setInstalling(false);
-    };
-
     webApp.onEvent?.("homeScreenChecked", handleChecked);
     webApp.onEvent?.("homeScreenAdded", handleAdded);
-    webApp.onEvent?.("homeScreenFailed", handleFailed);
 
-    if (typeof (webApp as any).checkHomeScreenStatus === "function") {
+    if (typeof webApp.checkHomeScreenStatus === "function") {
       try {
-        (webApp as any).checkHomeScreenStatus((status: unknown) => {
+        webApp.checkHomeScreenStatus((status: unknown) => {
           handleChecked(status);
         });
       } catch {
-        try {
-          const result = (webApp as any).checkHomeScreenStatus();
-          if (result && typeof result.then === "function") {
-            result.then((status: unknown) => handleChecked(status));
-          }
-        } catch {
-          /* ignore */
-        }
+        /* ignore */
       }
     } else {
       setHomeScreenStatus("unsupported");
@@ -131,17 +114,16 @@ export function HomeContainer() {
       active = false;
       webApp.offEvent?.("homeScreenChecked", handleChecked);
       webApp.offEvent?.("homeScreenAdded", handleAdded);
-      webApp.offEvent?.("homeScreenFailed", handleFailed);
     };
   }, [webApp]);
 
   const showAddToHome = homeScreenStatus === "missed";
 
   const handleAddToHome = () => {
-    if (!webApp || typeof (webApp as any).addToHomeScreen !== "function") return;
+    if (!webApp || typeof webApp.addToHomeScreen !== "function") return;
     setInstalling(true);
     try {
-      (webApp as any).addToHomeScreen();
+      webApp.addToHomeScreen();
     } catch {
       setInstalling(false);
     }
