@@ -46,6 +46,7 @@ import {
 
 const PAGE_SIZE = 6;
 const INITIAL_PAGE_SIZE = 2;
+const SAMPLE_STAGE_SIZES = [300, 1200, 2400];
 const STORAGE_KEY = 'videoDictionaryState';
 const HISTORY_KEY = 'dictionarySearchHistory';
 const HISTORY_LIMIT = 5;
@@ -141,6 +142,7 @@ export function DictionaryContainer() {
   const [hasMore, setHasMore] = useState(false);
   const [forceLoadAttempts, setForceLoadAttempts] = useState(0);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [sampleStage, setSampleStage] = useState(0);
   const [total, setTotal] = useState(0);
   const [isSharing, setIsSharing] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
@@ -312,6 +314,7 @@ export function DictionaryContainer() {
     setHasSearched(false);
     setActiveIndex(0);
     setForceLoadAttempts(0);
+    setSampleStage(0);
     isLoadingMoreRef.current = false;
     lastLoadMoreAtRef.current = 0;
     try {
@@ -357,6 +360,7 @@ export function DictionaryContainer() {
       setTotal(0);
       setActiveIndex(0);
       setForceLoadAttempts(0);
+      setSampleStage(0);
       isLoadingMoreRef.current = false;
       lastLoadMoreAtRef.current = 0;
       setHighlight(trimmed);
@@ -431,6 +435,7 @@ export function DictionaryContainer() {
           limit: INITIAL_PAGE_SIZE,
           cursor: null,
           paddingSeconds: computePaddingSeconds(nextVideoQuery),
+          sampleSize: SAMPLE_STAGE_SIZES[0],
           userId: auth.profile?.id ?? null,
           signal: controller.signal,
         });
@@ -448,11 +453,13 @@ export function DictionaryContainer() {
             isLoadingMoreRef.current = true;
             setIsLoadingMore(true);
             try {
+              setSampleStage(1);
               const followUp = await dictionaryModuleApi.getVideoDictionary({
                 phrase: nextVideoQuery,
                 limit: PAGE_SIZE,
                 cursor: response.nextCursor,
                 paddingSeconds: computePaddingSeconds(nextVideoQuery),
+                sampleSize: SAMPLE_STAGE_SIZES[1],
                 userId: auth.profile?.id ?? null,
                 signal: controller.signal,
               });
@@ -519,8 +526,13 @@ export function DictionaryContainer() {
 
     isLoadingMoreRef.current = true;
     setIsLoadingMore(true);
+    const nextStage =
+      !hasMore && force
+        ? Math.min(sampleStage + 1, SAMPLE_STAGE_SIZES.length - 1)
+        : sampleStage;
     if (!hasMore && force) {
       setForceLoadAttempts((prev) => prev + 1);
+      setSampleStage(nextStage);
     }
 
     try {
@@ -529,6 +541,7 @@ export function DictionaryContainer() {
         limit: PAGE_SIZE,
         cursor: cursorOverride,
         paddingSeconds: computePaddingSeconds(videoQuery),
+        sampleSize: SAMPLE_STAGE_SIZES[nextStage],
         userId: auth.profile?.id ?? null,
       });
 
@@ -547,7 +560,7 @@ export function DictionaryContainer() {
       isLoadingMoreRef.current = false;
       setIsLoadingMore(false);
     }
-  }, [auth.profile?.id, forceLoadAttempts, hasMore, isLoadingMore, items.length, nextCursor, videoQuery]);
+  }, [auth.profile?.id, forceLoadAttempts, hasMore, isLoadingMore, items.length, nextCursor, sampleStage, videoQuery]);
 
   useEffect(() => {
     const needsMore = items.length < 30;

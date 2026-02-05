@@ -38,6 +38,7 @@ export const videoDictionaryApi = {
     limit,
     cursor,
     paddingSeconds,
+    sampleSize,
     userId,
     signal,
   }: {
@@ -45,6 +46,7 @@ export const videoDictionaryApi = {
     limit?: number;
     cursor?: string | number | null;
     paddingSeconds?: number;
+    sampleSize?: number;
     userId?: string | null;
     signal?: AbortSignal;
   }) {
@@ -56,6 +58,9 @@ export const videoDictionaryApi = {
     }
     if (cursor !== undefined && cursor !== null) {
       params.append("cursor", cursor.toString());
+    }
+    if (typeof sampleSize === "number" && sampleSize > 0) {
+      params.append("sampleSize", Math.floor(sampleSize).toString());
     }
 
     return apiFetch<PhraseSearchResponse>(
