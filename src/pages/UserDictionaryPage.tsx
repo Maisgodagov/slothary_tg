@@ -566,6 +566,10 @@ export default function UserDictionaryPage() {
         )}
 
         {dictionary.items.map((entry) => {
+          const isPhraseEntry = entry.type === "phrase";
+          const displayWord = isPhraseEntry ? (entry.phrase ?? entry.word ?? "") : (entry.word ?? "");
+          const displayTranslation = entry.translation ?? "";
+
           const open = examplesOpen[entry.id] ?? false;
           const state = exampleState[entry.id] ?? {
             status: "idle",
@@ -591,8 +595,8 @@ export default function UserDictionaryPage() {
                   event.stopPropagation();
                   setDeleteTarget({
                     id: entry.id,
-                    word: entry.word,
-                    translation: entry.translation,
+                    word: displayWord,
+                    translation: displayTranslation,
                   });
                 }}
                 style={{
@@ -621,16 +625,16 @@ export default function UserDictionaryPage() {
                 }}
                 onClick={(event) => {
                   if ((event.target as HTMLElement).closest("button")) return;
-                  toggleTranslations(entry.id);
+                  if (!isPhraseEntry) toggleTranslations(entry.id);
                 }}
               >
                   <WordCard
-                    word={entry.word}
-                    translation={entry.translation}
+                    word={displayWord}
+                    translation={displayTranslation}
                     otherTranslationsRu={otherTranslations}
                     showExamplesButton={true}
                     examplesOpen={open}
-                    onToggleExamples={() => toggleExamples(entry.id, entry.word)}
+                    onToggleExamples={() => toggleExamples(entry.id, displayWord)}
                     dictionaryActionMode="none"
                     variant="compact"
                 >
@@ -654,7 +658,7 @@ export default function UserDictionaryPage() {
                       {state.items.length > 0 && (
                         <SnippetCarousel
                           items={state.items}
-                          highlight={entry.word}
+                          highlight={displayWord}
                           onOpenFullVideo={handleOpenFullVideo}
                         />
                       )}

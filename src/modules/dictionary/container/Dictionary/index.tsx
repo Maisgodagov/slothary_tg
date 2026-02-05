@@ -12,8 +12,10 @@ import { useTelegram } from '../../../../app/providers/TelegramProvider';
 import { selectAuth } from '../../../../features/auth/slice';
 import {
   addWord,
+  addPhrase,
   fetchDictionary,
   removeWord,
+  removePhrase,
   selectDictionary,
 } from '../../../../features/dictionary/slice';
 import { WordCard } from '../../../../features/dictionary/components/WordCard';
@@ -111,6 +113,23 @@ const sendShareToBot = async (payload: {
   });
 };
 
+const sendPhraseShareToBot = async (payload: {
+  initData: string;
+  phrase: string;
+  translation?: string;
+  videoUrl?: string;
+  startSeconds?: number;
+  endSeconds?: number;
+  exampleText?: string;
+  exampleIndex?: number;
+  examplesTotal?: number;
+}) => {
+  return apiFetch('share/phrase/send', {
+    method: 'POST',
+    body: payload,
+  });
+};
+
 const showShareError = (webAppInstance: any, message: string) => {
   if (webAppInstance?.showAlert) {
     webAppInstance.showAlert(message);
@@ -183,6 +202,7 @@ export function DictionaryContainer() {
     id: string;
     word: string;
     translation: string;
+    type: 'word' | 'phrase';
   } | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -266,7 +286,10 @@ export function DictionaryContainer() {
   useEffect(() => {
     if (dictionary.items.length === 0) return;
     if (userExpandedTranslationsId) return;
-    setUserExpandedTranslationsId(dictionary.items[0]?.id ?? null);
+    const firstWord = (dictionary.items as UserDictionaryEntry[]).find(
+      (entry) => (entry.type ?? 'word') === 'word',
+    );
+    setUserExpandedTranslationsId(firstWord?.id ?? null);
   }, [dictionary.items, userExpandedTranslationsId]);
 
   useEffect(() => {
@@ -371,9 +394,12 @@ export function DictionaryContainer() {
           .map((part) => part.trim())
           .filter(Boolean);
         const isRu = detectLanguage(trimmed);
-        const isPhrase = !isRu && trimmedWords.length >= 2;
+        const isPhrase = trimmedWords.length >= 2;
 
         let dictionaryResults: MuellerEntry[] = [];
+        let phraseDisplay = trimmed;
+        let phraseTranslationText = '';
+        let phraseVideoQuery = isRu ? '' : trimmed;
         if (!isPhrase) {
           dictionaryResults = await dictionaryModuleApi.searchMueller({
             word: trimmed,
@@ -393,12 +419,21 @@ export function DictionaryContainer() {
           });
           try {
             const phraseTranslation = await dictionaryModuleApi
-              .translatePhrase(trimmed, 'en', 'ru')
+              .translatePhrase(trimmed, isRu ? 'ru' : 'en', isRu ? 'en' : 'ru')
               .then((result) => result.translation)
               .catch(() => '');
+            if (isRu) {
+              phraseDisplay = phraseTranslation || trimmed;
+              phraseTranslationText = trimmed;
+              phraseVideoQuery = phraseTranslation || '';
+            } else {
+              phraseDisplay = trimmed;
+              phraseTranslationText = phraseTranslation;
+              phraseVideoQuery = trimmed;
+            }
             setPhraseFallback({
-              phrase: trimmed,
-              translation: phraseTranslation,
+              phrase: phraseDisplay,
+              translation: phraseTranslationText,
             });
           } catch {
             // ignore word translation errors
@@ -417,7 +452,11 @@ export function DictionaryContainer() {
             .catch(() => null);
         }
 
-        const nextVideoQuery = isRu ? dictionaryResults[0]?.word?.trim() ?? '' : trimmed;
+        const nextVideoQuery = isPhrase
+          ? phraseVideoQuery
+          : isRu
+          ? dictionaryResults[0]?.word?.trim() ?? ''
+          : trimmed;
         setVideoQuery(nextVideoQuery);
         setHighlight(nextVideoQuery || trimmed);
 
@@ -495,10 +534,16 @@ export function DictionaryContainer() {
   useEffect(() => {
     if (startParamHandledRef.current) return;
     const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
-    const urlWord = new URLSearchParams(window.location.search).get('word');
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlWord = urlParams.get('word');
+    const urlPhrase = urlParams.get('phrase');
     let word = '';
     if (typeof startParam === 'string' && startParam.startsWith('word_')) {
       word = startParam.slice('word_'.length).trim();
+    } else if (typeof startParam === 'string' && startParam.startsWith('phrase_')) {
+      word = startParam.slice('phrase_'.length).trim();
+    } else if (typeof urlPhrase === 'string' && urlPhrase.trim()) {
+      word = urlPhrase.trim();
     } else if (typeof urlWord === 'string' && urlWord.trim()) {
       word = urlWord.trim();
     }
@@ -852,7 +897,7 @@ export function DictionaryContainer() {
           const entry = (dictionary.items as UserDictionaryEntry[]).find(
             (item: UserDictionaryEntry) => item.id === nextValue,
           );
-          if (entry) loadUserDictionaryDetails(entry.id, entry.word);
+          if (entry?.word) loadUserDictionaryDetails(entry.id, entry.word);
         }
         return nextValue;
       });
@@ -905,6 +950,8 @@ export function DictionaryContainer() {
             const normalizedTranslation = primaryRussian.trim().toLowerCase();
             const existingEntry = (dictionary.items as UserDictionaryEntry[]).find(
               (entry: UserDictionaryEntry) =>
+                (entry.type ?? 'word') === 'word' &&
+                typeof entry.word === 'string' &&
                 entry.word.toLowerCase() === normalizedWord &&
                 entry.translation.toLowerCase() === normalizedTranslation,
             );
@@ -1020,6 +1067,15 @@ export function DictionaryContainer() {
           (() => {
             const hasSnippets = items.length > 0;
             const showSnippets = showExamples && examplesOpen && hasSnippets;
+            const normalizedPhrase = phraseFallback.phrase.trim().toLowerCase();
+            const normalizedPhraseTranslation = (phraseFallback.translation ?? '').trim().toLowerCase();
+            const existingPhraseEntry = (dictionary.items as UserDictionaryEntry[]).find(
+              (entry: UserDictionaryEntry) =>
+                entry.type === 'phrase' &&
+                (entry.phrase ?? entry.word ?? '').toLowerCase() === normalizedPhrase &&
+                entry.translation.toLowerCase() === normalizedPhraseTranslation,
+            );
+            const isPhraseInDictionary = Boolean(existingPhraseEntry);
             return (
               <WordCard
                 word={phraseFallback.phrase}
@@ -1027,7 +1083,24 @@ export function DictionaryContainer() {
                 showExamplesButton={showExamples && hasSnippets}
                 examplesOpen={examplesOpen}
                 onToggleExamples={() => setExamplesOpen((prev) => !prev)}
-                dictionaryActionMode="none"
+                dictionaryActionMode="button"
+                dictionaryActionLabel={isPhraseInDictionary ? 'в словаре' : '+ в словарь'}
+                dictionaryActionDisabled={isPhraseInDictionary || !phraseFallback.translation}
+                onDictionaryAction={() => {
+                  if (!auth.profile?.id) return;
+                  if (isPhraseInDictionary && existingPhraseEntry) {
+                    dispatch(removePhrase(existingPhraseEntry.id));
+                    return;
+                  }
+                  const queryValue = query.trim();
+                  if (!queryValue) return;
+                  dispatch(
+                    addPhrase({
+                      query: queryValue,
+                      lang: detectLanguage(queryValue) ? 'ru' : 'en',
+                    }),
+                  );
+                }}
                 shareActionLabel={<Icon name="repost" size={16} />}
                 shareActionLoading={isSharing}
                 onShare={async () => {
@@ -1046,12 +1119,10 @@ export function DictionaryContainer() {
                   const examplesTotal = total || 0;
                   try {
                     setIsSharing(true);
-                    await sendShareToBot({
+                    await sendPhraseShareToBot({
                       initData,
-                      word: phraseFallback.phrase,
+                      phrase: phraseFallback.phrase,
                       translation: phraseFallback.translation ?? '',
-                      extraTranslations: [],
-                      synonyms: [],
                       videoUrl: activeSnippet?.videoUrl,
                       startSeconds: activeSnippet?.startSeconds,
                       endSeconds: activeSnippet?.endSeconds,
@@ -1102,12 +1173,13 @@ export function DictionaryContainer() {
           )}
           <UserList>
             {(dictionary.items as UserDictionaryEntry[]).map((entry: UserDictionaryEntry) => {
+              const isPhraseEntry = entry.type === 'phrase';
               const open = userExamplesOpenId === entry.id;
               const state = userExampleState[entry.id] ?? {
                 status: 'idle',
                 items: [],
               };
-              const expanded = userExpandedTranslationsId === entry.id;
+              const expanded = !isPhraseEntry && userExpandedTranslationsId === entry.id;
               const otherTranslations = expanded ? entry.otherTranslations : undefined;
               const hasRuTranslations = expanded && Boolean(otherTranslations?.some((value) => detectLanguage(value)));
               const otherTranslationsRu = hasRuTranslations ? otherTranslations : undefined;
@@ -1115,18 +1187,21 @@ export function DictionaryContainer() {
               const details = userDictionaryDetails[entry.id];
               const detailsTranslations = expanded && details?.status === 'ready' ? details.translationsRu : undefined;
               const detailsSynonyms = expanded && details?.status === 'ready' ? details.synonyms : undefined;
+              const displayWord = isPhraseEntry ? (entry.phrase ?? entry.word ?? '') : entry.word ?? '';
+              const displayTranslation = entry.translation ?? '';
 
               return (
                 <UserEntryWrapper key={entry.id}>
-                  {expanded && (
+                  {(expanded || isPhraseEntry) && (
                     <DeleteEntryButton
                       type='button'
                       onClick={(event) => {
                         event.stopPropagation();
                         setDeleteTarget({
                           id: entry.id,
-                          word: entry.word,
-                          translation: entry.translation,
+                          word: displayWord,
+                          translation: displayTranslation,
+                          type: entry.type ?? 'word',
                         });
                       }}
                       aria-label='Удалить'
@@ -1138,21 +1213,25 @@ export function DictionaryContainer() {
                   <Clickable
                     onClick={(event) => {
                       if ((event.target as HTMLElement).closest('button')) return;
-                      toggleUserTranslations(entry.id);
+                      if (isPhraseEntry) {
+                        toggleUserExamples(entry.id, displayWord);
+                      } else {
+                        toggleUserTranslations(entry.id);
+                      }
                     }}
                   >
                     <WordCard
-                      word={entry.word}
-                      translation={entry.translation}
+                      word={displayWord}
+                      translation={displayTranslation}
                       otherTranslationsRu={detailsTranslations ?? otherTranslationsRu}
                       synonyms={detailsSynonyms ?? synonyms}
-                      showExamplesButton={expanded}
+                      showExamplesButton={isPhraseEntry ? true : expanded}
                       examplesOpen={open}
-                      onToggleExamples={() => toggleUserExamples(entry.id, entry.word)}
+                      onToggleExamples={() => toggleUserExamples(entry.id, displayWord)}
                       dictionaryActionMode='none'
                       variant='compact'
                     >
-                      {expanded && open && (
+                      {open && (
                         <>
                           {state.status === 'loading' && (
                             <InlineCenter>
@@ -1166,12 +1245,12 @@ export function DictionaryContainer() {
                           {state.items.length > 0 && (
                             <SnippetCarousel
                               items={state.items}
-                              highlight={entry.word}
+                              highlight={displayWord}
                               onOpenFullVideo={handleOpenFullVideo}
                               total={state.total}
                               hasMore={state.hasMore}
                               isLoadingMore={state.isLoadingMore}
-                              onLoadMore={() => loadMoreUserExamples(entry.id, entry.word)}
+                              onLoadMore={() => loadMoreUserExamples(entry.id, displayWord)}
                             />
                           )}
                         </>
@@ -1192,7 +1271,11 @@ export function DictionaryContainer() {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={() => {
           if (!deleteTarget) return;
-          dispatch(removeWord(deleteTarget.id));
+          if (deleteTarget.type === 'phrase') {
+            dispatch(removePhrase(deleteTarget.id));
+          } else {
+            dispatch(removeWord(deleteTarget.id));
+          }
           setDeleteTarget(null);
         }}
       />

@@ -652,6 +652,7 @@ export function ReaderContainer() {
                 const normalizedTranslation = translation.toLowerCase();
                 const existingEntry = dictionary.items.find(
                   (item) =>
+                    typeof item.word === "string" &&
                     item.word.toLowerCase() === normalizedWord &&
                     item.translation.toLowerCase() === normalizedTranslation,
                 );

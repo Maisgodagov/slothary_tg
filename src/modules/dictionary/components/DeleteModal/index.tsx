@@ -1,25 +1,41 @@
-import type { DeleteModalProps } from './types';
-import { Actions, CancelButton, ConfirmButton, Description, Modal, Overlay, Title } from './styles';
+import type { DeleteModalProps } from "./types";
+import { createPortal } from "react-dom";
+import {
+  Actions,
+  CancelButton,
+  ConfirmButton,
+  Description,
+  Modal,
+  Overlay,
+  Title,
+} from "./styles";
 
-export function DeleteModal({ open, word, translation, onCancel, onConfirm }: DeleteModalProps) {
+export function DeleteModal({
+  open,
+  word,
+  translation,
+  onCancel,
+  onConfirm,
+}: DeleteModalProps) {
   if (!open) return null;
 
-  return (
+  return createPortal(
     <Overlay onClick={onCancel}>
       <Modal onClick={(event) => event.stopPropagation()}>
-        <Title>Удалить слово?</Title>
+        <Title>Удалить из словаря?</Title>
         <Description>
           {word} - {translation}
         </Description>
         <Actions>
           <CancelButton type="button" onClick={onCancel}>
-            Отмена
+            Нет
           </CancelButton>
           <ConfirmButton type="button" onClick={onConfirm}>
             Удалить
           </ConfirmButton>
         </Actions>
       </Modal>
-    </Overlay>
+    </Overlay>,
+    document.body,
   );
 }

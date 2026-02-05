@@ -456,6 +456,7 @@ export function VideoCard({
     currentExercise &&
       dictionary.items.find(
         (item) =>
+          typeof item.word === "string" &&
           item.word.toLowerCase() === exerciseWord.toLowerCase() &&
           item.translation.toLowerCase() === exerciseTranslation.toLowerCase()
       )
@@ -941,6 +942,7 @@ export function VideoCard({
               const normalizedTranslation = translation.toLowerCase();
               const existingEntry = dictionary.items.find(
                 (item) =>
+                  typeof item.word === "string" &&
                   item.word.toLowerCase() === normalizedWord &&
                   item.translation.toLowerCase() === normalizedTranslation
               );

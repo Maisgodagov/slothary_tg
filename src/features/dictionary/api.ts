@@ -2,7 +2,9 @@ import { apiFetch } from '../../shared/api/client';
 
 export interface UserDictionaryEntry {
   id: string;
-  word: string;
+  type: "word" | "phrase";
+  word?: string;
+  phrase?: string;
   translation: string;
   otherTranslations?: string[];
   createdAt: string;
@@ -14,6 +16,11 @@ export interface CreateUserDictionaryEntry {
   lang: 'en' | 'ru';
   word?: string;
   translation?: string;
+}
+
+export interface CreateUserPhraseEntry {
+  query: string;
+  lang: 'en' | 'ru';
 }
 
 export interface DictionaryStats {
@@ -87,8 +94,21 @@ export const dictionaryApi = {
       body: payload,
     });
   },
+  addUserPhraseEntry(userId: string, payload: CreateUserPhraseEntry) {
+    return apiFetch<UserDictionaryEntry>('dictionary/phrases', {
+      method: 'POST',
+      headers: headersWithUser(userId),
+      body: payload,
+    });
+  },
   deleteUserDictionaryEntry(userId: string, id: string) {
     return apiFetch<void>(`dictionary/${id}`, {
+      method: 'DELETE',
+      headers: headersWithUser(userId),
+    });
+  },
+  deleteUserPhraseEntry(userId: string, id: string) {
+    return apiFetch<void>(`dictionary/phrases/${id}`, {
       method: 'DELETE',
       headers: headersWithUser(userId),
     });
