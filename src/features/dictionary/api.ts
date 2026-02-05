@@ -34,6 +34,10 @@ export interface DictionaryStatsWord {
   touchesIncorrect: number | null;
 }
 
+export interface PhraseTranslationResponse {
+  translation: string;
+}
+
 const headersWithUser = (userId?: string | null) => (userId ? { 'x-user-id': userId } : undefined);
 
 export const dictionaryApi = {
@@ -88,5 +92,9 @@ export const dictionaryApi = {
       method: 'DELETE',
       headers: headersWithUser(userId),
     });
+  },
+  translatePhrase(text: string, from: 'en' | 'ru' = 'en', to: 'en' | 'ru' = 'ru') {
+    const query = new URLSearchParams({ text, from, to });
+    return apiFetch<PhraseTranslationResponse>(`dictionary/translate?${query.toString()}`);
   },
 };

@@ -8,6 +8,7 @@ export const dictionaryModuleApi = {
   deleteUserDictionaryEntry: dictionaryApi.deleteUserDictionaryEntry,
   getStats: dictionaryApi.getStats,
   recordView: dictionaryApi.recordView,
+  translatePhrase: dictionaryApi.translatePhrase,
   searchMueller: muellerApi.lookup,
   getVideoDictionary: videoDictionaryApi.searchPhrase,
 };

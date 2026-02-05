@@ -679,7 +679,7 @@ export function VideoCard({
       {heartIndicator && (
         <S.TapOverlay $shrink={showExercises}>
           <S.TapIndicator>
-            <Icon name="like" size={72} color="#ff5f6d" />
+            <Icon name="like" size={72} color="#ff5f6d" fillColor="#ff5f6d" />
           </S.TapIndicator>
         </S.TapOverlay>
       )}
@@ -691,6 +691,7 @@ export function VideoCard({
               name={item.isLiked ? "like" : "like-outline"}
               size={34}
               color={item.isLiked ? "#ff5f6d" : "#fff"}
+              fillColor={item.isLiked ? "#ff5f6d" : "none"}
             />
             <span style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>
               {likesCount}

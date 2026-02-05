@@ -5,6 +5,7 @@ export const DictionaryLayout = styled.div`
   gap: 16px;
   align-content: start;
   justify-items: stretch;
+  padding-top: 8px;
   padding-right: 12px;
   padding-left: 12px;
   padding-bottom: 60px;
