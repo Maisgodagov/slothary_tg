@@ -102,6 +102,21 @@ function BackHandler() {
 function AppRoutes() {
   const auth = useAppSelector(selectAuth);
   const isAdmin = auth.profile?.role === "admin";
+  const location = useLocation();
+
+  useEffect(() => {
+    const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
+    const urlWord = new URLSearchParams(window.location.search).get("word");
+    const rawWord =
+      typeof startParam === "string" && startParam.startsWith("word_")
+        ? startParam.slice("word_".length)
+        : urlWord ?? "";
+    const word = rawWord.trim();
+    if (!word) return;
+    if (location.hash?.startsWith("#/dictionary")) return;
+    const params = new URLSearchParams({ word });
+    window.location.hash = `#/dictionary?${params.toString()}`;
+  }, [location.hash]);
 
   return (
     <>
