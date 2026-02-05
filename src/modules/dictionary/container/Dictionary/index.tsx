@@ -476,6 +476,9 @@ export function DictionaryContainer() {
     if (isLoadingMoreRef.current) return;
     if (!hasMore && !force) return;
     if (force && forceLoadAttempts >= 3) return;
+    const phrase = videoQuery.trim();
+    if (!phrase) return;
+    if (items.length === 0 && !hasMore) return;
     const cursorOverride = !hasMore && force ? String(items.length) : nextCursor;
     if (!cursorOverride) return;
     const now = Date.now();
@@ -490,7 +493,7 @@ export function DictionaryContainer() {
 
     try {
       const response = await dictionaryModuleApi.getVideoDictionary({
-        phrase: videoQuery.trim(),
+        phrase,
         limit: PAGE_SIZE,
         cursor: cursorOverride,
         paddingSeconds: computePaddingSeconds(videoQuery),
@@ -517,7 +520,7 @@ export function DictionaryContainer() {
   useEffect(() => {
     const needsMore = items.length < 30;
     const canForce = !hasMore && needsMore && forceLoadAttempts < 3;
-    if (activeIndex >= items.length - 3) {
+    if (items.length > 0 && activeIndex >= items.length - 3) {
       handleLoadMore(canForce);
     }
   }, [activeIndex, forceLoadAttempts, handleLoadMore, hasMore, isLoadingMore, items.length]);
