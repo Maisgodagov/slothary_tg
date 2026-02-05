@@ -32,6 +32,7 @@ import "../shared/styles/global.css";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import { selectAuth, setProfile, telegramAuth } from "../features/auth/slice";
 import { usersApi } from "../features/users/api";
+import { apiFetch } from "../shared/api/client";
 
 function AutoTelegramAuth() {
   const { initData } = useTelegram();
@@ -67,6 +68,30 @@ function StreakRefresher() {
         // ignore streak refresh failures
       });
   }, [auth.profile, dispatch]);
+
+  return null;
+}
+
+function WelcomeSender() {
+  const { initData } = useTelegram();
+  const sentRef = useRef(false);
+
+  useEffect(() => {
+    if (!initData || sentRef.current) return;
+    const key = "welcome-sent";
+    if (localStorage.getItem(key) === "1") return;
+    sentRef.current = true;
+    apiFetch("share/welcome", {
+      method: "POST",
+      body: { initData },
+    })
+      .then(() => {
+        localStorage.setItem(key, "1");
+      })
+      .catch(() => {
+        // ignore
+      });
+  }, [initData]);
 
   return null;
 }
@@ -126,6 +151,7 @@ function AppRoutes() {
   return (
     <>
       <AutoTelegramAuth />
+      <WelcomeSender />
       <StreakRefresher />
       <div className="page">
         <Routes>
