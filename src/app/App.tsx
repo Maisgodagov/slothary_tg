@@ -99,29 +99,6 @@ function BackHandler() {
   return null;
 }
 
-function StartParamRedirect() {
-  const { webApp } = useTelegram();
-  const navigate = useNavigate();
-  const handledRef = useRef(false);
-
-  useEffect(() => {
-    if (handledRef.current) return;
-    const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
-    const urlWord = new URLSearchParams(window.location.search).get("word");
-    const hasWord =
-      (typeof startParam === "string" && startParam.startsWith("word_")) ||
-      (typeof urlWord === "string" && urlWord.trim());
-    if (!hasWord) return;
-    handledRef.current = true;
-    navigate("/dictionary");
-    if (webApp?.setHeaderColor) {
-      webApp.setHeaderColor("bg_color");
-    }
-  }, [navigate, webApp]);
-
-  return null;
-}
-
 function AppRoutes() {
   const auth = useAppSelector(selectAuth);
   const isAdmin = auth.profile?.role === "admin";
@@ -130,7 +107,6 @@ function AppRoutes() {
     <>
       <AutoTelegramAuth />
       <StreakRefresher />
-      <StartParamRedirect />
       <div className="page">
         <Routes>
           <Route path="/" element={<HomeContainer />} />
