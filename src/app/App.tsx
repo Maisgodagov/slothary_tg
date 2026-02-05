@@ -113,8 +113,13 @@ function AppRoutes() {
         : urlWord ?? "";
     const word = rawWord.trim();
     if (!word) return;
+    const handledKey = `startapp-handled:${word.toLowerCase()}`;
+    if (window.localStorage.getItem(handledKey) === "1") return;
     if (location.hash?.startsWith("#/dictionary")) return;
+    const isBlankHash = !location.hash || location.hash === "#/" || location.hash === "#";
+    if (!isBlankHash) return;
     const params = new URLSearchParams({ word });
+    window.localStorage.setItem(handledKey, "1");
     window.location.hash = `#/dictionary?${params.toString()}`;
   }, [location.hash]);
 

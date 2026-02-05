@@ -185,6 +185,11 @@ export function DictionaryContainer() {
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const lastSettledIndex = useRef(0);
 
+  const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
+  const urlWord = new URLSearchParams(window.location.search).get('word');
+  const showBotBanner =
+    Boolean(startParam || urlWord) && localStorage.getItem('bot-started') !== '1';
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -756,6 +761,54 @@ export function DictionaryContainer() {
   return (
     <PageShell>
       <DictionaryLayout>
+        {showBotBanner && (
+          <div
+            style={{
+              background: "var(--tg-surface)",
+              border: "1px solid var(--tg-border)",
+              borderRadius: 16,
+              padding: "12px 14px",
+              marginBottom: 12,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <div style={{ fontSize: 13, color: "var(--tg-text)" }}>
+              Чтобы бот появился в чатах, нажмите «Start».
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  localStorage.setItem('bot-started', '1');
+                } catch {
+                  // ignore
+                }
+                const url = "https://t.me/slothary_bot?start=from_webapp";
+                if (webApp?.openTelegramLink) {
+                  webApp.openTelegramLink(url);
+                } else {
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }
+              }}
+              style={{
+                border: "none",
+                background: "linear-gradient(135deg, #2ea3ff, #6dd3ff)",
+                color: "#0c1021",
+                fontWeight: 700,
+                fontSize: 12,
+                borderRadius: 999,
+                padding: "8px 12px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Start bot
+            </button>
+          </div>
+        )}
         <SearchBar
           query={query}
           onQueryChange={setQuery}
