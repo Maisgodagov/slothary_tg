@@ -150,14 +150,18 @@ function AppRoutes() {
       mode = "word";
     }
     const value = rawValue.trim();
-    if (!value) return;
-    const handledKey = `startapp-handled:${mode}:${value.toLowerCase()}`;
+    const normalizedValue =
+      value.includes("_") && !value.includes(" ")
+        ? value.replace(/_+/g, " ").trim()
+        : value;
+    if (!normalizedValue) return;
+    const handledKey = `startapp-handled:${mode}:${normalizedValue.toLowerCase()}`;
     if (window.localStorage.getItem(handledKey) === "1") return;
     if (location.hash?.startsWith("#/dictionary")) return;
     const isBlankHash = !location.hash || location.hash === "#/" || location.hash === "#";
     if (!isBlankHash) return;
     const nextParams = new URLSearchParams(
-      mode === "phrase" ? { phrase: value } : { word: value }
+      mode === "phrase" ? { phrase: normalizedValue } : { word: normalizedValue }
     );
     window.localStorage.setItem(handledKey, "1");
     window.location.hash = `#/dictionary?${nextParams.toString()}`;

@@ -548,12 +548,16 @@ export function DictionaryContainer() {
       word = urlWord.trim();
     }
     if (!word) return;
+    const normalizedWord =
+      word.includes('_') && !word.includes(' ')
+        ? word.replace(/_+/g, ' ').trim()
+        : word.trim();
     if (sessionStorage.getItem('dictionary-start-handled') === '1') return;
     startParamHandledRef.current = true;
     sessionStorage.setItem('dictionary-start-handled', '1');
-    setQuery(word);
+    setQuery(normalizedWord);
     setExamplesOpen(true);
-    handleSearch(word);
+    handleSearch(normalizedWord);
   }, [handleSearch]);
 
   const handleLoadMore = useCallback(async (force = false) => {
