@@ -537,11 +537,16 @@ export function DictionaryContainer() {
     const urlParams = new URLSearchParams(window.location.search);
     const urlWord = urlParams.get('word');
     const urlPhrase = urlParams.get('phrase');
+    const urlStartApp = urlParams.get('startapp');
     let word = '';
     if (typeof startParam === 'string' && startParam.startsWith('word_')) {
       word = startParam.slice('word_'.length).trim();
     } else if (typeof startParam === 'string' && startParam.startsWith('phrase_')) {
       word = startParam.slice('phrase_'.length).trim();
+    } else if (typeof urlStartApp === 'string' && urlStartApp.startsWith('word_')) {
+      word = urlStartApp.slice('word_'.length).trim();
+    } else if (typeof urlStartApp === 'string' && urlStartApp.startsWith('phrase_')) {
+      word = urlStartApp.slice('phrase_'.length).trim();
     } else if (typeof urlPhrase === 'string' && urlPhrase.trim()) {
       word = urlPhrase.trim();
     } else if (typeof urlWord === 'string' && urlWord.trim()) {
