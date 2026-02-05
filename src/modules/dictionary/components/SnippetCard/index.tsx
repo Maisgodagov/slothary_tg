@@ -18,11 +18,22 @@ import {
 const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+const buildTokenPattern = (token: string) => {
+  const normalized = token.replace(/['’]/g, '');
+  if (!normalized) return '';
+  const chars = normalized.split('').map(escapeRegExp);
+  return `\\b${chars.join("['’]?")}\\b`;
+};
+
 const createHighlightRegex = (value: string): RegExp | null => {
   const trimmed = value.trim();
   if (!trimmed) return null;
-  const parts = trimmed.split(/\s+/).map(escapeRegExp);
-  const pattern = parts.map((part) => `\\b${part}\\b`).join('\\s+');
+  const parts = trimmed
+    .split(/\s+/)
+    .map(buildTokenPattern)
+    .filter(Boolean);
+  if (!parts.length) return null;
+  const pattern = parts.join('\\s+');
   return new RegExp(pattern, 'gi');
 };
 
