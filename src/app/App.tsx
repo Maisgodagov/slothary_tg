@@ -131,21 +131,36 @@ function AppRoutes() {
 
   useEffect(() => {
     const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
-    const urlWord = new URLSearchParams(window.location.search).get("word");
-    const rawWord =
-      typeof startParam === "string" && startParam.startsWith("word_")
-        ? startParam.slice("word_".length)
-        : urlWord ?? "";
-    const word = rawWord.trim();
-    if (!word) return;
-    const handledKey = `startapp-handled:${word.toLowerCase()}`;
+    const params = new URLSearchParams(window.location.search);
+    const urlWord = params.get("word");
+    const urlPhrase = params.get("phrase");
+    let rawValue = "";
+    let mode: "word" | "phrase" = "word";
+    if (typeof startParam === "string" && startParam.startsWith("word_")) {
+      rawValue = startParam.slice("word_".length);
+      mode = "word";
+    } else if (typeof startParam === "string" && startParam.startsWith("phrase_")) {
+      rawValue = startParam.slice("phrase_".length);
+      mode = "phrase";
+    } else if (typeof urlPhrase === "string" && urlPhrase.trim()) {
+      rawValue = urlPhrase;
+      mode = "phrase";
+    } else if (typeof urlWord === "string") {
+      rawValue = urlWord;
+      mode = "word";
+    }
+    const value = rawValue.trim();
+    if (!value) return;
+    const handledKey = `startapp-handled:${mode}:${value.toLowerCase()}`;
     if (window.localStorage.getItem(handledKey) === "1") return;
     if (location.hash?.startsWith("#/dictionary")) return;
     const isBlankHash = !location.hash || location.hash === "#/" || location.hash === "#";
     if (!isBlankHash) return;
-    const params = new URLSearchParams({ word });
+    const nextParams = new URLSearchParams(
+      mode === "phrase" ? { phrase: value } : { word: value }
+    );
     window.localStorage.setItem(handledKey, "1");
-    window.location.hash = `#/dictionary?${params.toString()}`;
+    window.location.hash = `#/dictionary?${nextParams.toString()}`;
   }, [location.hash]);
 
   return (
