@@ -1,15 +1,9 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { useAppDispatch, useAppSelector } from '../../../../app/hooks';
-import { useTelegram } from '../../../../app/providers/TelegramProvider';
-import { selectAuth } from '../../../../features/auth/slice';
+import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
+import { useTelegram } from "../../../../app/providers/TelegramProvider";
+import { selectAuth } from "../../../../features/auth/slice";
 import {
   addWord,
   addPhrase,
@@ -17,19 +11,23 @@ import {
   removeWord,
   removePhrase,
   selectDictionary,
-} from '../../../../features/dictionary/slice';
-import { WordCard } from '../../../../features/dictionary/components/WordCard';
-import { Icon } from '../../../../shared/ui/Icon';
-import { Loader } from '../../../../shared/ui/Loader';
-import { PageShell } from '../../../../shared/ui/PageShell';
-import { apiFetch } from '../../../../shared/api/client';
-import { dictionaryModuleApi } from '../../api';
-import type { MuellerEntry, PhraseSnippet, UserDictionaryEntry } from '../../api/types';
-import { DeleteModal } from '../../components/DeleteModal';
-import { SearchBar } from '../../components/SearchBar';
-import { SearchSnippetsCarousel } from '../../components/SearchSnippetsCarousel';
-import { SnippetCarousel } from '../../components/SnippetCarousel';
-import { setLastQuery } from '../../store/slice';
+} from "../../../../features/dictionary/slice";
+import { WordCard } from "../../../../features/dictionary/components/WordCard";
+import { Icon } from "../../../../shared/ui/Icon";
+import { Loader } from "../../../../shared/ui/Loader";
+import { PageShell } from "../../../../shared/ui/PageShell";
+import { apiFetch } from "../../../../shared/api/client";
+import { dictionaryModuleApi } from "../../api";
+import type {
+  MuellerEntry,
+  PhraseSnippet,
+  UserDictionaryEntry,
+} from "../../api/types";
+import { DeleteModal } from "../../components/DeleteModal";
+import { SearchBar } from "../../components/SearchBar";
+import { SearchSnippetsCarousel } from "../../components/SearchSnippetsCarousel";
+import { SnippetCarousel } from "../../components/SnippetCarousel";
+import { setLastQuery } from "../../store/slice";
 import {
   Clickable,
   DeleteEntryButton,
@@ -37,6 +35,8 @@ import {
   DictionaryLayout,
   EmptyText,
   ErrorText,
+  FilterButton,
+  FilterRow,
   HelperText,
   InlineCenter,
   LoaderWrap,
@@ -44,13 +44,13 @@ import {
   SubtleText,
   UserList,
   UserEntryWrapper,
-} from './styles';
+} from "./styles";
 
 const PAGE_SIZE = 6;
 const INITIAL_PAGE_SIZE = 2;
 const SAMPLE_STAGE_SIZES = [300, 1200, 2400];
-const STORAGE_KEY = 'videoDictionaryState';
-const HISTORY_KEY = 'dictionarySearchHistory';
+const STORAGE_KEY = "videoDictionaryState";
+const HISTORY_KEY = "dictionarySearchHistory";
 const HISTORY_LIMIT = 5;
 
 const computePaddingSeconds = (phrase: string): number => {
@@ -107,8 +107,8 @@ const sendShareToBot = async (payload: {
   exampleIndex?: number;
   examplesTotal?: number;
 }) => {
-  return apiFetch('share/word/send', {
-    method: 'POST',
+  return apiFetch("share/word/send", {
+    method: "POST",
     body: payload,
   });
 };
@@ -124,8 +124,8 @@ const sendPhraseShareToBot = async (payload: {
   exampleIndex?: number;
   examplesTotal?: number;
 }) => {
-  return apiFetch('share/phrase/send', {
-    method: 'POST',
+  return apiFetch("share/phrase/send", {
+    method: "POST",
     body: payload,
   });
 };
@@ -144,11 +144,13 @@ export function DictionaryContainer() {
   const dictionary = useAppSelector(selectDictionary);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [dictEntries, setDictEntries] = useState<MuellerEntry[]>([]);
-  const [dictStatus, setDictStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [dictStatus, setDictStatus] = useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle");
   const [dictError, setDictError] = useState<string | null>(null);
-  const [videoQuery, setVideoQuery] = useState('');
+  const [videoQuery, setVideoQuery] = useState("");
   const showExamples = true;
   const [examplesOpen, setExamplesOpen] = useState(true);
   const startParamHandledRef = useRef(false);
@@ -157,28 +159,39 @@ export function DictionaryContainer() {
     phrase: string;
     translation?: string;
   } | null>(null);
-  const [highlight, setHighlight] = useState('');
+  const [highlight, setHighlight] = useState("");
   const [hasMore, setHasMore] = useState(false);
   const [forceLoadAttempts, setForceLoadAttempts] = useState(0);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [sampleStage, setSampleStage] = useState(0);
   const [total, setTotal] = useState(0);
   const [isSharing, setIsSharing] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(
+    "idle",
+  );
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const isLoadingMoreRef = useRef(false);
   const lastLoadMoreAtRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [userExamplesOpenId, setUserExamplesOpenId] = useState<string | null>(null);
-  const [userExpandedTranslationsId, setUserExpandedTranslationsId] = useState<string | null>(null);
-  const [userExpandedPhraseId, setUserExpandedPhraseId] = useState<string | null>(null);
+  const [userExamplesOpenId, setUserExamplesOpenId] = useState<string | null>(
+    null,
+  );
+  const [userExpandedTranslationsId, setUserExpandedTranslationsId] = useState<
+    string | null
+  >(null);
+  const [userExpandedPhraseId, setUserExpandedPhraseId] = useState<
+    string | null
+  >(null);
+  const [userDictionaryFilter, setUserDictionaryFilter] = useState<
+    "all" | "word" | "phrase"
+  >("all");
   const [userExampleState, setUserExampleState] = useState<
     Record<
       string,
       {
-        status: 'idle' | 'loading' | 'ready' | 'error';
+        status: "idle" | "loading" | "ready" | "error";
         items: PhraseSnippet[];
         total?: number;
         hasMore?: boolean;
@@ -192,7 +205,7 @@ export function DictionaryContainer() {
     Record<
       string,
       {
-        status: 'idle' | 'loading' | 'ready' | 'error';
+        status: "idle" | "loading" | "ready" | "error";
         translationsRu: string[];
         synonyms: string[];
         error?: string;
@@ -203,7 +216,7 @@ export function DictionaryContainer() {
     id: string;
     word: string;
     translation: string;
-    type: 'word' | 'phrase';
+    type: "word" | "phrase";
   } | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -216,7 +229,6 @@ export function DictionaryContainer() {
   const scrollEndTimer = useRef<number | null>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const lastSettledIndex = useRef(0);
-
 
   useEffect(() => {
     try {
@@ -238,18 +250,18 @@ export function DictionaryContainer() {
       if (saved.videoQuery) setVideoQuery(saved.videoQuery);
       if (saved.dictEntries && Array.isArray(saved.dictEntries)) {
         setDictEntries(saved.dictEntries);
-        setDictStatus(saved.dictEntries.length ? 'ready' : 'idle');
+        setDictStatus(saved.dictEntries.length ? "ready" : "idle");
       }
       if (saved.items && Array.isArray(saved.items)) {
         setItems(saved.items);
-        setStatus(saved.items.length ? 'ready' : 'idle');
+        setStatus(saved.items.length ? "ready" : "idle");
       }
-      if (typeof saved.total === 'number') setTotal(saved.total);
+      if (typeof saved.total === "number") setTotal(saved.total);
       setNextCursor(saved.nextCursor ?? null);
       setHasMore(Boolean(saved.hasMore));
       setActiveIndex(saved.activeIndex ?? 0);
       setHasSearched(Boolean(saved.hasSearched));
-      if (typeof saved.examplesOpen === 'boolean') {
+      if (typeof saved.examplesOpen === "boolean") {
         setExamplesOpen(saved.examplesOpen);
       }
       if (saved.query) setHighlight(saved.query);
@@ -264,7 +276,7 @@ export function DictionaryContainer() {
       if (!rawHistory) return;
       const parsed = JSON.parse(rawHistory);
       if (Array.isArray(parsed)) {
-        setSearchHistory(parsed.filter((value) => typeof value === 'string'));
+        setSearchHistory(parsed.filter((value) => typeof value === "string"));
       }
     } catch {
       // ignore restore errors
@@ -288,10 +300,18 @@ export function DictionaryContainer() {
     if (dictionary.items.length === 0) return;
     if (userExpandedTranslationsId) return;
     const firstWord = (dictionary.items as UserDictionaryEntry[]).find(
-      (entry) => (entry.type ?? 'word') === 'word',
+      (entry) => (entry.type ?? "word") === "word",
     );
     setUserExpandedTranslationsId(firstWord?.id ?? null);
   }, [dictionary.items, userExpandedTranslationsId]);
+
+  const filteredDictionaryItems = useMemo(() => {
+    const items = dictionary.items as UserDictionaryEntry[];
+    if (userDictionaryFilter === "all") return items;
+    return items.filter(
+      (entry) => (entry.type ?? "word") === userDictionaryFilter,
+    );
+  }, [dictionary.items, userDictionaryFilter]);
 
   useEffect(() => {
     try {
@@ -311,29 +331,40 @@ export function DictionaryContainer() {
     } catch {
       // ignore persist errors
     }
-  }, [activeIndex, dictEntries, examplesOpen, hasMore, hasSearched, items, nextCursor, query, total, videoQuery]);
+  }, [
+    activeIndex,
+    dictEntries,
+    examplesOpen,
+    hasMore,
+    hasSearched,
+    items,
+    nextCursor,
+    query,
+    total,
+    videoQuery,
+  ]);
 
   const updateCardWidth = useCallback(() => {
     if (!firstCardRef.current) return;
     const width = firstCardRef.current.getBoundingClientRect().width;
     cardWidthRef.current = width;
-    sliderRef.current?.style.setProperty('--card-width', `${width}px`);
+    sliderRef.current?.style.setProperty("--card-width", `${width}px`);
   }, []);
 
   const handleClear = useCallback(() => {
-    setQuery('');
-    setVideoQuery('');
+    setQuery("");
+    setVideoQuery("");
     setDictEntries([]);
-    setDictStatus('idle');
+    setDictStatus("idle");
     setDictError(null);
     setExamplesOpen(true);
     setItems([]);
     setPhraseFallback(null);
-    setHighlight('');
+    setHighlight("");
     setHasMore(false);
     setNextCursor(null);
     setTotal(0);
-    setStatus('idle');
+    setStatus("idle");
     setError(null);
     setHasSearched(false);
     setActiveIndex(0);
@@ -356,10 +387,12 @@ export function DictionaryContainer() {
       dispatch(setLastQuery(trimmed));
       setHistoryOpen(false);
       setSearchHistory((prev) => {
-        const next = [trimmed, ...prev.filter((item) => item.toLowerCase() !== trimmed.toLowerCase())].slice(
-          0,
-          HISTORY_LIMIT,
-        );
+        const next = [
+          trimmed,
+          ...prev.filter(
+            (item) => item.toLowerCase() !== trimmed.toLowerCase(),
+          ),
+        ].slice(0, HISTORY_LIMIT);
         try {
           localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
         } catch {
@@ -372,9 +405,9 @@ export function DictionaryContainer() {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      setStatus('loading');
+      setStatus("loading");
       setError(null);
-      setDictStatus('loading');
+      setDictStatus("loading");
       setDictError(null);
       setHasSearched(true);
       setItems([]);
@@ -399,34 +432,34 @@ export function DictionaryContainer() {
 
         let dictionaryResults: MuellerEntry[] = [];
         let phraseDisplay = trimmed;
-        let phraseTranslationText = '';
-        let phraseVideoQuery = isRu ? '' : trimmed;
+        let phraseTranslationText = "";
+        let phraseVideoQuery = isRu ? "" : trimmed;
         if (!isPhrase) {
           dictionaryResults = await dictionaryModuleApi.searchMueller({
             word: trimmed,
-            lang: isRu ? 'ru' : 'en',
+            lang: isRu ? "ru" : "en",
           });
           setDictEntries(dictionaryResults);
-          setDictStatus('ready');
+          setDictStatus("ready");
         } else {
           setDictEntries([]);
-          setDictStatus('ready');
+          setDictStatus("ready");
         }
 
         if (dictionaryResults.length === 0 && isPhrase) {
           setPhraseFallback({
             phrase: trimmed,
-            translation: '',
+            translation: "",
           });
           try {
             const phraseTranslation = await dictionaryModuleApi
-              .translatePhrase(trimmed, isRu ? 'ru' : 'en', isRu ? 'en' : 'ru')
+              .translatePhrase(trimmed, isRu ? "ru" : "en", isRu ? "en" : "ru")
               .then((result) => result.translation)
-              .catch(() => '');
+              .catch(() => "");
             if (isRu) {
               phraseDisplay = phraseTranslation || trimmed;
               phraseTranslationText = trimmed;
-              phraseVideoQuery = phraseTranslation || '';
+              phraseVideoQuery = phraseTranslation || "";
             } else {
               phraseDisplay = trimmed;
               phraseTranslationText = phraseTranslation;
@@ -446,7 +479,7 @@ export function DictionaryContainer() {
           dictionaryModuleApi
             .recordView(auth.profile.id, {
               query: trimmed.toLowerCase(),
-              lang: isRu ? 'ru' : 'en',
+              lang: isRu ? "ru" : "en",
               word: primary.word,
               translation: primary.translations[0],
             })
@@ -456,8 +489,8 @@ export function DictionaryContainer() {
         const nextVideoQuery = isPhrase
           ? phraseVideoQuery
           : isRu
-          ? dictionaryResults[0]?.word?.trim() ?? ''
-          : trimmed;
+            ? (dictionaryResults[0]?.word?.trim() ?? "")
+            : trimmed;
         setVideoQuery(nextVideoQuery);
         setHighlight(nextVideoQuery || trimmed);
 
@@ -466,7 +499,7 @@ export function DictionaryContainer() {
           setHasMore(false);
           setNextCursor(null);
           setTotal(0);
-          setStatus('ready');
+          setStatus("ready");
           return;
         }
 
@@ -486,7 +519,7 @@ export function DictionaryContainer() {
         setHasMore(nextHasMore);
         setNextCursor(nextHasMore ? response.nextCursor : null);
         setTotal(nextHasMore ? response.total : deduped.length);
-        setStatus('ready');
+        setStatus("ready");
 
         if (nextHasMore && response.nextCursor && deduped.length < PAGE_SIZE) {
           if (!isLoadingMoreRef.current) {
@@ -504,7 +537,10 @@ export function DictionaryContainer() {
                 signal: controller.signal,
               });
               setItems((prev) => {
-                const merged = mergeSnippets(prev, dedupeSnippets(followUp.items));
+                const merged = mergeSnippets(
+                  prev,
+                  dedupeSnippets(followUp.items),
+                );
                 const added = merged.length - prev.length;
                 const followHasMore = followUp.hasMore && added > 0;
                 setHasMore(followHasMore);
@@ -521,12 +557,12 @@ export function DictionaryContainer() {
           }
         }
       } catch (err: any) {
-        if (err?.name === 'AbortError') return;
-        const message = err?.message ?? 'Не удалось выполнить поиск';
+        if (err?.name === "AbortError") return;
+        const message = err?.message ?? "Не удалось выполнить поиск";
         setError(message);
         setDictError(message);
-        setStatus('error');
-        setDictStatus('error');
+        setStatus("error");
+        setDictStatus("error");
       }
     },
     [auth.profile?.id, dispatch, query],
@@ -534,83 +570,100 @@ export function DictionaryContainer() {
 
   useEffect(() => {
     if (startParamHandledRef.current) return;
-    const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
+    const startParam = (window as any).Telegram?.WebApp?.initDataUnsafe
+      ?.start_param;
     const urlParams = new URLSearchParams(window.location.search);
-    const urlWord = urlParams.get('word');
-    const urlPhrase = urlParams.get('phrase');
-    let word = '';
-    if (typeof startParam === 'string' && startParam.startsWith('word_')) {
-      word = startParam.slice('word_'.length).trim();
-    } else if (typeof startParam === 'string' && startParam.startsWith('phrase_')) {
-      word = startParam.slice('phrase_'.length).trim();
-    } else if (typeof urlPhrase === 'string' && urlPhrase.trim()) {
+    const urlWord = urlParams.get("word");
+    const urlPhrase = urlParams.get("phrase");
+    let word = "";
+    if (typeof startParam === "string" && startParam.startsWith("word_")) {
+      word = startParam.slice("word_".length).trim();
+    } else if (
+      typeof startParam === "string" &&
+      startParam.startsWith("phrase_")
+    ) {
+      word = startParam.slice("phrase_".length).trim();
+    } else if (typeof urlPhrase === "string" && urlPhrase.trim()) {
       word = urlPhrase.trim();
-    } else if (typeof urlWord === 'string' && urlWord.trim()) {
+    } else if (typeof urlWord === "string" && urlWord.trim()) {
       word = urlWord.trim();
     }
     if (!word) return;
     const normalizedWord =
-      word.includes('_') && !word.includes(' ')
-        ? word.replace(/_+/g, ' ').trim()
+      word.includes("_") && !word.includes(" ")
+        ? word.replace(/_+/g, " ").trim()
         : word.trim();
-    if (sessionStorage.getItem('dictionary-start-handled') === '1') return;
+    if (sessionStorage.getItem("dictionary-start-handled") === "1") return;
     startParamHandledRef.current = true;
-    sessionStorage.setItem('dictionary-start-handled', '1');
+    sessionStorage.setItem("dictionary-start-handled", "1");
     setQuery(normalizedWord);
     setExamplesOpen(true);
     handleSearch(normalizedWord);
   }, [handleSearch]);
 
-  const handleLoadMore = useCallback(async (force = false) => {
-    if (isLoadingMoreRef.current) return;
-    if (!hasMore && !force) return;
-    if (force && forceLoadAttempts >= 3) return;
-    const phrase = videoQuery.trim();
-    if (!phrase) return;
-    if (items.length === 0 && !hasMore) return;
-    const cursorOverride = !hasMore && force ? String(items.length) : nextCursor;
-    if (!cursorOverride) return;
-    const now = Date.now();
-    if (now - lastLoadMoreAtRef.current < 400) return;
-    lastLoadMoreAtRef.current = now;
+  const handleLoadMore = useCallback(
+    async (force = false) => {
+      if (isLoadingMoreRef.current) return;
+      if (!hasMore && !force) return;
+      if (force && forceLoadAttempts >= 3) return;
+      const phrase = videoQuery.trim();
+      if (!phrase) return;
+      if (items.length === 0 && !hasMore) return;
+      const cursorOverride =
+        !hasMore && force ? String(items.length) : nextCursor;
+      if (!cursorOverride) return;
+      const now = Date.now();
+      if (now - lastLoadMoreAtRef.current < 400) return;
+      lastLoadMoreAtRef.current = now;
 
-    isLoadingMoreRef.current = true;
-    setIsLoadingMore(true);
-    const nextStage =
-      !hasMore && force
-        ? Math.min(sampleStage + 1, SAMPLE_STAGE_SIZES.length - 1)
-        : sampleStage;
-    if (!hasMore && force) {
-      setForceLoadAttempts((prev) => prev + 1);
-      setSampleStage(nextStage);
-    }
+      isLoadingMoreRef.current = true;
+      setIsLoadingMore(true);
+      const nextStage =
+        !hasMore && force
+          ? Math.min(sampleStage + 1, SAMPLE_STAGE_SIZES.length - 1)
+          : sampleStage;
+      if (!hasMore && force) {
+        setForceLoadAttempts((prev) => prev + 1);
+        setSampleStage(nextStage);
+      }
 
-    try {
-      const response = await dictionaryModuleApi.getVideoDictionary({
-        phrase,
-        limit: PAGE_SIZE,
-        cursor: cursorOverride,
-        paddingSeconds: computePaddingSeconds(videoQuery),
-        sampleSize: SAMPLE_STAGE_SIZES[nextStage],
-        userId: auth.profile?.id ?? null,
-      });
+      try {
+        const response = await dictionaryModuleApi.getVideoDictionary({
+          phrase,
+          limit: PAGE_SIZE,
+          cursor: cursorOverride,
+          paddingSeconds: computePaddingSeconds(videoQuery),
+          sampleSize: SAMPLE_STAGE_SIZES[nextStage],
+          userId: auth.profile?.id ?? null,
+        });
 
-      setItems((prev) => {
-        const merged = mergeSnippets(prev, dedupeSnippets(response.items));
-        const added = merged.length - prev.length;
-        const nextHasMore = response.hasMore && added > 0;
-        setHasMore(nextHasMore);
-        setNextCursor(nextHasMore ? response.nextCursor : null);
-        setTotal(nextHasMore ? response.total : merged.length);
-        return merged;
-      });
-    } catch (err: any) {
-      setError(err?.message ?? 'Не удалось загрузить еще результаты');
-    } finally {
-      isLoadingMoreRef.current = false;
-      setIsLoadingMore(false);
-    }
-  }, [auth.profile?.id, forceLoadAttempts, hasMore, isLoadingMore, items.length, nextCursor, sampleStage, videoQuery]);
+        setItems((prev) => {
+          const merged = mergeSnippets(prev, dedupeSnippets(response.items));
+          const added = merged.length - prev.length;
+          const nextHasMore = response.hasMore && added > 0;
+          setHasMore(nextHasMore);
+          setNextCursor(nextHasMore ? response.nextCursor : null);
+          setTotal(nextHasMore ? response.total : merged.length);
+          return merged;
+        });
+      } catch (err: any) {
+        setError(err?.message ?? "Не удалось загрузить еще результаты");
+      } finally {
+        isLoadingMoreRef.current = false;
+        setIsLoadingMore(false);
+      }
+    },
+    [
+      auth.profile?.id,
+      forceLoadAttempts,
+      hasMore,
+      isLoadingMore,
+      items.length,
+      nextCursor,
+      sampleStage,
+      videoQuery,
+    ],
+  );
 
   useEffect(() => {
     const needsMore = items.length < 30;
@@ -618,7 +671,14 @@ export function DictionaryContainer() {
     if (items.length > 0 && activeIndex >= items.length - 3) {
       handleLoadMore(canForce);
     }
-  }, [activeIndex, forceLoadAttempts, handleLoadMore, hasMore, isLoadingMore, items.length]);
+  }, [
+    activeIndex,
+    forceLoadAttempts,
+    handleLoadMore,
+    hasMore,
+    isLoadingMore,
+    items.length,
+  ]);
 
   const getCenteredIndex = useCallback(() => {
     if (!sliderRef.current || items.length === 0) return 0;
@@ -645,9 +705,9 @@ export function DictionaryContainer() {
     const card = cardRefs.current[index];
     if (!card) return;
     card.scrollIntoView({
-      behavior: 'smooth',
-      inline: 'center',
-      block: 'nearest',
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
     });
   }, []);
 
@@ -668,7 +728,8 @@ export function DictionaryContainer() {
   }, [examplesOpen, activeIndex, items.length, snapToIndex, updateCardWidth]);
 
   useEffect(() => {
-    if (!examplesOpen || !sliderRef.current || cardWidthRef.current === 0) return;
+    if (!examplesOpen || !sliderRef.current || cardWidthRef.current === 0)
+      return;
 
     const handleScroll = () => {
       if (!sliderRef.current || cardWidthRef.current === 0) return;
@@ -701,8 +762,8 @@ export function DictionaryContainer() {
     };
 
     const node = sliderRef.current;
-    node.addEventListener('scroll', handleScroll, { passive: true });
-    return () => node.removeEventListener('scroll', handleScroll);
+    node.addEventListener("scroll", handleScroll, { passive: true });
+    return () => node.removeEventListener("scroll", handleScroll);
   }, [examplesOpen, getCenteredIndex, items.length, snapToIndex]);
 
   useEffect(() => {
@@ -717,23 +778,39 @@ export function DictionaryContainer() {
   }, [activeIndex, items.length]);
 
   const helperText = useMemo(() => {
-    if (status === 'loading' || dictStatus === 'loading') return null;
+    if (status === "loading" || dictStatus === "loading") return null;
     if (!hasSearched) return null;
-    if (status === 'error') return error ?? 'Произошла ошибка';
-    if (dictStatus === 'error') return dictError ?? 'Произошла ошибка';
-    if (dictStatus === 'ready' && dictEntries.length === 0 && !phraseFallback) {
-      return 'Перевод не найден. Попробуйте другой запрос.';
+    if (status === "error") return error ?? "Произошла ошибка";
+    if (dictStatus === "error") return dictError ?? "Произошла ошибка";
+    if (dictStatus === "ready" && dictEntries.length === 0 && !phraseFallback) {
+      return "Перевод не найден. Попробуйте другой запрос.";
     }
-    if (status === 'ready' && items.length === 0 && dictEntries.length === 0 && !phraseFallback) {
-      return 'Ничего не найдено. Попробуйте другой запрос.';
+    if (
+      status === "ready" &&
+      items.length === 0 &&
+      dictEntries.length === 0 &&
+      !phraseFallback
+    ) {
+      return "Ничего не найдено. Попробуйте другой запрос.";
     }
     return null;
-  }, [dictEntries.length, dictError, dictStatus, error, hasSearched, items.length, status, phraseFallback]);
+  }, [
+    dictEntries.length,
+    dictError,
+    dictStatus,
+    error,
+    hasSearched,
+    items.length,
+    status,
+    phraseFallback,
+  ]);
 
   const handleOpenFullVideo = useCallback(
     (snippet: PhraseSnippet) => {
       if (!snippet.contentId) return;
-      navigate(`/video?contentId=${encodeURIComponent(snippet.contentId)}&focus=${Date.now()}`);
+      navigate(
+        `/video?contentId=${encodeURIComponent(snippet.contentId)}&focus=${Date.now()}`,
+      );
     },
     [navigate],
   );
@@ -744,7 +821,7 @@ export function DictionaryContainer() {
       setUserExampleState((prev) => ({
         ...prev,
         [entryId]: {
-          status: 'loading',
+          status: "loading",
           items: [],
           total: 0,
           hasMore: false,
@@ -765,7 +842,7 @@ export function DictionaryContainer() {
         setUserExampleState((prev) => ({
           ...prev,
           [entryId]: {
-            status: 'ready',
+            status: "ready",
             items,
             total: response.total,
             hasMore: response.hasMore,
@@ -777,13 +854,13 @@ export function DictionaryContainer() {
         setUserExampleState((prev) => ({
           ...prev,
           [entryId]: {
-            status: 'error',
+            status: "error",
             items: [],
             total: 0,
             hasMore: false,
             nextCursor: null,
             isLoadingMore: false,
-            error: err?.message ?? 'Не удалось загрузить примеры.',
+            error: err?.message ?? "Не удалось загрузить примеры.",
           },
         }));
       }
@@ -838,7 +915,7 @@ export function DictionaryContainer() {
             [entryId]: {
               ...existing,
               isLoadingMore: false,
-              error: err?.message ?? 'Не удалось загрузить примеры.',
+              error: err?.message ?? "Не удалось загрузить примеры.",
             },
           };
         });
@@ -847,45 +924,52 @@ export function DictionaryContainer() {
     [auth.profile?.id, userExampleState],
   );
 
-  const loadUserDictionaryDetails = useCallback(async (entryId: string, word: string) => {
-    setUserDictionaryDetails((prev) => ({
-      ...prev,
-      [entryId]: { status: 'loading', translationsRu: [], synonyms: [] },
-    }));
+  const loadUserDictionaryDetails = useCallback(
+    async (entryId: string, word: string) => {
+      setUserDictionaryDetails((prev) => ({
+        ...prev,
+        [entryId]: { status: "loading", translationsRu: [], synonyms: [] },
+      }));
 
-    try {
-      const lang = detectLanguage(word) ? 'ru' : 'en';
-      const entries = await dictionaryModuleApi.searchMueller({ word, lang });
-      const primary = entries[0];
-      const translationsRu = filterPureTranslations(primary?.translations ?? []).slice(0, 6);
-      const synonyms = (primary?.synonyms ?? []).filter((value) => value && /[a-z]/i.test(value)).slice(0, 6);
-      setUserDictionaryDetails((prev) => ({
-        ...prev,
-        [entryId]: {
-          status: 'ready',
-          translationsRu,
-          synonyms,
-        },
-      }));
-    } catch (err: any) {
-      setUserDictionaryDetails((prev) => ({
-        ...prev,
-        [entryId]: {
-          status: 'error',
-          translationsRu: [],
-          synonyms: [],
-          error: err?.message ?? 'Не удалось загрузить переводы.',
-        },
-      }));
-    }
-  }, []);
+      try {
+        const lang = detectLanguage(word) ? "ru" : "en";
+        const entries = await dictionaryModuleApi.searchMueller({ word, lang });
+        const primary = entries[0];
+        const translationsRu = filterPureTranslations(
+          primary?.translations ?? [],
+        ).slice(0, 6);
+        const synonyms = (primary?.synonyms ?? [])
+          .filter((value) => value && /[a-z]/i.test(value))
+          .slice(0, 6);
+        setUserDictionaryDetails((prev) => ({
+          ...prev,
+          [entryId]: {
+            status: "ready",
+            translationsRu,
+            synonyms,
+          },
+        }));
+      } catch (err: any) {
+        setUserDictionaryDetails((prev) => ({
+          ...prev,
+          [entryId]: {
+            status: "error",
+            translationsRu: [],
+            synonyms: [],
+            error: err?.message ?? "Не удалось загрузить переводы.",
+          },
+        }));
+      }
+    },
+    [],
+  );
 
   const toggleUserExamples = useCallback(
     (entryId: string, phrase: string) => {
       setExamplesOpen(false);
       setUserExamplesOpenId((prev) => {
         const nextValue = prev === entryId ? null : entryId;
-        if (nextValue && userExampleState[entryId]?.status !== 'ready') {
+        if (nextValue && userExampleState[entryId]?.status !== "ready") {
           loadUserExamples(entryId, phrase);
         }
         return nextValue;
@@ -898,7 +982,7 @@ export function DictionaryContainer() {
     (entryId: string) => {
       setUserExpandedTranslationsId((prev) => {
         const nextValue = prev === entryId ? null : entryId;
-        if (nextValue && userDictionaryDetails[nextValue]?.status !== 'ready') {
+        if (nextValue && userDictionaryDetails[nextValue]?.status !== "ready") {
           const entry = (dictionary.items as UserDictionaryEntry[]).find(
             (item: UserDictionaryEntry) => item.id === nextValue,
           );
@@ -928,40 +1012,55 @@ export function DictionaryContainer() {
             handleSearch(value);
             (document.activeElement as HTMLElement | null)?.blur?.();
           }}
-          loading={status === 'loading'}
+          loading={status === "loading"}
         />
 
         {helperText && <HelperText>{helperText}</HelperText>}
 
-        {(status === 'loading' || dictStatus === 'loading') && (
+        {(status === "loading" || dictStatus === "loading") && (
           <LoaderWrap>
             <Loader />
           </LoaderWrap>
         )}
 
-        {dictStatus === 'ready' && dictEntries.length > 0 &&
+        {dictStatus === "ready" &&
+          dictEntries.length > 0 &&
           (() => {
             const isRuQuery = detectLanguage(highlight);
             const primaryEntry = dictEntries[0];
-            const ruTranslationsAll = filterPureTranslations(primaryEntry?.translations ?? []);
+            const ruTranslationsAll = filterPureTranslations(
+              primaryEntry?.translations ?? [],
+            );
             const primaryEnglish = primaryEntry?.word?.trim() || query.trim();
-            const primaryRussian = isRuQuery ? highlight.trim() : ruTranslationsAll[0] ?? '';
-            const otherTranslationsRu = ruTranslationsAll.filter((value) => value && value !== primaryRussian).slice(0, 4);
-            const synonymsAll = (primaryEntry?.synonyms ?? []).filter((value) => value && /[a-z]/i.test(value));
-            const synonyms = synonymsAll.filter((value) => value !== primaryEnglish).slice(0, 4);
+            const primaryRussian = isRuQuery
+              ? highlight.trim()
+              : (ruTranslationsAll[0] ?? "");
+            const otherTranslationsRu = ruTranslationsAll
+              .filter((value) => value && value !== primaryRussian)
+              .slice(0, 4);
+            const synonymsAll = (primaryEntry?.synonyms ?? []).filter(
+              (value) => value && /[a-z]/i.test(value),
+            );
+            const synonyms = synonymsAll
+              .filter((value) => value !== primaryEnglish)
+              .slice(0, 4);
             const hasSnippets = items.length > 0;
             const showSnippets = showExamples && examplesOpen && hasSnippets;
             const normalizedWord = primaryEnglish.toLowerCase();
             const normalizedTranslation = primaryRussian.trim().toLowerCase();
-            const existingEntry = (dictionary.items as UserDictionaryEntry[]).find(
+            const existingEntry = (
+              dictionary.items as UserDictionaryEntry[]
+            ).find(
               (entry: UserDictionaryEntry) =>
-                (entry.type ?? 'word') === 'word' &&
-                typeof entry.word === 'string' &&
+                (entry.type ?? "word") === "word" &&
+                typeof entry.word === "string" &&
                 entry.word.toLowerCase() === normalizedWord &&
                 entry.translation.toLowerCase() === normalizedTranslation,
             );
             const isInDictionary = Boolean(existingEntry);
-            const dictionaryActionLabel = isInDictionary ? 'в словаре' : '+ в словарь';
+            const dictionaryActionLabel = isInDictionary
+              ? "в словаре"
+              : "+ в словарь";
 
             return (
               <WordCard
@@ -983,7 +1082,7 @@ export function DictionaryContainer() {
                   })
                 }
                 dictionaryActionLabel={dictionaryActionLabel}
-                dictionaryActionMode={isInDictionary ? 'tag' : 'button'}
+                dictionaryActionMode={isInDictionary ? "tag" : "button"}
                 dictionaryActionDisabled={isInDictionary}
                 onDictionaryAction={() => {
                   if (!auth.profile?.id) return;
@@ -991,7 +1090,7 @@ export function DictionaryContainer() {
                     dispatch(removeWord(existingEntry.id));
                     return;
                   }
-                  const lang = isRuQuery ? 'ru' : 'en';
+                  const lang = isRuQuery ? "ru" : "en";
                   const queryValue = highlight.trim();
                   if (!queryValue) return;
                   dispatch(
@@ -1007,7 +1106,10 @@ export function DictionaryContainer() {
                 shareActionLoading={isSharing}
                 onShare={async () => {
                   if (!initData) {
-                    showShareError(webApp, 'Откройте приложение через Telegram, чтобы поделиться.');
+                    showShareError(
+                      webApp,
+                      "Откройте приложение через Telegram, чтобы поделиться.",
+                    );
                     return;
                   }
                   if (isSharing) return;
@@ -1016,7 +1118,7 @@ export function DictionaryContainer() {
                     activeSnippet?.contextText ||
                     activeSnippet?.matchedText ||
                     activeSnippet?.translationContextText ||
-                    '';
+                    "";
                   const exampleIndex = activeIndex + 1;
                   const examplesTotal = total || 0;
                   try {
@@ -1035,13 +1137,15 @@ export function DictionaryContainer() {
                       examplesTotal,
                     });
                     if (webApp?.showAlert) {
-                      webApp.showAlert('Сообщение отправлено в бот. Перешлите его нужному человеку.');
+                      webApp.showAlert(
+                        "Сообщение отправлено в бот. Перешлите его нужному человеку.",
+                      );
                     }
                   } catch (error: any) {
                     const message =
-                      typeof error?.message === 'string'
+                      typeof error?.message === "string"
                         ? `Не удалось отправить: ${error.message}`
-                        : 'Не удалось отправить сообщение.';
+                        : "Не удалось отправить сообщение.";
                     showShareError(webApp, message);
                   } finally {
                     setIsSharing(false);
@@ -1068,29 +1172,42 @@ export function DictionaryContainer() {
             );
           })()}
 
-        {dictStatus === 'ready' && dictEntries.length === 0 && phraseFallback &&
+        {dictStatus === "ready" &&
+          dictEntries.length === 0 &&
+          phraseFallback &&
           (() => {
             const hasSnippets = items.length > 0;
             const showSnippets = showExamples && examplesOpen && hasSnippets;
             const normalizedPhrase = phraseFallback.phrase.trim().toLowerCase();
-            const normalizedPhraseTranslation = (phraseFallback.translation ?? '').trim().toLowerCase();
-            const existingPhraseEntry = (dictionary.items as UserDictionaryEntry[]).find(
+            const normalizedPhraseTranslation = (
+              phraseFallback.translation ?? ""
+            )
+              .trim()
+              .toLowerCase();
+            const existingPhraseEntry = (
+              dictionary.items as UserDictionaryEntry[]
+            ).find(
               (entry: UserDictionaryEntry) =>
-                entry.type === 'phrase' &&
-                (entry.phrase ?? entry.word ?? '').toLowerCase() === normalizedPhrase &&
+                entry.type === "phrase" &&
+                (entry.phrase ?? entry.word ?? "").toLowerCase() ===
+                  normalizedPhrase &&
                 entry.translation.toLowerCase() === normalizedPhraseTranslation,
             );
             const isPhraseInDictionary = Boolean(existingPhraseEntry);
             return (
               <WordCard
                 word={phraseFallback.phrase}
-                translation={phraseFallback.translation ?? ''}
+                translation={phraseFallback.translation ?? ""}
                 showExamplesButton={showExamples && hasSnippets}
                 examplesOpen={examplesOpen}
                 onToggleExamples={() => setExamplesOpen((prev) => !prev)}
                 dictionaryActionMode="button"
-                dictionaryActionLabel={isPhraseInDictionary ? 'в словаре' : '+ в словарь'}
-                dictionaryActionDisabled={isPhraseInDictionary || !phraseFallback.translation}
+                dictionaryActionLabel={
+                  isPhraseInDictionary ? "в словаре" : "+ в словарь"
+                }
+                dictionaryActionDisabled={
+                  isPhraseInDictionary || !phraseFallback.translation
+                }
                 onDictionaryAction={() => {
                   if (!auth.profile?.id) return;
                   if (isPhraseInDictionary && existingPhraseEntry) {
@@ -1102,7 +1219,7 @@ export function DictionaryContainer() {
                   dispatch(
                     addPhrase({
                       query: queryValue,
-                      lang: detectLanguage(queryValue) ? 'ru' : 'en',
+                      lang: detectLanguage(queryValue) ? "ru" : "en",
                     }),
                   );
                 }}
@@ -1110,7 +1227,10 @@ export function DictionaryContainer() {
                 shareActionLoading={isSharing}
                 onShare={async () => {
                   if (!initData) {
-                    showShareError(webApp, 'Откройте приложение через Telegram, чтобы поделиться.');
+                    showShareError(
+                      webApp,
+                      "Откройте приложение через Telegram, чтобы поделиться.",
+                    );
                     return;
                   }
                   if (isSharing) return;
@@ -1119,7 +1239,7 @@ export function DictionaryContainer() {
                     activeSnippet?.contextText ||
                     activeSnippet?.matchedText ||
                     activeSnippet?.translationContextText ||
-                    '';
+                    "";
                   const exampleIndex = activeIndex + 1;
                   const examplesTotal = total || 0;
                   try {
@@ -1127,7 +1247,7 @@ export function DictionaryContainer() {
                     await sendPhraseShareToBot({
                       initData,
                       phrase: phraseFallback.phrase,
-                      translation: phraseFallback.translation ?? '',
+                      translation: phraseFallback.translation ?? "",
                       videoUrl: activeSnippet?.videoUrl,
                       startSeconds: activeSnippet?.startSeconds,
                       endSeconds: activeSnippet?.endSeconds,
@@ -1136,13 +1256,15 @@ export function DictionaryContainer() {
                       examplesTotal,
                     });
                     if (webApp?.showAlert) {
-                      webApp.showAlert('Сообщение отправлено в бот. Перешлите его нужному человеку.');
+                      webApp.showAlert(
+                        "Сообщение отправлено в бот. Перешлите его нужному человеку.",
+                      );
                     }
                   } catch (error: any) {
                     const message =
-                      typeof error?.message === 'string'
+                      typeof error?.message === "string"
                         ? `Не удалось отправить: ${error.message}`
-                        : 'Не удалось отправить сообщение.';
+                        : "Не удалось отправить сообщение.";
                     showShareError(webApp, message);
                   } finally {
                     setIsSharing(false);
@@ -1171,54 +1293,98 @@ export function DictionaryContainer() {
 
         <DictionarySection>
           <SectionTitle>Мой словарь</SectionTitle>
-          {(dictionary.items as UserDictionaryEntry[]).length === 0 && (
+          <FilterRow>
+            <FilterButton
+              type="button"
+              $active={userDictionaryFilter === "all"}
+              onClick={() => setUserDictionaryFilter("all")}
+            >
+              все
+            </FilterButton>
+            <FilterButton
+              type="button"
+              $active={userDictionaryFilter === "word"}
+              onClick={() => setUserDictionaryFilter("word")}
+            >
+              слова
+            </FilterButton>
+            <FilterButton
+              type="button"
+              $active={userDictionaryFilter === "phrase"}
+              onClick={() => setUserDictionaryFilter("phrase")}
+            >
+              фразы
+            </FilterButton>
+          </FilterRow>
+          {filteredDictionaryItems.length === 0 && (
             <EmptyText>
-              Здесь пока пусто. Добавляйте новые слова в словарь, и они будут появляться в этом списке.
+              Здесь пока пусто. Добавляйте новые слова и фразы в словарь, и они
+              будут появляться в этом списке.
             </EmptyText>
           )}
           <UserList>
-            {(dictionary.items as UserDictionaryEntry[]).map((entry: UserDictionaryEntry) => {
-              const isPhraseEntry = entry.type === 'phrase';
+            {filteredDictionaryItems.map((entry: UserDictionaryEntry) => {
+              const isPhraseEntry = entry.type === "phrase";
               const open = userExamplesOpenId === entry.id;
               const state = userExampleState[entry.id] ?? {
-                status: 'idle',
+                status: "idle",
                 items: [],
               };
-              const expanded = !isPhraseEntry && userExpandedTranslationsId === entry.id;
-              const phraseExpanded = isPhraseEntry && userExpandedPhraseId === entry.id;
-              const otherTranslations = expanded ? entry.otherTranslations : undefined;
-              const hasRuTranslations = expanded && Boolean(otherTranslations?.some((value) => detectLanguage(value)));
-              const otherTranslationsRu = hasRuTranslations ? otherTranslations : undefined;
-              const synonyms = expanded && !hasRuTranslations ? otherTranslations : undefined;
+              const expanded =
+                !isPhraseEntry && userExpandedTranslationsId === entry.id;
+              const phraseExpanded =
+                isPhraseEntry && userExpandedPhraseId === entry.id;
+              const otherTranslations = expanded
+                ? entry.otherTranslations
+                : undefined;
+              const hasRuTranslations =
+                expanded &&
+                Boolean(
+                  otherTranslations?.some((value) => detectLanguage(value)),
+                );
+              const otherTranslationsRu = hasRuTranslations
+                ? otherTranslations
+                : undefined;
+              const synonyms =
+                expanded && !hasRuTranslations ? otherTranslations : undefined;
               const details = userDictionaryDetails[entry.id];
-              const detailsTranslations = expanded && details?.status === 'ready' ? details.translationsRu : undefined;
-              const detailsSynonyms = expanded && details?.status === 'ready' ? details.synonyms : undefined;
-              const displayWord = isPhraseEntry ? (entry.phrase ?? entry.word ?? '') : entry.word ?? '';
-              const displayTranslation = entry.translation ?? '';
+              const detailsTranslations =
+                expanded && details?.status === "ready"
+                  ? details.translationsRu
+                  : undefined;
+              const detailsSynonyms =
+                expanded && details?.status === "ready"
+                  ? details.synonyms
+                  : undefined;
+              const displayWord = isPhraseEntry
+                ? (entry.phrase ?? entry.word ?? "")
+                : (entry.word ?? "");
+              const displayTranslation = entry.translation ?? "";
 
               return (
                 <UserEntryWrapper key={entry.id}>
                   {(expanded || phraseExpanded) && (
                     <DeleteEntryButton
-                      type='button'
+                      type="button"
                       onClick={(event) => {
                         event.stopPropagation();
                         setDeleteTarget({
                           id: entry.id,
                           word: displayWord,
                           translation: displayTranslation,
-                          type: entry.type ?? 'word',
+                          type: entry.type ?? "word",
                         });
                       }}
-                      aria-label='Удалить'
+                      aria-label="Удалить"
                     >
-                      <Icon name='close' size={14} />
+                      <Icon name="close" size={14} />
                     </DeleteEntryButton>
                   )}
 
                   <Clickable
                     onClick={(event) => {
-                      if ((event.target as HTMLElement).closest('button')) return;
+                      if ((event.target as HTMLElement).closest("button"))
+                        return;
                       if (isPhraseEntry) {
                         setUserExpandedPhraseId((prev) => {
                           const nextValue = prev === entry.id ? null : entry.id;
@@ -1235,28 +1401,35 @@ export function DictionaryContainer() {
                     <WordCard
                       word={displayWord}
                       translation={displayTranslation}
-                      otherTranslationsRu={detailsTranslations ?? otherTranslationsRu}
+                      otherTranslationsRu={
+                        detailsTranslations ?? otherTranslationsRu
+                      }
                       synonyms={detailsSynonyms ?? synonyms}
-                      showExamplesButton={isPhraseEntry ? phraseExpanded : expanded}
+                      showExamplesButton={
+                        isPhraseEntry ? phraseExpanded : expanded
+                      }
                       examplesOpen={open}
                       onToggleExamples={() => {
                         if (isPhraseEntry && !phraseExpanded) return;
                         toggleUserExamples(entry.id, displayWord);
                       }}
-                      dictionaryActionMode='none'
-                      variant='compact'
+                      dictionaryActionMode="none"
+                      variant="compact"
                     >
                       {open && (
                         <>
-                          {state.status === 'loading' && (
+                          {state.status === "loading" && (
                             <InlineCenter>
                               <Loader />
                             </InlineCenter>
                           )}
-                          {state.status === 'error' && <ErrorText>{state.error}</ErrorText>}
-                          {state.status === 'ready' && state.items.length === 0 && (
-                            <SubtleText>Примеры не найдены.</SubtleText>
+                          {state.status === "error" && (
+                            <ErrorText>{state.error}</ErrorText>
                           )}
+                          {state.status === "ready" &&
+                            state.items.length === 0 && (
+                              <SubtleText>Примеры не найдены.</SubtleText>
+                            )}
                           {state.items.length > 0 && (
                             <SnippetCarousel
                               items={state.items}
@@ -1265,7 +1438,9 @@ export function DictionaryContainer() {
                               total={state.total}
                               hasMore={state.hasMore}
                               isLoadingMore={state.isLoadingMore}
-                              onLoadMore={() => loadMoreUserExamples(entry.id, displayWord)}
+                              onLoadMore={() =>
+                                loadMoreUserExamples(entry.id, displayWord)
+                              }
                             />
                           )}
                         </>
@@ -1281,12 +1456,12 @@ export function DictionaryContainer() {
 
       <DeleteModal
         open={Boolean(deleteTarget)}
-        word={deleteTarget?.word ?? ''}
-        translation={deleteTarget?.translation ?? ''}
+        word={deleteTarget?.word ?? ""}
+        translation={deleteTarget?.translation ?? ""}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={() => {
           if (!deleteTarget) return;
-          if (deleteTarget.type === 'phrase') {
+          if (deleteTarget.type === "phrase") {
             dispatch(removePhrase(deleteTarget.id));
           } else {
             dispatch(removeWord(deleteTarget.id));

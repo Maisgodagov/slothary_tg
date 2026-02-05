@@ -34,6 +34,23 @@ export const DictionarySection = styled.div`
   gap: 12px;
 `;
 
+export const FilterRow = styled.div`
+  display: flex;
+  gap: 8px;
+  padding-left: 4px;
+`;
+
+export const FilterButton = styled.button<{ $active?: boolean }>`
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: ${({ $active }) => ($active ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)')};
+  color: ${({ $active }) => ($active ? 'var(--tg-text)' : 'var(--tg-subtle)')};
+`;
+
 export const UserList = styled.div`
   display: grid;
   gap: 12px;
