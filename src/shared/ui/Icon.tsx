@@ -27,6 +27,7 @@ import {
   Flame,
   History,
   RotateCcw,
+  Repeat2,
   Type,
   CaseSensitive,
   Share2,
@@ -64,6 +65,7 @@ type IconName =
   | "flame-filled"
   | "history"
   | "replay"
+  | "repost"
   | "trophy"
   | "translate"
   | "bookmark"
@@ -112,6 +114,7 @@ const ICON_MAP: Record<
   "flame-filled": Flame,
   history: History,
   replay: RotateCcw,
+  repost: Repeat2,
   trophy: Trophy,
   translate: Languages,
   bookmark: Bookmark,

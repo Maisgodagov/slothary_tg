@@ -24,6 +24,7 @@ type WordCardProps = {
   summary?: boolean;
   reading?: boolean;
   shareActionLabel?: ReactNode;
+  shareActionLoading?: boolean;
   onShare?: () => void;
   children?: ReactNode;
 };
@@ -50,6 +51,7 @@ export function WordCard({
   summary = false,
   reading = false,
   shareActionLabel,
+  shareActionLoading = false,
   onShare,
   children,
 }: WordCardProps) {
@@ -102,8 +104,51 @@ export function WordCard({
         padding: isSubtitle ? 10 : effectiveLayout === "tight" ? 12 : 16,
         display: "grid",
         gap: outerGap,
+        position: "relative",
       }}
     >
+      {showShareAction && (
+        <button
+          type="button"
+          onClick={shareActionLoading ? undefined : onShare}
+          aria-label="Поделиться"
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            border: "1px solid var(--tg-border)",
+            background: "var(--tg-card)",
+            color: "var(--tg-text)",
+            borderRadius: 10,
+            width: 32,
+            height: 32,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: shareActionLoading ? "default" : "pointer",
+            opacity: shareActionLoading ? 0.6 : 1,
+          }}
+        >
+          {shareActionLoading ? (
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: "50%",
+                border: "2px solid rgba(109, 211, 255, 0.3)",
+                borderTopColor: "var(--tg-accent-strong)",
+                animation: "spin 0.9s linear infinite",
+                display: "inline-block",
+              }}
+            />
+          ) : (
+            shareActionLabel
+          )}
+          <style>
+            {`@keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}
+          </style>
+        </button>
+      )}
       <div
         style={{
           display: "grid",
@@ -226,7 +271,7 @@ export function WordCard({
         )}
       </div>
 
-      {(showExamplesButton || showFooterAction || showShareAction) && !summary && (
+      {(showExamplesButton || showFooterAction) && !summary && (
         <div
           style={{
             display: "flex",
@@ -310,27 +355,6 @@ export function WordCard({
                 {dictionaryActionLabel}
               </button>
             ))}
-          {showShareAction && (
-            <button
-              type="button"
-              onClick={onShare}
-              style={{
-                border: "1px solid var(--tg-border)",
-                background: "var(--tg-card)",
-                color: "var(--tg-text)",
-                fontWeight: 700,
-                fontSize: buttonFontSize,
-                borderRadius: 999,
-                padding: isCompact ? "6px 10px" : "8px 10px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                cursor: "pointer",
-              }}
-            >
-              {shareActionLabel}
-            </button>
-          )}
         </div>
       )}
 

@@ -136,6 +136,7 @@ export function DictionaryContainer() {
   const [hasMore, setHasMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
+  const [isSharing, setIsSharing] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
@@ -776,7 +777,7 @@ export function DictionaryContainer() {
             }}
           >
             <div style={{ fontSize: 13, color: "var(--tg-text)" }}>
-              Чтобы бот появился в чатах, нажмите «Start».
+              Для корректной работы запустите бота.
             </div>
             <button
               type="button"
@@ -805,7 +806,7 @@ export function DictionaryContainer() {
                 whiteSpace: "nowrap",
               }}
             >
-              Start bot
+              Запустить
             </button>
           </div>
         )}
@@ -896,12 +897,14 @@ export function DictionaryContainer() {
                     }),
                   );
                 }}
-                shareActionLabel={<Icon name="share" size={14} />}
+                shareActionLabel={<Icon name="repost" size={16} />}
+                shareActionLoading={isSharing}
                 onShare={async () => {
                   if (!initData) {
                     showShareError(webApp, 'Откройте приложение через Telegram, чтобы поделиться.');
                     return;
                   }
+                  if (isSharing) return;
                   const activeSnippet = items[activeIndex];
                   const exampleText =
                     activeSnippet?.contextText ||
@@ -911,6 +914,7 @@ export function DictionaryContainer() {
                   const exampleIndex = activeIndex + 1;
                   const examplesTotal = total || 0;
                   try {
+                    setIsSharing(true);
                     await sendShareToBot({
                       initData,
                       word: primaryEnglish,
@@ -933,6 +937,8 @@ export function DictionaryContainer() {
                         ? `Не удалось отправить: ${error.message}`
                         : 'Не удалось отправить сообщение.';
                     showShareError(webApp, message);
+                  } finally {
+                    setIsSharing(false);
                   }
                 }}
               >
