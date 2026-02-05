@@ -130,6 +130,7 @@ export function DictionaryContainer() {
   const [videoQuery, setVideoQuery] = useState('');
   const showExamples = true;
   const [examplesOpen, setExamplesOpen] = useState(true);
+  const startParamHandledRef = useRef(false);
   const [items, setItems] = useState<PhraseSnippet[]>([]);
   const [highlight, setHighlight] = useState('');
   const [hasMore, setHasMore] = useState(false);
@@ -174,7 +175,6 @@ export function DictionaryContainer() {
   } | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const startParamHandledRef = useRef(false);
 
   const abortRef = useRef<AbortController | null>(null);
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -417,8 +417,11 @@ export function DictionaryContainer() {
       word = urlWord.trim();
     }
     if (!word) return;
+    if (sessionStorage.getItem('dictionary-start-handled') === '1') return;
     startParamHandledRef.current = true;
+    sessionStorage.setItem('dictionary-start-handled', '1');
     setQuery(word);
+    setExamplesOpen(true);
     handleSearch(word);
   }, [handleSearch]);
 
@@ -840,7 +843,7 @@ export function DictionaryContainer() {
                     }),
                   );
                 }}
-                shareActionLabel='Поделиться'
+                shareActionLabel={<Icon name="share" size={14} />}
                 onShare={async () => {
                   if (!initData) {
                     showShareError(webApp, 'Откройте приложение через Telegram, чтобы поделиться.');

@@ -321,10 +321,10 @@ export function WordCard({
                 fontWeight: 700,
                 fontSize: buttonFontSize,
                 borderRadius: 999,
-                padding: isCompact ? "6px 12px" : "8px 14px",
+                padding: isCompact ? "6px 10px" : "8px 10px",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 8,
+                gap: 6,
                 cursor: "pointer",
               }}
             >
