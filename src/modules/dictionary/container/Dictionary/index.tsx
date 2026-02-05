@@ -464,7 +464,7 @@ export function DictionaryContainer() {
                 signal: controller.signal,
               });
               setItems((prev) => {
-                const merged = mergeSnippets(prev, followUp.items);
+                const merged = mergeSnippets(prev, dedupeSnippets(followUp.items));
                 const added = merged.length - prev.length;
                 const followHasMore = followUp.hasMore && added > 0;
                 setHasMore(followHasMore);
@@ -546,7 +546,7 @@ export function DictionaryContainer() {
       });
 
       setItems((prev) => {
-        const merged = mergeSnippets(prev, response.items);
+        const merged = mergeSnippets(prev, dedupeSnippets(response.items));
         const added = merged.length - prev.length;
         const nextHasMore = response.hasMore && added > 0;
         setHasMore(nextHasMore);
