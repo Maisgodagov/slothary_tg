@@ -12,6 +12,20 @@ export interface RequestConfig<TBody = unknown> {
 
 const API_URL = env.apiUrl.replace(/\/$/, '');
 
+const getStoredAccessToken = () => {
+  try {
+    const raw = localStorage.getItem('persist:root');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Record<string, string>;
+    const authRaw = parsed?.auth;
+    if (!authRaw) return null;
+    const auth = JSON.parse(authRaw) as { tokens?: { accessToken?: string } };
+    return auth?.tokens?.accessToken ?? null;
+  } catch {
+    return null;
+  }
+};
+
 export async function apiFetch<TResponse, TBody = unknown>(
   endpoint: string,
   { method = 'GET', body, token, headers = {}, signal }: RequestConfig<TBody> = {},
@@ -27,8 +41,9 @@ export async function apiFetch<TResponse, TBody = unknown>(
     requestHeaders.set('Content-Type', 'application/json');
   }
 
-  if (token) {
-    requestHeaders.set('Authorization', `Bearer ${token}`);
+  const accessToken = token ?? getStoredAccessToken();
+  if (accessToken) {
+    requestHeaders.set('Authorization', `Bearer ${accessToken}`);
   }
 
   const response = await fetch(fullUrl, {

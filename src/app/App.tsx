@@ -74,10 +74,12 @@ function StreakRefresher() {
 
 function WelcomeSender() {
   const { initData } = useTelegram();
+  const auth = useAppSelector(selectAuth);
   const sentRef = useRef(false);
 
   useEffect(() => {
     if (!initData || sentRef.current) return;
+    if (!auth.tokens?.accessToken) return;
     const key = "welcome-sent";
     if (localStorage.getItem(key) === "1") return;
     sentRef.current = true;
@@ -91,7 +93,7 @@ function WelcomeSender() {
       .catch(() => {
         // ignore
       });
-  }, [initData]);
+  }, [auth.tokens?.accessToken, initData]);
 
   return null;
 }

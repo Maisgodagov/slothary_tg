@@ -1112,6 +1112,13 @@ export function DictionaryContainer() {
                     );
                     return;
                   }
+                  if (!auth.tokens?.accessToken) {
+                    showShareError(
+                      webApp,
+                      "Нужно войти, чтобы поделиться.",
+                    );
+                    return;
+                  }
                   if (isSharing) return;
                   const activeSnippet = items[activeIndex];
                   const exampleText =
@@ -1230,6 +1237,13 @@ export function DictionaryContainer() {
                     showShareError(
                       webApp,
                       "Откройте приложение через Telegram, чтобы поделиться.",
+                    );
+                    return;
+                  }
+                  if (!auth.tokens?.accessToken) {
+                    showShareError(
+                      webApp,
+                      "Нужно войти, чтобы поделиться.",
                     );
                     return;
                   }
