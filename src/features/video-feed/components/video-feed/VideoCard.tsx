@@ -1123,26 +1123,28 @@ export function VideoCard({
                           type="button"
                           onClick={handleExcludeExerciseWord}
                           style={{
-                            border: "1px solid #d9b8b8",
-                            background: "#fff3f3",
-                            color: "#9f2b2b",
+                            border: "1px solid var(--tg-border)",
+                            background: "var(--tg-card)",
+                            color: "var(--tg-subtle)",
                             fontWeight: 700,
-                            fontSize: 12,
                             borderRadius: 999,
-                            padding: "6px 10px",
+                            width: 32,
+                            height: 32,
                             cursor:
                               excludingWordId === currentExercise.wordId
                                 ? "default"
                                 : "pointer",
-                            whiteSpace: "nowrap",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                             opacity:
                               excludingWordId === currentExercise.wordId ? 0.6 : 1,
                           }}
                           disabled={excludingWordId === currentExercise.wordId}
+                          aria-label="Исключить слово из упражнений"
+                          title="Исключить слово из упражнений"
                         >
-                          {excludingWordId === currentExercise.wordId
-                            ? "Исключаем..."
-                            : "Исключить"}
+                          <Icon name="close" size={16} />
                         </button>
                       )}
                       {currentExercise.direction === "en-ru" && (
