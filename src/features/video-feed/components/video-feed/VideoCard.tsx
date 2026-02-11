@@ -505,9 +505,7 @@ export function VideoCard({
       exercisesRequested.current = true;
       try {
         setExercisesLoading(true);
-        const wordIds = await wordIdsFromSubtitles(subtitlesSource as any, {
-          limit: 120,
-        });
+        const wordIds = await wordIdsFromSubtitles(subtitlesSource as any);
         if (!wordIds.length) {
           setExercises([]);
           return;

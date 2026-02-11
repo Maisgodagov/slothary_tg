@@ -49,13 +49,13 @@ export const wordIdsFromSubtitles = async (
     new Set(forms.map((f) => normalizeForm(f)).filter((v): v is string => Boolean(v))),
   );
   const ids: number[] = [];
-  const limit = options?.limit ?? 200;
+  const limit = options?.limit;
 
   for (const form of normalized) {
     const id = map[form];
     if (typeof id === "number" && Number.isFinite(id) && id > 0) {
       ids.push(id);
-      if (ids.length >= limit) break;
+      if (typeof limit === "number" && limit > 0 && ids.length >= limit) break;
     }
   }
   return Array.from(new Set(ids));
