@@ -33,13 +33,19 @@ import {
   DeleteEntryButton,
   DictionarySection,
   DictionaryLayout,
+  DictionaryListSkeleton,
+  DictionaryListSkeletonItem,
   EmptyText,
   ErrorText,
   FilterButton,
   FilterRow,
   HelperText,
   InlineCenter,
-  LoaderWrap,
+  SkeletonCard,
+  SkeletonLine,
+  SkeletonSnippetCard,
+  SkeletonSnippetCounter,
+  SkeletonSnippetsWrap,
   SectionTitle,
   SubtleText,
   UserList,
@@ -1070,10 +1076,18 @@ export function DictionaryContainer() {
 
         {helperText && <HelperText>{helperText}</HelperText>}
 
-        {(status === "loading" || dictStatus === "loading") && (
-          <LoaderWrap>
-            <Loader />
-          </LoaderWrap>
+        {dictStatus === "loading" && (
+          <SkeletonCard>
+            <SkeletonLine $w="48%" $h="30px" />
+            <SkeletonLine $w="92%" />
+            <SkeletonLine $w="78%" />
+            <SkeletonLine $w="64%" />
+            <SkeletonLine $w="42%" $h="34px" />
+            <SkeletonSnippetsWrap>
+              <SkeletonSnippetCard />
+              <SkeletonSnippetCounter />
+            </SkeletonSnippetsWrap>
+          </SkeletonCard>
         )}
 
         {dictStatus === "ready" &&
@@ -1099,6 +1113,8 @@ export function DictionaryContainer() {
               .slice(0, 7);
             const hasSnippets = items.length > 0;
             const showSnippets = showExamples && examplesOpen && hasSnippets;
+            const showSnippetsSkeleton =
+              showExamples && examplesOpen && status === "loading" && !hasSnippets;
             const normalizedWord = primaryEnglish.toLowerCase();
             const normalizedTranslation = primaryRussian.trim().toLowerCase();
             const existingEntry = (
@@ -1125,7 +1141,7 @@ export function DictionaryContainer() {
                   setQuery(value);
                   handleSearch(value);
                 }}
-                showExamplesButton={showExamples && hasSnippets}
+                showExamplesButton={showExamples && (hasSnippets || status === "loading")}
                 examplesOpen={examplesOpen}
                 onToggleExamples={() =>
                   setExamplesOpen((prev) => {
@@ -1209,7 +1225,7 @@ export function DictionaryContainer() {
                   }
                 }}
               >
-                {showSnippets && (
+                {(showSnippets || showSnippetsSkeleton) && (
                   <div
                     style={{
                       border: "1px solid var(--tg-border)",
@@ -1220,22 +1236,29 @@ export function DictionaryContainer() {
                       overflow: "hidden",
                     }}
                   >
-                    <SearchSnippetsCarousel
-                      items={items}
-                      highlight={highlight}
-                      activeIndex={activeIndex}
-                      onOpenFullVideo={handleOpenFullVideo}
-                      total={visibleSnippetsTotal}
-                      realTotal={total}
-                      uiTotal={visibleSnippetsTotal}
-                      sliderRef={sliderRef}
-                      onCardRef={(index, node) => {
-                        cardRefs.current[index] = node;
-                      }}
-                      onFirstCardRef={(node) => {
-                        firstCardRef.current = node;
-                      }}
-                    />
+                    {showSnippets ? (
+                      <SearchSnippetsCarousel
+                        items={items}
+                        highlight={highlight}
+                        activeIndex={activeIndex}
+                        onOpenFullVideo={handleOpenFullVideo}
+                        total={visibleSnippetsTotal}
+                        realTotal={total}
+                        uiTotal={visibleSnippetsTotal}
+                        sliderRef={sliderRef}
+                        onCardRef={(index, node) => {
+                          cardRefs.current[index] = node;
+                        }}
+                        onFirstCardRef={(node) => {
+                          firstCardRef.current = node;
+                        }}
+                      />
+                    ) : (
+                      <SkeletonSnippetsWrap>
+                        <SkeletonSnippetCard />
+                        <SkeletonSnippetCounter />
+                      </SkeletonSnippetsWrap>
+                    )}
                   </div>
                 )}
               </WordCard>
@@ -1248,6 +1271,8 @@ export function DictionaryContainer() {
           (() => {
             const hasSnippets = items.length > 0;
             const showSnippets = showExamples && examplesOpen && hasSnippets;
+            const showSnippetsSkeleton =
+              showExamples && examplesOpen && status === "loading" && !hasSnippets;
             const normalizedPhrase = phraseFallback.phrase.trim().toLowerCase();
             const normalizedPhraseTranslation = (
               phraseFallback.translation ?? ""
@@ -1268,7 +1293,7 @@ export function DictionaryContainer() {
               <WordCard
                 word={phraseFallback.phrase}
                 translation={phraseFallback.translation ?? ""}
-                showExamplesButton={showExamples && hasSnippets}
+                showExamplesButton={showExamples && (hasSnippets || status === "loading")}
                 examplesOpen={examplesOpen}
                 onToggleExamples={() => setExamplesOpen((prev) => !prev)}
                 dictionaryActionMode="button"
@@ -1345,7 +1370,7 @@ export function DictionaryContainer() {
                   }
                 }}
               >
-                {showSnippets && (
+                {(showSnippets || showSnippetsSkeleton) && (
                   <div
                     style={{
                       border: "1px solid var(--tg-border)",
@@ -1356,22 +1381,29 @@ export function DictionaryContainer() {
                       overflow: "hidden",
                     }}
                   >
-                    <SearchSnippetsCarousel
-                      items={items}
-                      highlight={highlight}
-                      activeIndex={activeIndex}
-                      onOpenFullVideo={handleOpenFullVideo}
-                      total={visibleSnippetsTotal}
-                      realTotal={total}
-                      uiTotal={visibleSnippetsTotal}
-                      sliderRef={sliderRef}
-                      onCardRef={(index, node) => {
-                        cardRefs.current[index] = node;
-                      }}
-                      onFirstCardRef={(node) => {
-                        firstCardRef.current = node;
-                      }}
-                    />
+                    {showSnippets ? (
+                      <SearchSnippetsCarousel
+                        items={items}
+                        highlight={highlight}
+                        activeIndex={activeIndex}
+                        onOpenFullVideo={handleOpenFullVideo}
+                        total={visibleSnippetsTotal}
+                        realTotal={total}
+                        uiTotal={visibleSnippetsTotal}
+                        sliderRef={sliderRef}
+                        onCardRef={(index, node) => {
+                          cardRefs.current[index] = node;
+                        }}
+                        onFirstCardRef={(node) => {
+                          firstCardRef.current = node;
+                        }}
+                      />
+                    ) : (
+                      <SkeletonSnippetsWrap>
+                        <SkeletonSnippetCard />
+                        <SkeletonSnippetCounter />
+                      </SkeletonSnippetsWrap>
+                    )}
                   </div>
                 )}
               </WordCard>
@@ -1403,14 +1435,28 @@ export function DictionaryContainer() {
               фразы
             </FilterButton>
           </FilterRow>
-          {filteredDictionaryItems.length === 0 && (
+          {dictionary.status !== "loading" && filteredDictionaryItems.length === 0 && (
             <EmptyText>
               Здесь пока пусто. Добавляйте новые слова и фразы в словарь, и они
               будут появляться в этом списке.
             </EmptyText>
           )}
-          <UserList>
-            {filteredDictionaryItems.map((entry: UserDictionaryEntry) => {
+          {dictionary.status === "loading" ? (
+            <DictionaryListSkeleton>
+              <DictionaryListSkeletonItem>
+                <SkeletonLine $w="58%" $h="24px" />
+                <SkeletonLine $w="34%" $h="16px" />
+                <SkeletonLine $w="42%" $h="34px" />
+              </DictionaryListSkeletonItem>
+              {Array.from({ length: 8 }).map((_, index) => (
+                <DictionaryListSkeletonItem key={index}>
+                  <SkeletonLine $w="52%" $h="24px" />
+                </DictionaryListSkeletonItem>
+              ))}
+            </DictionaryListSkeleton>
+          ) : (
+            <UserList>
+              {filteredDictionaryItems.map((entry: UserDictionaryEntry) => {
               const isPhraseEntry = entry.type === "phrase";
               const open = userExamplesOpenId === entry.id;
               const state = userExampleState[entry.id] ?? {
@@ -1536,8 +1582,9 @@ export function DictionaryContainer() {
                   </Clickable>
                 </UserEntryWrapper>
               );
-            })}
-          </UserList>
+              })}
+            </UserList>
+          )}
         </DictionarySection>
       </DictionaryLayout>
 
