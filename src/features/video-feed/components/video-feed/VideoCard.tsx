@@ -51,6 +51,7 @@ export function VideoCard({
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [exerciseOptions, setExerciseOptions] = useState<string[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [excludingWordId, setExcludingWordId] = useState<number | null>(null);
   const lastTapRef = useRef<number>(0);
   const playTimeoutRef = useRef<number | null>(null);
   const heartTimeoutRef = useRef<number | null>(null);
@@ -598,6 +599,33 @@ export function VideoCard({
     }, 800);
   };
 
+  const handleExcludeExerciseWord = async () => {
+    if (!isAdmin || !currentExercise || !auth.profile?.id) return;
+    if (excludingWordId === currentExercise.wordId) return;
+    try {
+      setExcludingWordId(currentExercise.wordId);
+      await exercisesApi.excludeWord(
+        { wordId: currentExercise.wordId },
+        auth.profile.id,
+        auth.profile.role
+      );
+      setExercises((prev) => {
+        if (!prev?.length) return prev;
+        const next = prev.filter((exercise) => exercise.wordId !== currentExercise.wordId);
+        if (exerciseIndex >= next.length) {
+          setExerciseIndex(Math.max(0, next.length - 1));
+        }
+        return next;
+      });
+      setSelectedOption(null);
+    } catch (err) {
+      console.error("excludeWord failed", err);
+      alert("Не удалось добавить слово в исключения");
+    } finally {
+      setExcludingWordId(null);
+    }
+  };
+
   const showSpinner = isContentLoading;
   const showExerciseButton = !showSpinner && exercisesCount > 0;
 
@@ -1092,6 +1120,33 @@ export function VideoCard({
                     >
                       {exerciseInDictionary ? "в словаре" : "+ в словарь"}
                     </button>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={handleExcludeExerciseWord}
+                          style={{
+                            border: "1px solid #d9b8b8",
+                            background: "#fff3f3",
+                            color: "#9f2b2b",
+                            fontWeight: 700,
+                            fontSize: 12,
+                            borderRadius: 999,
+                            padding: "6px 10px",
+                            cursor:
+                              excludingWordId === currentExercise.wordId
+                                ? "default"
+                                : "pointer",
+                            whiteSpace: "nowrap",
+                            opacity:
+                              excludingWordId === currentExercise.wordId ? 0.6 : 1,
+                          }}
+                          disabled={excludingWordId === currentExercise.wordId}
+                        >
+                          {excludingWordId === currentExercise.wordId
+                            ? "Исключаем..."
+                            : "Исключить"}
+                        </button>
+                      )}
                       {currentExercise.direction === "en-ru" && (
                         <S.ListenButton
                           onClick={() => {

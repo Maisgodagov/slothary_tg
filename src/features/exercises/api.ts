@@ -56,4 +56,18 @@ export const exercisesApi = {
       body,
     });
   },
+  async excludeWord(
+    body: { wordId: number },
+    userId?: string | null,
+    role?: string | null,
+  ) {
+    const headers: Record<string, string> = {};
+    if (userId) headers["x-user-id"] = userId;
+    if (role) headers["x-user-role"] = role;
+    return apiFetch<{ wordId: number; excluded: true }>('exercises/exclude-word', {
+      method: 'POST',
+      headers,
+      body,
+    });
+  },
 };
