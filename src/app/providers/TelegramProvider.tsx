@@ -83,6 +83,12 @@ function updateKeyboardState() {
   root.classList.toggle('keyboard-open', keyboardOpen);
 }
 
+function isMobileTelegramClient(platform: string | undefined) {
+  if (!platform) return false;
+  const normalized = platform.toLowerCase();
+  return normalized === 'android' || normalized === 'ios';
+}
+
 export function TelegramProvider({ children }: { children: ReactNode }) {
   const [systemTheme, setSystemTheme] = useState<Theme>(WebApp?.colorScheme ?? 'dark');
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
@@ -102,10 +108,14 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const shouldAutoExpand = isMobileTelegramClient(WebApp.platform);
+
     WebApp.ready();
-    WebApp.expand();
-    if (typeof WebApp.requestFullscreen === 'function') {
-      WebApp.requestFullscreen();
+    if (shouldAutoExpand) {
+      WebApp.expand();
+      if (typeof WebApp.requestFullscreen === 'function') {
+        WebApp.requestFullscreen();
+      }
     }
     WebApp.disableVerticalSwipes();
     WebApp.disableClosingConfirmation?.();
@@ -127,11 +137,13 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
     };
 
     const handleViewportChange = () => {
-      if (!WebApp.isExpanded) {
-        WebApp.expand();
-      }
-      if (typeof WebApp.requestFullscreen === 'function') {
-        WebApp.requestFullscreen();
+      if (shouldAutoExpand) {
+        if (!WebApp.isExpanded) {
+          WebApp.expand();
+        }
+        if (typeof WebApp.requestFullscreen === 'function') {
+          WebApp.requestFullscreen();
+        }
       }
       updateSafeAreaFromViewport();
       updateKeyboardState();
