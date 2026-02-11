@@ -937,10 +937,10 @@ export function DictionaryContainer() {
         const primary = entries[0];
         const translationsRu = filterPureTranslations(
           primary?.translations ?? [],
-        ).slice(0, 6);
+        ).slice(0, 7);
         const synonyms = (primary?.synonyms ?? [])
           .filter((value) => value && /[a-z]/i.test(value))
-          .slice(0, 6);
+          .slice(0, 7);
         setUserDictionaryDetails((prev) => ({
           ...prev,
           [entryId]: {
@@ -1037,13 +1037,13 @@ export function DictionaryContainer() {
               : (ruTranslationsAll[0] ?? "");
             const otherTranslationsRu = ruTranslationsAll
               .filter((value) => value && value !== primaryRussian)
-              .slice(0, 4);
+              .slice(0, 7);
             const synonymsAll = (primaryEntry?.synonyms ?? []).filter(
               (value) => value && /[a-z]/i.test(value),
             );
             const synonyms = synonymsAll
               .filter((value) => value !== primaryEnglish)
-              .slice(0, 4);
+              .slice(0, 7);
             const hasSnippets = items.length > 0;
             const showSnippets = showExamples && examplesOpen && hasSnippets;
             const normalizedWord = primaryEnglish.toLowerCase();
@@ -1113,10 +1113,7 @@ export function DictionaryContainer() {
                     return;
                   }
                   if (!auth.tokens?.accessToken) {
-                    showShareError(
-                      webApp,
-                      "Нужно войти, чтобы поделиться.",
-                    );
+                    showShareError(webApp, "Нужно войти, чтобы поделиться.");
                     return;
                   }
                   if (isSharing) return;
@@ -1160,20 +1157,31 @@ export function DictionaryContainer() {
                 }}
               >
                 {showSnippets && (
-                  <SearchSnippetsCarousel
-                    items={items}
-                    highlight={highlight}
-                    activeIndex={activeIndex}
-                    onOpenFullVideo={handleOpenFullVideo}
-                    total={total}
-                    sliderRef={sliderRef}
-                    onCardRef={(index, node) => {
-                      cardRefs.current[index] = node;
+                  <div
+                    style={{
+                      border: "1px solid var(--tg-border)",
+                      background: "var(--tg-surface)",
+                      borderRadius: 32,
+                      padding: "4px 2px 6px",
+                      maxWidth: "100%",
+                      overflow: "hidden",
                     }}
-                    onFirstCardRef={(node) => {
-                      firstCardRef.current = node;
-                    }}
-                  />
+                  >
+                    <SearchSnippetsCarousel
+                      items={items}
+                      highlight={highlight}
+                      activeIndex={activeIndex}
+                      onOpenFullVideo={handleOpenFullVideo}
+                      total={total}
+                      sliderRef={sliderRef}
+                      onCardRef={(index, node) => {
+                        cardRefs.current[index] = node;
+                      }}
+                      onFirstCardRef={(node) => {
+                        firstCardRef.current = node;
+                      }}
+                    />
+                  </div>
                 )}
               </WordCard>
             );
@@ -1241,10 +1249,7 @@ export function DictionaryContainer() {
                     return;
                   }
                   if (!auth.tokens?.accessToken) {
-                    showShareError(
-                      webApp,
-                      "Нужно войти, чтобы поделиться.",
-                    );
+                    showShareError(webApp, "Нужно войти, чтобы поделиться.");
                     return;
                   }
                   if (isSharing) return;
@@ -1286,20 +1291,31 @@ export function DictionaryContainer() {
                 }}
               >
                 {showSnippets && (
-                  <SearchSnippetsCarousel
-                    items={items}
-                    highlight={highlight}
-                    activeIndex={activeIndex}
-                    onOpenFullVideo={handleOpenFullVideo}
-                    total={total}
-                    sliderRef={sliderRef}
-                    onCardRef={(index, node) => {
-                      cardRefs.current[index] = node;
+                  <div
+                    style={{
+                      border: "1px solid var(--tg-border)",
+                      background: "var(--tg-surface)",
+                      borderRadius: 26,
+                      padding: "4px 2px 6px",
+                      maxWidth: "100%",
+                      overflow: "hidden",
                     }}
-                    onFirstCardRef={(node) => {
-                      firstCardRef.current = node;
-                    }}
-                  />
+                  >
+                    <SearchSnippetsCarousel
+                      items={items}
+                      highlight={highlight}
+                      activeIndex={activeIndex}
+                      onOpenFullVideo={handleOpenFullVideo}
+                      total={total}
+                      sliderRef={sliderRef}
+                      onCardRef={(index, node) => {
+                        cardRefs.current[index] = node;
+                      }}
+                      onFirstCardRef={(node) => {
+                        firstCardRef.current = node;
+                      }}
+                    />
+                  </div>
                 )}
               </WordCard>
             );

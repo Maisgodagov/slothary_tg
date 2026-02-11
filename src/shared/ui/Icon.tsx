@@ -31,6 +31,9 @@ import {
   Type,
   CaseSensitive,
   Share2,
+  Forward,
+  Plus,
+  Check,
 } from "lucide-react";
 
 type IconName =
@@ -71,7 +74,10 @@ type IconName =
   | "bookmark"
   | "share"
   | "font"
-  | "case-sensitive";
+  | "case-sensitive"
+  | "forward"
+  | "plus"
+  | "check";
 
 const ICON_MAP: Record<
   IconName,
@@ -121,6 +127,9 @@ const ICON_MAP: Record<
   share: Share2,
   font: Type,
   "case-sensitive": CaseSensitive,
+  forward: Forward,
+  plus: Plus,
+  check: Check,
 };
 
 interface IconProps {

@@ -71,11 +71,12 @@ export function WordCard({
   const showFooterAction =
     showDictionaryAction && dictionaryActionPlacement !== "inline";
   const showShareAction = Boolean(shareActionLabel && onShare);
+  const dictionaryLabelText = (dictionaryActionLabel ?? "").replace(/^\+\s*/, "");
   const displayWord = word.toLowerCase();
   const effectiveLayout = summary ? "tight" : layoutMode;
   const outerGap = effectiveLayout === "tight" ? 5 : isSubtitle ? 8 : isCompact ? 10 : 14;
 
-  const wordFontSize = isSubtitle ? 16 : isCompact ? 18 : 28;
+  const wordFontSize = isSubtitle ? 15 : isCompact ? 17 : 26;
   const metaFontSize = isSubtitle ? 12 : isCompact ? 13 : 14;
   const buttonFontSize = reading ? 11 : isSubtitle ? 12 : isCompact ? 12 : 14;
   const actionsJustify =
@@ -100,55 +101,13 @@ export function WordCard({
       style={{
         background: "var(--tg-card-strong)",
         border: "none",
-        borderRadius: 16,
+        borderRadius: 20,
         padding: isSubtitle ? 10 : effectiveLayout === "tight" ? 12 : 16,
         display: "grid",
         gap: outerGap,
         position: "relative",
       }}
     >
-      {showShareAction && (
-        <button
-          type="button"
-          onClick={shareActionLoading ? undefined : onShare}
-          aria-label="Поделиться"
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            border: "1px solid var(--tg-border)",
-            background: "var(--tg-card)",
-            color: "var(--tg-text)",
-            borderRadius: 10,
-            width: 32,
-            height: 32,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: shareActionLoading ? "default" : "pointer",
-            opacity: shareActionLoading ? 0.6 : 1,
-          }}
-        >
-          {shareActionLoading ? (
-            <span
-              style={{
-                width: 14,
-                height: 14,
-                borderRadius: "50%",
-                border: "2px solid rgba(109, 211, 255, 0.3)",
-                borderTopColor: "var(--tg-accent-strong)",
-                animation: "spin 0.9s linear infinite",
-                display: "inline-block",
-              }}
-            />
-          ) : (
-            shareActionLabel
-          )}
-          <style>
-            {`@keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}
-          </style>
-        </button>
-      )}
       <div
         style={{
           display: "grid",
@@ -186,6 +145,7 @@ export function WordCard({
                   color: "var(--tg-text)",
                   fontWeight: 700,
                   fontSize: buttonFontSize,
+                  lineHeight: 1,
                   borderRadius: 999,
                   padding: isCompact ? "6px 12px" : "8px 14px",
                   display: "inline-flex",
@@ -195,6 +155,9 @@ export function WordCard({
                   whiteSpace: "nowrap",
                 }}
               >
+                <span style={{ display: "inline-flex", alignItems: "center" }}>
+                  <Icon name="check" size={14} />
+                </span>
                 {dictionaryActionLabel}
               </span>
             ) : (
@@ -210,6 +173,7 @@ export function WordCard({
                   color: "var(--tg-text)",
                   fontWeight: 700,
                   fontSize: buttonFontSize,
+                  lineHeight: 1,
                   borderRadius: 999,
                   padding: isCompact ? "6px 12px" : "8px 14px",
                   display: "inline-flex",
@@ -220,7 +184,13 @@ export function WordCard({
                   whiteSpace: "nowrap",
                 }}
               >
-                {dictionaryActionLabel}
+                <span style={{ display: "inline-flex", alignItems: "center" }}>
+                  <Icon
+                    name={dictionaryActionDisabled ? "check" : "plus"}
+                    size={14}
+                  />
+                </span>
+                {dictionaryLabelText}
               </button>
             ))}
         </div>
@@ -283,33 +253,58 @@ export function WordCard({
           }}
         >
           {showExamplesButton && (
-            <button
-              type="button"
-              onClick={onToggleExamples}
-              style={{
-                border: "1px solid var(--tg-border)",
-                background: "var(--tg-card)",
-                color: "var(--tg-text)",
-                fontWeight: 700,
-                fontSize: buttonFontSize,
-                borderRadius: 999,
-                padding: isCompact ? "6px 12px" : "8px 14px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                cursor: "pointer",
-              }}
-            >
-              {examplesLabel}
-              <Icon
-                name="chevron-down"
-                size={16}
+            showShareAction ? (
+              <button
+                type="button"
+                onClick={shareActionLoading ? undefined : onShare}
                 style={{
-                  transform: examplesOpen ? "rotate(180deg)" : "rotate(0deg)",
-                  transition: "transform 0.15s ease",
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                  fontWeight: 700,
+                  fontSize: buttonFontSize,
+                  lineHeight: 1,
+                  borderRadius: 999,
+                  padding: isCompact ? "6px 12px" : "8px 14px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  cursor: shareActionLoading ? "default" : "pointer",
+                  opacity: shareActionLoading ? 0.6 : 1,
                 }}
-              />
-            </button>
+              >
+                Поделиться
+                <Icon name="forward" size={14} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onToggleExamples}
+                style={{
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-card)",
+                  color: "var(--tg-text)",
+                  fontWeight: 700,
+                  fontSize: buttonFontSize,
+                  borderRadius: 999,
+                  padding: isCompact ? "6px 12px" : "8px 14px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  cursor: "pointer",
+                }}
+              >
+                {examplesLabel}
+                <Icon
+                  name="chevron-down"
+                  size={16}
+                  style={{
+                    transform: examplesOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.15s ease",
+                  }}
+                />
+              </button>
+            )
           )}
           {showFooterAction &&
             (dictionaryActionMode === "tag" ? (
@@ -328,6 +323,9 @@ export function WordCard({
                   opacity: 0.7,
                 }}
               >
+                <span style={{ display: "inline-flex", alignItems: "center" }}>
+                  <Icon name="check" size={14} />
+                </span>
                 {dictionaryActionLabel}
               </span>
             ) : (
@@ -343,6 +341,7 @@ export function WordCard({
                   color: "var(--tg-text)",
                   fontWeight: 700,
                   fontSize: buttonFontSize,
+                  lineHeight: 1,
                   borderRadius: 999,
                   padding: isCompact ? "6px 12px" : "8px 14px",
                   display: "inline-flex",
@@ -352,7 +351,13 @@ export function WordCard({
                   opacity: dictionaryActionDisabled ? 0.6 : 1,
                 }}
               >
-                {dictionaryActionLabel}
+                <span style={{ display: "inline-flex", alignItems: "center" }}>
+                  <Icon
+                    name={dictionaryActionDisabled ? "check" : "plus"}
+                    size={14}
+                  />
+                </span>
+                {dictionaryLabelText}
               </button>
             ))}
         </div>

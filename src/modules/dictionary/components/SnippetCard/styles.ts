@@ -1,10 +1,10 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const CardPlaceholder = styled.div<{ $compact?: boolean }>`
   width: ${({ $compact }) =>
-    $compact ? "clamp(200px, 62vw, 260px)" : "clamp(220px, 72vw, 360px)"};
+    $compact ? "clamp(218px, 69vw, 292px)" : "clamp(252px, 82vw, 388px)"};
   height: ${({ $compact }) =>
-    $compact ? "clamp(220px, 38vh, 300px)" : "clamp(260px, 52vh, 420px)"};
+    $compact ? "clamp(210px, 36vh, 290px)" : "clamp(250px, 50vh, 400px)"};
   border-radius: 22px;
   background: var(--tg-card);
   border: 1px solid var(--tg-border);
@@ -12,9 +12,9 @@ export const CardPlaceholder = styled.div<{ $compact?: boolean }>`
 
 export const CardShell = styled.div<{ $compact?: boolean }>`
   width: ${({ $compact }) =>
-    $compact ? "clamp(200px, 62vw, 260px)" : "clamp(220px, 72vw, 360px)"};
+    $compact ? "clamp(218px, 69vw, 292px)" : "clamp(252px, 82vw, 388px)"};
   height: ${({ $compact }) =>
-    $compact ? "clamp(220px, 38vh, 300px)" : "clamp(260px, 52vh, 420px)"};
+    $compact ? "clamp(210px, 36vh, 290px)" : "clamp(250px, 50vh, 400px)"};
   border-radius: 22px;
   overflow: hidden;
   background: #000;
@@ -33,7 +33,7 @@ export const FullVideoButton = styled.button`
   padding: 6px 10px;
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 `;
@@ -59,7 +59,7 @@ export const ContextText = styled.div`
   background: rgba(0, 0, 0, 0.78);
   padding: 8px 12px;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 `;
 
