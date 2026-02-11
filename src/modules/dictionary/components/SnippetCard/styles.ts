@@ -5,9 +5,10 @@ export const CardPlaceholder = styled.div<{ $compact?: boolean }>`
     $compact ? "clamp(218px, 69vw, 292px)" : "clamp(252px, 82vw, 388px)"};
   height: ${({ $compact }) =>
     $compact ? "clamp(210px, 36vh, 290px)" : "clamp(250px, 50vh, 400px)"};
-  border-radius: 22px;
+  border-radius: 24px;
   background: var(--tg-card);
-  border: 1px solid var(--tg-border);
+  border: 3px solid var(--tg-surface);
+  box-shadow: inset 0 0 0 1px var(--tg-border);
 `;
 
 export const CardShell = styled.div<{ $compact?: boolean }>`
@@ -15,12 +16,13 @@ export const CardShell = styled.div<{ $compact?: boolean }>`
     $compact ? "clamp(218px, 69vw, 292px)" : "clamp(252px, 82vw, 388px)"};
   height: ${({ $compact }) =>
     $compact ? "clamp(210px, 36vh, 290px)" : "clamp(250px, 50vh, 400px)"};
-  border-radius: 22px;
+  border-radius: 25px;
   overflow: hidden;
   background: #000;
   position: relative;
   scroll-snap-align: center;
-  border: 1px solid var(--tg-border);
+  border: 3px solid var(--tg-surface);
+  box-shadow: inset 0 0 0 1px var(--tg-border);
 `;
 
 export const FullVideoButton = styled.button`

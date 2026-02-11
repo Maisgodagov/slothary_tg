@@ -10,17 +10,19 @@ export const Slider = styled.div`
   padding-left: calc((100% - var(--card-width, 320px)) / 2);
   padding-right: calc((100% - var(--card-width, 320px)) / 2);
   scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
 `;
 
 export const SliderItem = styled.div<{ $active: boolean }>`
   flex: 0 0 auto;
   scroll-snap-stop: always;
-  opacity: ${({ $active }) => ($active ? 1 : 0.55)};
-  transform: ${({ $active }) => ($active ? 'scale(1)' : 'scale(0.92)')};
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  opacity: ${({ $active }) => ($active ? 1 : 0.42)};
+  transform: ${({ $active }) => ($active ? 'scale(1)' : 'scale(0.96)')};
+  transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: center;
+  will-change: transform, opacity;
 `;
 
 export const Counter = styled.div`

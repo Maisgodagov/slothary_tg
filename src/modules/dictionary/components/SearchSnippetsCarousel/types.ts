@@ -7,6 +7,8 @@ export type SearchSnippetsCarouselProps = {
   activeIndex: number;
   onOpenFullVideo: (snippet: PhraseSnippet) => void;
   total: number;
+  realTotal?: number;
+  uiTotal?: number;
   sliderRef: RefObject<HTMLDivElement | null>;
   onCardRef: (index: number, node: HTMLDivElement | null) => void;
   onFirstCardRef: (node: HTMLDivElement | null) => void;

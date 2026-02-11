@@ -47,8 +47,11 @@ import {
 } from "./styles";
 
 const PAGE_SIZE = 6;
+const MAIN_PAGE_SIZE = 10;
 const INITIAL_PAGE_SIZE = 2;
-const SAMPLE_STAGE_SIZES = [300, 1200, 2400];
+const SAMPLE_STAGE_SIZES = [300, 1200, 2400, 3500, 5000];
+const TARGET_SNIPPETS_COUNT = 30;
+const LAST_SAMPLE_STAGE_INDEX = SAMPLE_STAGE_SIZES.length - 1;
 const STORAGE_KEY = "videoDictionaryState";
 const HISTORY_KEY = "dictionarySearchHistory";
 const HISTORY_LIMIT = 5;
@@ -503,7 +506,7 @@ export function DictionaryContainer() {
           return;
         }
 
-        const response = await dictionaryModuleApi.getVideoDictionary({
+        let response = await dictionaryModuleApi.getVideoDictionary({
           phrase: nextVideoQuery,
           limit: INITIAL_PAGE_SIZE,
           cursor: null,
@@ -512,16 +515,40 @@ export function DictionaryContainer() {
           userId: auth.profile?.id ?? null,
           signal: controller.signal,
         });
+        let deduped = dedupeSnippets(response.items);
+        let resolvedStage = 0;
 
-        const deduped = dedupeSnippets(response.items);
-        const nextHasMore = response.hasMore && deduped.length > 0;
+        // If early stages return nothing, continue trying larger samples up to the last stage.
+        if (!deduped.length && SAMPLE_STAGE_SIZES.length > 1) {
+          for (let stage = 1; stage < SAMPLE_STAGE_SIZES.length; stage += 1) {
+            response = await dictionaryModuleApi.getVideoDictionary({
+              phrase: nextVideoQuery,
+              limit: INITIAL_PAGE_SIZE,
+              cursor: null,
+              paddingSeconds: computePaddingSeconds(nextVideoQuery),
+              sampleSize: SAMPLE_STAGE_SIZES[stage],
+              userId: auth.profile?.id ?? null,
+              signal: controller.signal,
+            });
+            deduped = dedupeSnippets(response.items);
+            resolvedStage = stage;
+            if (deduped.length > 0) break;
+          }
+        }
+        setSampleStage(resolvedStage);
+
+        const nextHasMore = Boolean(response.hasMore && response.nextCursor);
         setItems(deduped);
         setHasMore(nextHasMore);
         setNextCursor(nextHasMore ? response.nextCursor : null);
-        setTotal(nextHasMore ? response.total : deduped.length);
+        setTotal(deduped.length);
         setStatus("ready");
 
-        if (nextHasMore && response.nextCursor && deduped.length < PAGE_SIZE) {
+        if (
+          nextHasMore &&
+          response.nextCursor &&
+          deduped.length < MAIN_PAGE_SIZE
+        ) {
           if (!isLoadingMoreRef.current) {
             isLoadingMoreRef.current = true;
             setIsLoadingMore(true);
@@ -529,7 +556,7 @@ export function DictionaryContainer() {
               setSampleStage(1);
               const followUp = await dictionaryModuleApi.getVideoDictionary({
                 phrase: nextVideoQuery,
-                limit: PAGE_SIZE,
+                limit: MAIN_PAGE_SIZE,
                 cursor: response.nextCursor,
                 paddingSeconds: computePaddingSeconds(nextVideoQuery),
                 sampleSize: SAMPLE_STAGE_SIZES[1],
@@ -541,11 +568,12 @@ export function DictionaryContainer() {
                   prev,
                   dedupeSnippets(followUp.items),
                 );
-                const added = merged.length - prev.length;
-                const followHasMore = followUp.hasMore && added > 0;
+                const followHasMore = Boolean(
+                  followUp.hasMore && followUp.nextCursor,
+                );
                 setHasMore(followHasMore);
                 setNextCursor(followHasMore ? followUp.nextCursor : null);
-                setTotal(followHasMore ? followUp.total : merged.length);
+                setTotal(merged.length);
                 return merged;
               });
             } catch {
@@ -605,7 +633,7 @@ export function DictionaryContainer() {
     async (force = false) => {
       if (isLoadingMoreRef.current) return;
       if (!hasMore && !force) return;
-      if (force && forceLoadAttempts >= 3) return;
+      if (force && sampleStage >= LAST_SAMPLE_STAGE_INDEX) return;
       const phrase = videoQuery.trim();
       if (!phrase) return;
       if (items.length === 0 && !hasMore) return;
@@ -620,7 +648,7 @@ export function DictionaryContainer() {
       setIsLoadingMore(true);
       const nextStage =
         !hasMore && force
-          ? Math.min(sampleStage + 1, SAMPLE_STAGE_SIZES.length - 1)
+          ? Math.min(sampleStage + 1, LAST_SAMPLE_STAGE_INDEX)
           : sampleStage;
       if (!hasMore && force) {
         setForceLoadAttempts((prev) => prev + 1);
@@ -630,7 +658,7 @@ export function DictionaryContainer() {
       try {
         const response = await dictionaryModuleApi.getVideoDictionary({
           phrase,
-          limit: PAGE_SIZE,
+          limit: MAIN_PAGE_SIZE,
           cursor: cursorOverride,
           paddingSeconds: computePaddingSeconds(videoQuery),
           sampleSize: SAMPLE_STAGE_SIZES[nextStage],
@@ -639,11 +667,10 @@ export function DictionaryContainer() {
 
         setItems((prev) => {
           const merged = mergeSnippets(prev, dedupeSnippets(response.items));
-          const added = merged.length - prev.length;
-          const nextHasMore = response.hasMore && added > 0;
+          const nextHasMore = Boolean(response.hasMore && response.nextCursor);
           setHasMore(nextHasMore);
           setNextCursor(nextHasMore ? response.nextCursor : null);
-          setTotal(nextHasMore ? response.total : merged.length);
+          setTotal(merged.length);
           return merged;
         });
       } catch (err: any) {
@@ -666,19 +693,45 @@ export function DictionaryContainer() {
   );
 
   useEffect(() => {
-    const needsMore = items.length < 30;
-    const canForce = !hasMore && needsMore && forceLoadAttempts < 3;
-    if (items.length > 0 && activeIndex >= items.length - 3) {
+    if (items.length === 0) return;
+    if (items.length >= TARGET_SNIPPETS_COUNT) return;
+    const canForce = !hasMore && sampleStage < LAST_SAMPLE_STAGE_INDEX;
+    if (hasMore || canForce) {
       handleLoadMore(canForce);
+      return;
     }
+    // No more data and no more force attempts: keep real final count.
+    setTotal(items.length);
+  }, [forceLoadAttempts, handleLoadMore, hasMore, items.length, sampleStage]);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    if (items.length >= TARGET_SNIPPETS_COUNT) return;
+    const remaining = items.length - (activeIndex + 1);
+    if (remaining > 2) return;
+    const canForce = !hasMore && sampleStage < LAST_SAMPLE_STAGE_INDEX;
+    if (!hasMore && !canForce) return;
+    handleLoadMore(canForce);
   }, [
     activeIndex,
     forceLoadAttempts,
     handleLoadMore,
     hasMore,
-    isLoadingMore,
     items.length,
+    sampleStage,
   ]);
+
+  const isSnippetSearchExhausted =
+    items.length > 0 &&
+    sampleStage >= LAST_SAMPLE_STAGE_INDEX &&
+    !hasMore &&
+    !isLoadingMore;
+  const visibleSnippetsTotal =
+    items.length > 0
+      ? isSnippetSearchExhausted
+        ? total
+        : TARGET_SNIPPETS_COUNT
+      : total;
 
   const getCenteredIndex = useCallback(() => {
     if (!sliderRef.current || items.length === 0) return 0;
@@ -1172,7 +1225,9 @@ export function DictionaryContainer() {
                       highlight={highlight}
                       activeIndex={activeIndex}
                       onOpenFullVideo={handleOpenFullVideo}
-                      total={total}
+                      total={visibleSnippetsTotal}
+                      realTotal={total}
+                      uiTotal={visibleSnippetsTotal}
                       sliderRef={sliderRef}
                       onCardRef={(index, node) => {
                         cardRefs.current[index] = node;
@@ -1306,7 +1361,9 @@ export function DictionaryContainer() {
                       highlight={highlight}
                       activeIndex={activeIndex}
                       onOpenFullVideo={handleOpenFullVideo}
-                      total={total}
+                      total={visibleSnippetsTotal}
+                      realTotal={total}
+                      uiTotal={visibleSnippetsTotal}
                       sliderRef={sliderRef}
                       onCardRef={(index, node) => {
                         cardRefs.current[index] = node;

@@ -19,6 +19,8 @@ export function SearchSnippetsCarousel({
   activeIndex,
   onOpenFullVideo,
   total,
+  realTotal,
+  uiTotal,
   sliderRef,
   onCardRef,
   onFirstCardRef,
@@ -54,6 +56,15 @@ export function SearchSnippetsCarousel({
       </Slider>
       <Counter>
         {(() => {
+          if (
+            typeof realTotal === "number" &&
+            typeof uiTotal === "number" &&
+            realTotal > 0 &&
+            uiTotal > 0
+          ) {
+            const uiIndex = Math.min(activeIndex + 1, uiTotal);
+            return `${uiIndex}/${uiTotal}`;
+          }
           const displayTotal = total > 0 ? total : items.length;
           const displayIndex = Math.min(activeIndex + 1, displayTotal);
           return `${displayIndex}/${displayTotal}`;
