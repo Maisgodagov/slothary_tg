@@ -13,16 +13,16 @@ export const SearchFieldWrapper = styled.div`
 
 export const SearchInput = styled.input<{ $historyOpen: boolean }>`
   width: 100%;
-  border-radius: 12px;
-  border-bottom-left-radius: ${({ $historyOpen }) => ($historyOpen ? '0' : '12px')};
-  border-bottom-right-radius: ${({ $historyOpen }) => ($historyOpen ? '0' : '12px')};
+  border-radius: 20px;
+  border-bottom-left-radius: ${({ $historyOpen }) => ($historyOpen ? '0' : '20px')};
+  border-bottom-right-radius: ${({ $historyOpen }) => ($historyOpen ? '0' : '20px')};
   border: 1px solid var(--tg-border);
   border-bottom: ${({ $historyOpen }) => ($historyOpen ? 'none' : '1px solid var(--tg-border)')};
   height: 44px;
   padding: 0 36px 0 12px;
   background: var(--tg-card);
   color: var(--tg-text);
-  font-size: 14px;
+  font-size: 15px;
 `;
 
 export const ClearButton = styled.button`
@@ -77,10 +77,10 @@ export const HistoryButton = styled.button`
 export const SearchButton = styled.button<{ $loading: boolean }>`
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  border: none;
-  background: var(--tg-accent-strong);
-  color: #fff;
+  border-radius: 20px;
+  border: 1px solid var(--tg-border);
+  background: var(--tg-card);
+  color: var(--tg-text);
   display: grid;
   place-items: center;
   cursor: pointer;

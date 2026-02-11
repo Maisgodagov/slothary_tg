@@ -65,7 +65,7 @@ export function SearchBar({
         aria-label="Найти фрагменты"
         $loading={loading}
       >
-        <Icon name="search" size={20} color="#fff" />
+        <Icon name="search" size={20} color="var(--tg-text)" />
       </SearchButton>
     </SearchRow>
   );
