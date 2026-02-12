@@ -17,12 +17,12 @@ export const Slider = styled.div`
 export const SliderItem = styled.div<{ $active: boolean }>`
   flex: 0 0 auto;
   scroll-snap-stop: always;
-  opacity: ${({ $active }) => ($active ? 1 : 0.42)};
-  transform: ${({ $active }) => ($active ? 'scale(1)' : 'scale(0.96)')};
+  opacity: ${({ $active }) => ($active ? 1 : 0.78)};
+  transform: ${({ $active }) => ($active ? 'scale(1)' : 'scale(0.985)')};
   transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: center;
-  will-change: transform, opacity;
+  will-change: auto;
 `;
 
 export const Counter = styled.div`

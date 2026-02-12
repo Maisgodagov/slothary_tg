@@ -23,6 +23,12 @@ export const SearchInput = styled.input<{ $historyOpen: boolean }>`
   background: var(--tg-card);
   color: var(--tg-text);
   font-size: 15px;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
 `;
 
 export const ClearButton = styled.button`

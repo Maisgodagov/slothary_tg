@@ -51,10 +51,12 @@ export const ContextWrapper = styled.div`
   left: 12px;
   right: 12px;
   bottom: 16px;
+  z-index: 3;
   display: grid;
   justify-items: center;
   text-align: center;
   color: #fff;
+  pointer-events: auto;
 `;
 
 export const ContextText = styled.div`
@@ -65,15 +67,26 @@ export const ContextText = styled.div`
   font-weight: 600;
 `;
 
+export const ContextWordButton = styled.button`
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+`;
+
 export const PlayButton = styled.button`
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: grid;
   place-items: center;
   background: transparent;
   border: none;
   color: #fff;
-  cursor: pointer;
+  pointer-events: none;
 `;
 
 export const PlayIcon = styled.span`

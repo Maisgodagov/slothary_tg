@@ -782,9 +782,9 @@ export function DictionaryContainer() {
     if (!examplesOpen || !sliderRef.current || items.length === 0) return;
     requestAnimationFrame(() => {
       updateCardWidth();
-      snapToIndex(Math.min(activeIndex, items.length - 1));
+      snapToIndex(Math.min(lastSettledIndex.current, items.length - 1));
     });
-  }, [examplesOpen, activeIndex, items.length, snapToIndex, updateCardWidth]);
+  }, [examplesOpen, items.length, snapToIndex, updateCardWidth]);
 
   useEffect(() => {
     if (!examplesOpen || !sliderRef.current || cardWidthRef.current === 0)
@@ -816,14 +816,13 @@ export function DictionaryContainer() {
         );
         lastSettledIndex.current = clamped;
         setActiveIndex(clamped);
-        snapToIndex(clamped);
       }, 180);
     };
 
     const node = sliderRef.current;
     node.addEventListener("scroll", handleScroll, { passive: true });
     return () => node.removeEventListener("scroll", handleScroll);
-  }, [examplesOpen, getCenteredIndex, items.length, snapToIndex]);
+  }, [examplesOpen, getCenteredIndex, items.length]);
 
   useEffect(() => {
     if (activeIndex >= items.length && items.length > 0) {

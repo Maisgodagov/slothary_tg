@@ -16,9 +16,9 @@ export const CarouselWrapper = styled.div`
 export const CarouselItem = styled.div<{ $active: boolean }>`
   flex: 0 0 auto;
   scroll-snap-stop: always;
-  opacity: ${({ $active }) => ($active ? 1 : 0.55)};
-  transform: ${({ $active }) => ($active ? 'scale(1)' : 'scale(0.92)')};
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  opacity: ${({ $active }) => ($active ? 1 : 0.8)};
+  transform: ${({ $active }) => ($active ? 'scale(1)' : 'scale(0.985)')};
+  transition: opacity 0.24s ease, transform 0.24s ease;
   transform-origin: center;
 `;
 
