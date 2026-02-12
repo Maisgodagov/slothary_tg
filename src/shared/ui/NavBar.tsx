@@ -15,8 +15,9 @@ const linkStyle: CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
   padding: "6px 8px 2px",
-  flex: 1,
-  borderRadius: 12,
+  width: "calc(100% - 24px)",
+  justifySelf: "center",
+  borderRadius: 22,
 };
 
 export function NavBar() {
@@ -71,7 +72,7 @@ export function NavBar() {
           style={({ isActive }) => ({
             ...linkStyle,
             color: "var(--tg-subtle)",
-            background: isActive ? "rgba(109, 211, 255, 0.12)" : "transparent",
+            background: isActive ? "var(--tg-card)" : "transparent",
           })}
         >
           {() => (
