@@ -117,7 +117,7 @@ export function HomeContainer() {
     };
   }, [webApp]);
 
-  const showAddToHome = homeScreenStatus === "missed";
+  const showAddToHome = true; // debug: show banner for all users
 
   const handleAddToHome = () => {
     if (!webApp || typeof webApp.addToHomeScreen !== "function") return;
@@ -144,15 +144,15 @@ export function HomeContainer() {
           onOpenProfile={() => navigate("/profile")}
         />
 
-        {showAddToHome && (
-          <AddToHomeBanner onInstall={handleAddToHome} installing={installing} />
-        )}
-
         <ProgressSummary
           stats={wordStats}
           loading={statsLoading}
           onDetails={() => navigate("/admin/word-progress")}
         />
+
+        {showAddToHome && (
+          <AddToHomeBanner onInstall={handleAddToHome} installing={installing} />
+        )}
 
       </HomeWrapper>
     </PageShell>
