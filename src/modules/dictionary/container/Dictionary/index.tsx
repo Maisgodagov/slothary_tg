@@ -55,7 +55,7 @@ import {
 const PAGE_SIZE = 6;
 const MAIN_PAGE_SIZE = 10;
 const INITIAL_PAGE_SIZE = 2;
-const SAMPLE_STAGE_SIZES = [300, 1200, 2400, 3500, 5000];
+const SAMPLE_STAGE_SIZES = [400, 1900, 3700, 5000, 9000, 15000];
 const TARGET_SNIPPETS_COUNT = 30;
 const LAST_SAMPLE_STAGE_INDEX = SAMPLE_STAGE_SIZES.length - 1;
 const STORAGE_KEY = "videoDictionaryState";
@@ -1113,7 +1113,10 @@ export function DictionaryContainer() {
             const hasSnippets = items.length > 0;
             const showSnippets = showExamples && examplesOpen && hasSnippets;
             const showSnippetsSkeleton =
-              showExamples && examplesOpen && status === "loading" && !hasSnippets;
+              showExamples &&
+              examplesOpen &&
+              status === "loading" &&
+              !hasSnippets;
             const normalizedWord = primaryEnglish.toLowerCase();
             const normalizedTranslation = primaryRussian.trim().toLowerCase();
             const existingEntry = (
@@ -1140,7 +1143,9 @@ export function DictionaryContainer() {
                   setQuery(value);
                   handleSearch(value);
                 }}
-                showExamplesButton={showExamples && (hasSnippets || status === "loading")}
+                showExamplesButton={
+                  showExamples && (hasSnippets || status === "loading")
+                }
                 examplesOpen={examplesOpen}
                 onToggleExamples={() =>
                   setExamplesOpen((prev) => {
@@ -1271,7 +1276,10 @@ export function DictionaryContainer() {
             const hasSnippets = items.length > 0;
             const showSnippets = showExamples && examplesOpen && hasSnippets;
             const showSnippetsSkeleton =
-              showExamples && examplesOpen && status === "loading" && !hasSnippets;
+              showExamples &&
+              examplesOpen &&
+              status === "loading" &&
+              !hasSnippets;
             const normalizedPhrase = phraseFallback.phrase.trim().toLowerCase();
             const normalizedPhraseTranslation = (
               phraseFallback.translation ?? ""
@@ -1292,7 +1300,9 @@ export function DictionaryContainer() {
               <WordCard
                 word={phraseFallback.phrase}
                 translation={phraseFallback.translation ?? ""}
-                showExamplesButton={showExamples && (hasSnippets || status === "loading")}
+                showExamplesButton={
+                  showExamples && (hasSnippets || status === "loading")
+                }
                 examplesOpen={examplesOpen}
                 onToggleExamples={() => setExamplesOpen((prev) => !prev)}
                 dictionaryActionMode="button"
@@ -1434,12 +1444,13 @@ export function DictionaryContainer() {
               фразы
             </FilterButton>
           </FilterRow>
-          {dictionary.status !== "loading" && filteredDictionaryItems.length === 0 && (
-            <EmptyText>
-              Здесь пока пусто. Добавляйте новые слова и фразы в словарь, и они
-              будут появляться в этом списке.
-            </EmptyText>
-          )}
+          {dictionary.status !== "loading" &&
+            filteredDictionaryItems.length === 0 && (
+              <EmptyText>
+                Здесь пока пусто. Добавляйте новые слова и фразы в словарь, и
+                они будут появляться в этом списке.
+              </EmptyText>
+            )}
           {dictionary.status === "loading" ? (
             <DictionaryListSkeleton>
               <DictionaryListSkeletonItem>
@@ -1456,131 +1467,134 @@ export function DictionaryContainer() {
           ) : (
             <UserList>
               {filteredDictionaryItems.map((entry: UserDictionaryEntry) => {
-              const isPhraseEntry = entry.type === "phrase";
-              const open = userExamplesOpenId === entry.id;
-              const state = userExampleState[entry.id] ?? {
-                status: "idle",
-                items: [],
-              };
-              const expanded =
-                !isPhraseEntry && userExpandedTranslationsId === entry.id;
-              const phraseExpanded =
-                isPhraseEntry && userExpandedPhraseId === entry.id;
-              const otherTranslations = expanded
-                ? entry.otherTranslations
-                : undefined;
-              const hasRuTranslations =
-                expanded &&
-                Boolean(
-                  otherTranslations?.some((value) => detectLanguage(value)),
-                );
-              const otherTranslationsRu = hasRuTranslations
-                ? otherTranslations
-                : undefined;
-              const synonyms =
-                expanded && !hasRuTranslations ? otherTranslations : undefined;
-              const details = userDictionaryDetails[entry.id];
-              const detailsTranslations =
-                expanded && details?.status === "ready"
-                  ? details.translationsRu
+                const isPhraseEntry = entry.type === "phrase";
+                const open = userExamplesOpenId === entry.id;
+                const state = userExampleState[entry.id] ?? {
+                  status: "idle",
+                  items: [],
+                };
+                const expanded =
+                  !isPhraseEntry && userExpandedTranslationsId === entry.id;
+                const phraseExpanded =
+                  isPhraseEntry && userExpandedPhraseId === entry.id;
+                const otherTranslations = expanded
+                  ? entry.otherTranslations
                   : undefined;
-              const detailsSynonyms =
-                expanded && details?.status === "ready"
-                  ? details.synonyms
+                const hasRuTranslations =
+                  expanded &&
+                  Boolean(
+                    otherTranslations?.some((value) => detectLanguage(value)),
+                  );
+                const otherTranslationsRu = hasRuTranslations
+                  ? otherTranslations
                   : undefined;
-              const displayWord = isPhraseEntry
-                ? (entry.phrase ?? entry.word ?? "")
-                : (entry.word ?? "");
-              const displayTranslation = entry.translation ?? "";
+                const synonyms =
+                  expanded && !hasRuTranslations
+                    ? otherTranslations
+                    : undefined;
+                const details = userDictionaryDetails[entry.id];
+                const detailsTranslations =
+                  expanded && details?.status === "ready"
+                    ? details.translationsRu
+                    : undefined;
+                const detailsSynonyms =
+                  expanded && details?.status === "ready"
+                    ? details.synonyms
+                    : undefined;
+                const displayWord = isPhraseEntry
+                  ? (entry.phrase ?? entry.word ?? "")
+                  : (entry.word ?? "");
+                const displayTranslation = entry.translation ?? "";
 
-              return (
-                <UserEntryWrapper key={entry.id}>
-                  {(expanded || phraseExpanded) && (
-                    <DeleteEntryButton
-                      type="button"
+                return (
+                  <UserEntryWrapper key={entry.id}>
+                    {(expanded || phraseExpanded) && (
+                      <DeleteEntryButton
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setDeleteTarget({
+                            id: entry.id,
+                            word: displayWord,
+                            translation: displayTranslation,
+                            type: entry.type ?? "word",
+                          });
+                        }}
+                        aria-label="Удалить"
+                      >
+                        <Icon name="close" size={14} />
+                      </DeleteEntryButton>
+                    )}
+
+                    <Clickable
                       onClick={(event) => {
-                        event.stopPropagation();
-                        setDeleteTarget({
-                          id: entry.id,
-                          word: displayWord,
-                          translation: displayTranslation,
-                          type: entry.type ?? "word",
-                        });
+                        if ((event.target as HTMLElement).closest("button"))
+                          return;
+                        if (isPhraseEntry) {
+                          setUserExpandedPhraseId((prev) => {
+                            const nextValue =
+                              prev === entry.id ? null : entry.id;
+                            if (prev === entry.id) {
+                              setUserExamplesOpenId(null);
+                            }
+                            return nextValue;
+                          });
+                        } else {
+                          toggleUserTranslations(entry.id);
+                        }
                       }}
-                      aria-label="Удалить"
                     >
-                      <Icon name="close" size={14} />
-                    </DeleteEntryButton>
-                  )}
-
-                  <Clickable
-                    onClick={(event) => {
-                      if ((event.target as HTMLElement).closest("button"))
-                        return;
-                      if (isPhraseEntry) {
-                        setUserExpandedPhraseId((prev) => {
-                          const nextValue = prev === entry.id ? null : entry.id;
-                          if (prev === entry.id) {
-                            setUserExamplesOpenId(null);
-                          }
-                          return nextValue;
-                        });
-                      } else {
-                        toggleUserTranslations(entry.id);
-                      }
-                    }}
-                  >
-                    <WordCard
-                      word={displayWord}
-                      translation={displayTranslation}
-                      otherTranslationsRu={
-                        detailsTranslations ?? otherTranslationsRu
-                      }
-                      synonyms={detailsSynonyms ?? synonyms}
-                      showExamplesButton={
-                        isPhraseEntry ? phraseExpanded : expanded
-                      }
-                      examplesOpen={open}
-                      onToggleExamples={() => {
-                        if (isPhraseEntry && !phraseExpanded) return;
-                        toggleUserExamples(entry.id, displayWord);
-                      }}
-                      dictionaryActionMode="none"
-                      variant="compact"
-                    >
-                      {open && (
-                        <>
-                          {state.status === "loading" && (
-                            <InlineCenter>
-                              <Loader />
-                            </InlineCenter>
-                          )}
-                          {state.status === "error" && (
-                            <ErrorText>{state.error}</ErrorText>
-                          )}
-                          {state.status === "ready" &&
-                            state.items.length === 0 && (
-                              <SubtleText>Примеры не найдены.</SubtleText>
+                      <WordCard
+                        word={displayWord}
+                        translation={displayTranslation}
+                        otherTranslationsRu={
+                          detailsTranslations ?? otherTranslationsRu
+                        }
+                        synonyms={detailsSynonyms ?? synonyms}
+                        showExamplesButton={
+                          isPhraseEntry ? phraseExpanded : expanded
+                        }
+                        examplesOpen={open}
+                        onToggleExamples={() => {
+                          if (isPhraseEntry && !phraseExpanded) return;
+                          toggleUserExamples(entry.id, displayWord);
+                        }}
+                        dictionaryActionMode="none"
+                        variant="compact"
+                      >
+                        {open && (
+                          <>
+                            {state.status === "loading" && (
+                              <InlineCenter>
+                                <Loader />
+                              </InlineCenter>
                             )}
-                          {state.items.length > 0 && (
-                            <SnippetCarousel
-                              items={state.items}
-                              highlight={displayWord}
-                              onOpenFullVideo={handleOpenFullVideo}
-                              total={state.total}
-                              hasMore={state.hasMore}
-                              isLoadingMore={state.isLoadingMore}
-                              onLoadMore={() =>
-                                loadMoreUserExamples(entry.id, displayWord)
-                              }
-                            />
-                          )}
-                        </>
-                      )}
-                    </WordCard>
-                  </Clickable>
-                </UserEntryWrapper>
-              );
+                            {state.status === "error" && (
+                              <ErrorText>{state.error}</ErrorText>
+                            )}
+                            {state.status === "ready" &&
+                              state.items.length === 0 && (
+                                <SubtleText>Примеры не найдены.</SubtleText>
+                              )}
+                            {state.items.length > 0 && (
+                              <SnippetCarousel
+                                items={state.items}
+                                highlight={displayWord}
+                                onOpenFullVideo={handleOpenFullVideo}
+                                total={state.total}
+                                hasMore={state.hasMore}
+                                isLoadingMore={state.isLoadingMore}
+                                onLoadMore={() =>
+                                  loadMoreUserExamples(entry.id, displayWord)
+                                }
+                              />
+                            )}
+                          </>
+                        )}
+                      </WordCard>
+                    </Clickable>
+                  </UserEntryWrapper>
+                );
               })}
             </UserList>
           )}
