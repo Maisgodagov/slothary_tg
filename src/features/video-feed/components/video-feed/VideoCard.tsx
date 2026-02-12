@@ -601,6 +601,25 @@ export function VideoCard({
     }
   };
 
+  const handleDeleteVideo = async () => {
+    if (!auth.profile?.id) return;
+    if (!window.confirm("Удалить это видео?")) return;
+    try {
+      setSavingModeration(true);
+      await moderationApi.deleteVideo(
+        item.id,
+        auth.profile.id,
+        auth.profile.role
+      );
+      setShowModeration(false);
+    } catch (err) {
+      console.error("Delete video failed", err);
+      alert("Не удалось удалить видео");
+    } finally {
+      setSavingModeration(false);
+    }
+  };
+
   const showSpinner = isContentLoading;
   const showExerciseButton = !showSpinner && exercisesCount > 0;
 
@@ -759,6 +778,17 @@ export function VideoCard({
                 color={isModerated ? "#3ec985" : "#fff"}
               />
             </S.ModerationButton>
+          )}
+          {isAdmin && (
+            <S.IconButton
+              onClick={handleDeleteVideo}
+              disabled={savingModeration}
+              aria-label="Удалить видео"
+              title="Удалить видео"
+              style={{ opacity: savingModeration ? 0.6 : 1 }}
+            >
+              <Icon name="trash" size={30} color="#ff6b6b" />
+            </S.IconButton>
           )}
         </S.TopRightStack>
       )}
@@ -1351,37 +1381,10 @@ export function VideoCard({
                 display: "flex",
                 gap: 8,
                 marginTop: 16,
-                justifyContent: "space-between",
+                justifyContent: "flex-end",
                 flexWrap: "wrap",
               }}
             >
-              <button
-                onClick={async () => {
-                  if (!auth.profile?.id) return;
-                  if (!window.confirm("Удалить это видео?")) return;
-                  try {
-                    setSavingModeration(true);
-                    await moderationApi.deleteVideo(
-                      item.id,
-                      auth.profile.id,
-                      auth.profile.role
-                    );
-                    setShowModeration(false);
-                  } catch (err) {
-                    console.error("Delete video failed", err);
-                    alert("Не удалось удалить видео");
-                  } finally {
-                    setSavingModeration(false);
-                  }
-                }}
-                style={{
-                  ...buttonStyle,
-                  background: "linear-gradient(135deg, #ff5f6d, #ff9966)",
-                  color: "#0c1021",
-                }}
-              >
-                Удалить
-              </button>
               <div
                 style={{
                   display: "flex",
