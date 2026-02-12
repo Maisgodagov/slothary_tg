@@ -26,7 +26,6 @@ import { VideoContainer } from "../modules/video";
 import { DictionaryContainer } from "../modules/dictionary";
 import { ProfileContainer } from "../modules/profile";
 import { AdminContainer } from "../modules/admin";
-import { BookDetailsContainer, ReadingContainer, ReaderContainer } from "../modules/reading";
 import { Loader } from "../shared/ui/Loader";
 import "../shared/styles/global.css";
 import { useAppDispatch, useAppSelector } from "./hooks";
@@ -127,8 +126,6 @@ function BackHandler() {
 }
 
 function AppRoutes() {
-  const auth = useAppSelector(selectAuth);
-  const isAdmin = auth.profile?.role === "admin";
   const location = useLocation();
 
   useEffect(() => {
@@ -180,19 +177,6 @@ function AppRoutes() {
           <Route path="/profile" element={<ProfileContainer />} />
           <Route path="/video" element={<VideoContainer />} />
           <Route path="/dictionary" element={<DictionaryContainer />} />
-          {isAdmin ? (
-            <>
-              <Route path="/reading" element={<ReadingContainer />} />
-              <Route path="/reading/:id" element={<BookDetailsContainer />} />
-              <Route path="/reading/:id/read" element={<ReaderContainer />} />
-            </>
-          ) : (
-            <>
-              <Route path="/reading" element={<Navigate to="/" replace />} />
-              <Route path="/reading/:id" element={<Navigate to="/" replace />} />
-              <Route path="/reading/:id/read" element={<Navigate to="/" replace />} />
-            </>
-          )}
           <Route path="/user-dictionary" element={<UserDictionaryPage />} />
           <Route
             path="/video-dictionary"

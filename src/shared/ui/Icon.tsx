@@ -2,7 +2,6 @@ import type { CSSProperties } from "react";
 import {
   Home,
   Book,
-  BookOpen,
   Bookmark,
   Heart,
   Volume2,
@@ -42,8 +41,6 @@ type IconName =
   | "home-filled"
   | "dictionary"
   | "dictionary-filled"
-  | "reading"
-  | "reading-filled"
   | "profile"
   | "admin"
   | "like"
@@ -95,8 +92,6 @@ const ICON_MAP: Record<
   "home-filled": Home,
   dictionary: Book,
   "dictionary-filled": Book,
-  reading: BookOpen,
-  "reading-filled": BookOpen,
   profile: UserRound,
   admin: Settings,
   like: Heart,
