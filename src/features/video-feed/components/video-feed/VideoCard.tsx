@@ -55,7 +55,9 @@ export function VideoCard({
   const lastTapRef = useRef<number>(0);
   const playTimeoutRef = useRef<number | null>(null);
   const heartTimeoutRef = useRef<number | null>(null);
+  const listenHintTimeoutRef = useRef<number | null>(null);
   const [heartIndicator, setHeartIndicator] = useState(false);
+  const [listenHint, setListenHint] = useState<string | null>(null);
   const [showModeration, setShowModeration] = useState(false);
   const [savingModeration, setSavingModeration] = useState(false);
   const [authors, setAuthors] = useState<string[]>([]);
@@ -162,6 +164,8 @@ export function VideoCard({
       if (playTimeoutRef.current) window.clearTimeout(playTimeoutRef.current);
       if (tapTimeoutRef.current) window.clearTimeout(tapTimeoutRef.current);
       if (heartTimeoutRef.current) window.clearTimeout(heartTimeoutRef.current);
+      if (listenHintTimeoutRef.current)
+        window.clearTimeout(listenHintTimeoutRef.current);
     };
   }, []);
 
@@ -642,15 +646,57 @@ export function VideoCard({
   }, [currentExercise?.wordId, currentExercise?.correctAnswer, currentExercise?.options]);
 
 
+  const normalizeLookupText = (value: string) =>
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[\u2019`]/g, "'")
+      .replace(/[^a-z0-9'\s-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const toToken = (value: string) =>
+    value.replace(/'/g, "").replace(/[^a-z0-9-]+/g, "").trim();
+
+  const extractLookupTokens = (value: string) =>
+    normalizeLookupText(value)
+      .split(/\s+/)
+      .map(toToken)
+      .filter(Boolean);
+
   const findWordTimestamp = (
     word: string,
     chunks: { text: string; timestamp: [number, number] }[]
   ) => {
-    if (!word) return null;
-    const lower = word.toLowerCase();
+    if (!word || !chunks.length) return null;
+    const targetToken = extractLookupTokens(word)[0];
+    if (!targetToken) return null;
+
+    // Primary path: exact token match in word-level chunks.
     for (const ch of chunks) {
-      if (ch.text.toLowerCase() === lower) return ch.timestamp[0];
+      const chunkToken = extractLookupTokens(ch.text)[0];
+      if (!chunkToken) continue;
+      if (chunkToken === targetToken) return ch.timestamp[0];
     }
+
+    // Fallback path: phrase chunks (or noisy tokens) containing the target token.
+    for (const ch of chunks) {
+      const chunkTokens = extractLookupTokens(ch.text);
+      if (!chunkTokens.length) continue;
+      if (chunkTokens.includes(targetToken)) return ch.timestamp[0];
+
+      // Lenient fallback for morphology (e.g. enjoy -> enjoyed).
+      if (
+        targetToken.length >= 4 &&
+        chunkTokens.some(
+          (token) =>
+            token.startsWith(targetToken) || targetToken.startsWith(token)
+        )
+      ) {
+        return ch.timestamp[0];
+      }
+    }
+
     return null;
   };
 
@@ -1154,7 +1200,18 @@ export function VideoCard({
                               currentExercise.word || currentExercise.prompt
                             );
                             const ts = findWordTimestamp(lookupWord, wordChunks);
-                            if (ts === null) return;
+                            if (ts === null) {
+                              setListenHint("Не нашли это слово в субтитрах");
+                              if (listenHintTimeoutRef.current) {
+                                window.clearTimeout(listenHintTimeoutRef.current);
+                              }
+                              listenHintTimeoutRef.current = window.setTimeout(
+                                () => setListenHint(null),
+                                1400
+                              );
+                              return;
+                            }
+                            setListenHint(null);
                             const el = videoRef.current;
                             if (!el) return;
                             el.currentTime = ts;
@@ -1166,6 +1223,18 @@ export function VideoCard({
                       )}
                     </div>
                 </div>
+                {listenHint && (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "var(--tg-subtle)",
+                      paddingLeft: 8,
+                    }}
+                  >
+                    {listenHint}
+                  </div>
+                )}
                   <S.ExerciseOptions>
                     {exerciseOptions.map((opt, i) => {
                     const state =
