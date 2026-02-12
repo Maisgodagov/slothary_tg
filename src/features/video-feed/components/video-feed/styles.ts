@@ -362,7 +362,8 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
     border-radius: 50%;
     z-index: 99000 !important;
     background: ${({ $showThumb }) => ($showThumb ? "#ffffff" : "transparent")};
-    border: ${({ $showThumb }) => ($showThumb ? "3px solid #2ea3ff" : "none")};
+    border: ${({ $showThumb }) =>
+      $showThumb ? "3px solid var(--tg-subtle)" : "none"};
     box-shadow: ${({ $showThumb }) =>
       $showThumb ? "0 2px 10px rgba(0, 0, 0, 0.35)" : "none"};
     margin-top: ${({ $thin }) => ($thin ? "-11px" : "-6px")};
@@ -376,7 +377,8 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
     z-index: 999000 !important;
 
     background: ${({ $showThumb }) => ($showThumb ? "#ffffff" : "transparent")};
-    border: ${({ $showThumb }) => ($showThumb ? "3px solid #2ea3ff" : "none")};
+    border: ${({ $showThumb }) =>
+      $showThumb ? "3px solid var(--tg-subtle)" : "none"};
     box-shadow: ${({ $showThumb }) =>
       $showThumb ? "0 2px 10px rgba(0, 0, 0, 0.35)" : "none"};
     transition: width 0.1s ease, height 0.1s ease;

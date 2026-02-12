@@ -61,7 +61,7 @@ export function VideoCard({
   const [enEdit, setEnEdit] = useState("");
   const [ruEdit, setRuEdit] = useState("");
   const [currentChunkIndex, setCurrentChunkIndex] = useState<number | null>(
-    null
+    null,
   );
   const [authorModal, setAuthorModal] = useState<string | null>(null);
   const [subtitleLookup, setSubtitleLookup] = useState<{
@@ -77,10 +77,10 @@ export function VideoCard({
     placement: "top" | "bottom";
   } | null>(null);
   const [localTranscription, setLocalTranscription] = useState(
-    content?.transcription?.chunks ?? []
+    content?.transcription?.chunks ?? [],
   );
   const [localTranslation, setLocalTranslation] = useState(
-    content?.translation?.chunks ?? []
+    content?.translation?.chunks ?? [],
   );
   const wordChunks = content?.transcription?.wordChunks ?? [];
   const auth = useAppSelector(selectAuth);
@@ -124,10 +124,10 @@ export function VideoCard({
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) =>
-          onVisibleChange(item.id, entry.intersectionRatio)
+          onVisibleChange(item.id, entry.intersectionRatio),
         );
       },
-      { threshold: [0.5, 0.75, 0.9] }
+      { threshold: [0.5, 0.75, 0.9] },
     );
 
     observer.observe(el);
@@ -160,11 +160,11 @@ export function VideoCard({
 
   const findChunkWithIndex = (
     chunks: { text: string; timestamp: [number, number] }[] | undefined,
-    graceSeconds = 1.5
+    graceSeconds = 1.5,
   ) => {
     if (!chunks || !chunks.length) return { text: "", index: -1 };
     const activeIdx = chunks.findIndex(
-      (ch) => currentTime >= ch.timestamp[0] && currentTime < ch.timestamp[1]
+      (ch) => currentTime >= ch.timestamp[0] && currentTime < ch.timestamp[1],
     );
     if (activeIdx !== -1)
       return { text: chunks[activeIdx].text, index: activeIdx };
@@ -240,7 +240,7 @@ export function VideoCard({
       }
       heartTimeoutRef.current = window.setTimeout(
         () => setHeartIndicator(false),
-        550
+        550,
       );
       return;
     }
@@ -340,7 +340,7 @@ export function VideoCard({
     const centeredLeft = rect.left + rect.width / 2;
     const clampedLeft = Math.min(
       viewportWidth - margin - popoverWidth / 2,
-      Math.max(margin + popoverWidth / 2, centeredLeft)
+      Math.max(margin + popoverWidth / 2, centeredLeft),
     );
     const estimatedHeight = 200;
     let placement: "top" | "bottom" = "top";
@@ -432,17 +432,17 @@ export function VideoCard({
   const exerciseTranslation = currentExercise?.correctAnswer ?? "";
   const exerciseInDictionary = Boolean(
     currentExercise &&
-      dictionary.items.find(
-        (item) =>
-          typeof item.word === "string" &&
-          item.word.toLowerCase() === exerciseWord.toLowerCase() &&
-          item.translation.toLowerCase() === exerciseTranslation.toLowerCase()
-      )
+    dictionary.items.find(
+      (item) =>
+        typeof item.word === "string" &&
+        item.word.toLowerCase() === exerciseWord.toLowerCase() &&
+        item.translation.toLowerCase() === exerciseTranslation.toLowerCase(),
+    ),
   );
   const exercisesCount = exercises?.length ?? 0;
   const isAdmin = auth.profile?.role === "admin";
   const handleExerciseTouchCapture = (
-    event: React.TouchEvent<HTMLDivElement>
+    event: React.TouchEvent<HTMLDivElement>,
   ) => {
     if (!showExercises) return;
     const target = event.target as HTMLElement | null;
@@ -453,7 +453,7 @@ export function VideoCard({
     event.stopPropagation();
   };
   const handleExerciseWheelCapture = (
-    event: React.WheelEvent<HTMLDivElement>
+    event: React.WheelEvent<HTMLDivElement>,
   ) => {
     if (!showExercises) return;
     const target = event.target as HTMLElement | null;
@@ -490,7 +490,7 @@ export function VideoCard({
         // const exercisesRole = "admin";
         const { exercises: data } = await exercisesApi.getExercises(
           { wordIds, exerciseLimit: 30, wordLimit: 20 },
-          resolveUserId()
+          resolveUserId(),
           // exercisesRole
         );
         setExercises(data ?? []);
@@ -518,7 +518,7 @@ export function VideoCard({
       try {
         const list = await moderationApi.getAuthors(
           auth.profile?.id,
-          auth.profile?.role
+          auth.profile?.role,
         );
         setAuthors(list?.map((a) => a.username) ?? []);
       } catch (err) {
@@ -551,7 +551,7 @@ export function VideoCard({
       exercisesApi
         .submitAnswer(
           { wordId: currentExercise.wordId, isCorrect: correct },
-          auth.profile.id
+          auth.profile.id,
         )
         .catch((err) => console.error("submitAnswer failed", err));
       if (correct) {
@@ -562,7 +562,7 @@ export function VideoCard({
               setProfile({
                 ...auth.profile!,
                 xpPoints: result.xpPoints,
-              })
+              }),
             );
           })
           .catch((err) => console.error("addXp failed", err));
@@ -582,11 +582,13 @@ export function VideoCard({
       await exercisesApi.excludeWord(
         { wordId: currentExercise.wordId },
         auth.profile.id,
-        auth.profile.role
+        auth.profile.role,
       );
       setExercises((prev) => {
         if (!prev?.length) return prev;
-        const next = prev.filter((exercise) => exercise.wordId !== currentExercise.wordId);
+        const next = prev.filter(
+          (exercise) => exercise.wordId !== currentExercise.wordId,
+        );
         if (exerciseIndex >= next.length) {
           setExerciseIndex(Math.max(0, next.length - 1));
         }
@@ -609,7 +611,7 @@ export function VideoCard({
       await moderationApi.deleteVideo(
         item.id,
         auth.profile.id,
-        auth.profile.role
+        auth.profile.role,
       );
       setShowModeration(false);
     } catch (err) {
@@ -635,8 +637,11 @@ export function VideoCard({
     const next = shuffleOptions([correct, ...picked]);
     while (next.length < 3) next.push(correct);
     setExerciseOptions(next);
-  }, [currentExercise?.wordId, currentExercise?.correctAnswer, currentExercise?.options]);
-
+  }, [
+    currentExercise?.wordId,
+    currentExercise?.correctAnswer,
+    currentExercise?.options,
+  ]);
 
   const normalizeLookupText = (value: string) =>
     value
@@ -648,17 +653,17 @@ export function VideoCard({
       .trim();
 
   const toToken = (value: string) =>
-    value.replace(/'/g, "").replace(/[^a-z0-9-]+/g, "").trim();
+    value
+      .replace(/'/g, "")
+      .replace(/[^a-z0-9-]+/g, "")
+      .trim();
 
   const extractLookupTokens = (value: string) =>
-    normalizeLookupText(value)
-      .split(/\s+/)
-      .map(toToken)
-      .filter(Boolean);
+    normalizeLookupText(value).split(/\s+/).map(toToken).filter(Boolean);
 
   const findWordTimestamp = (
     word: string,
-    chunks: { text: string; timestamp: [number, number] }[]
+    chunks: { text: string; timestamp: [number, number] }[],
   ) => {
     if (!word || !chunks.length) return null;
     const targetToken = extractLookupTokens(word)[0];
@@ -682,7 +687,7 @@ export function VideoCard({
         targetToken.length >= 4 &&
         chunkTokens.some(
           (token) =>
-            token.startsWith(targetToken) || targetToken.startsWith(token)
+            token.startsWith(targetToken) || targetToken.startsWith(token),
         )
       ) {
         return ch.timestamp[0];
@@ -958,7 +963,7 @@ export function VideoCard({
                       </button>
                     ) : (
                       <span key={token.key}>{token.value}</span>
-                    )
+                    ),
                   )}
                 </S.SubtitleLine>
               )}
@@ -1047,7 +1052,7 @@ export function VideoCard({
                 (item) =>
                   typeof item.word === "string" &&
                   item.word.toLowerCase() === normalizedWord &&
-                  item.translation.toLowerCase() === normalizedTranslation
+                  item.translation.toLowerCase() === normalizedTranslation,
               );
               const isInDictionary = Boolean(existingEntry);
               const dictionaryActionLabel = isInDictionary
@@ -1077,7 +1082,7 @@ export function VideoCard({
                         lang: "en",
                         word: entry.word,
                         translation,
-                      })
+                      }),
                     );
                   }}
                   variant="compact"
@@ -1124,10 +1129,10 @@ export function VideoCard({
               $showThumb={isSeeking}
               style={{
                 background: duration
-                  ? `linear-gradient(90deg, #2ea3ff ${
+                  ? `linear-gradient(90deg, var(--tg-subtle) ${
                       (currentTime / duration) * 100
-                    }%, #ffffff33 ${(currentTime / duration) * 100}%)`
-                  : "#ffffff33",
+                    }%, var(--tg-border) ${(currentTime / duration) * 100}%)`
+                  : "var(--tg-border)",
               }}
             />
           </S.Controls>
@@ -1149,33 +1154,38 @@ export function VideoCard({
           )}
           {!exercisesLoading && currentExercise && (
             <S.ExerciseList data-exercise-scroll>
-                <S.ExerciseCard>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <S.ExercisePrompt>
-                      {exerciseText(currentExercise.prompt)}
-                    </S.ExercisePrompt>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const word = exerciseWord;
-                          const translation = exerciseTranslation;
-                          if (!word || !translation) return;
-                          if (exerciseInDictionary) return;
-                          const normalizedWord = word.toLowerCase();
-                          const payload = {
-                            query: normalizedWord,
-                            lang: "en" as const,
-                            word,
-                            translation,
-                          };
+              <S.ExerciseCard>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <S.ExercisePrompt>
+                    {exerciseText(currentExercise.prompt)}
+                  </S.ExercisePrompt>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const word = exerciseWord;
+                        const translation = exerciseTranslation;
+                        if (!word || !translation) return;
+                        if (exerciseInDictionary) return;
+                        const normalizedWord = word.toLowerCase();
+                        const payload = {
+                          query: normalizedWord,
+                          lang: "en" as const,
+                          word,
+                          translation,
+                        };
                         if (auth.profile?.id) {
                           dispatch(addWord(payload));
                         } else {
                           dictionaryApi
                             .addUserDictionaryEntry(resolveUserId(), payload)
                             .catch((err) =>
-                              console.error("addUserDictionaryEntry failed", err)
+                              console.error(
+                                "addUserDictionaryEntry failed",
+                                err,
+                              ),
                             );
                         }
                       }}
@@ -1195,64 +1205,66 @@ export function VideoCard({
                     >
                       {exerciseInDictionary ? "в словаре" : "+ в словарь"}
                     </button>
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={handleExcludeExerciseWord}
-                          style={{
-                            border: "1px solid var(--tg-border)",
-                            background: "var(--tg-card)",
-                            color: "var(--tg-subtle)",
-                            fontWeight: 700,
-                            borderRadius: 999,
-                            width: 32,
-                            height: 32,
-                            cursor:
-                              excludingWordId === currentExercise.wordId
-                                ? "default"
-                                : "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            opacity:
-                              excludingWordId === currentExercise.wordId ? 0.6 : 1,
-                          }}
-                          disabled={excludingWordId === currentExercise.wordId}
-                          aria-label="Исключить слово из упражнений"
-                          title="Исключить слово из упражнений"
-                        >
-                          <Icon name="close" size={16} />
-                        </button>
-                      )}
-                      {currentExercise.direction === "en-ru" && (
-                        <S.ListenButton
-                          onClick={() => {
-                            const lookupWord = exerciseText(
-                              currentExercise.word || currentExercise.prompt
-                            );
-                            const ts = findWordTimestamp(lookupWord, wordChunks);
-                            if (ts === null) {
-                              setListenHint("Не нашли это слово в субтитрах");
-                              if (listenHintTimeoutRef.current) {
-                                window.clearTimeout(listenHintTimeoutRef.current);
-                              }
-                              listenHintTimeoutRef.current = window.setTimeout(
-                                () => setListenHint(null),
-                                1400
-                              );
-                              return;
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={handleExcludeExerciseWord}
+                        style={{
+                          border: "1px solid var(--tg-border)",
+                          background: "var(--tg-card)",
+                          color: "var(--tg-subtle)",
+                          fontWeight: 700,
+                          borderRadius: 999,
+                          width: 32,
+                          height: 32,
+                          cursor:
+                            excludingWordId === currentExercise.wordId
+                              ? "default"
+                              : "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity:
+                            excludingWordId === currentExercise.wordId
+                              ? 0.6
+                              : 1,
+                        }}
+                        disabled={excludingWordId === currentExercise.wordId}
+                        aria-label="Исключить слово из упражнений"
+                        title="Исключить слово из упражнений"
+                      >
+                        <Icon name="close" size={16} />
+                      </button>
+                    )}
+                    {currentExercise.direction === "en-ru" && (
+                      <S.ListenButton
+                        onClick={() => {
+                          const lookupWord = exerciseText(
+                            currentExercise.word || currentExercise.prompt,
+                          );
+                          const ts = findWordTimestamp(lookupWord, wordChunks);
+                          if (ts === null) {
+                            setListenHint("Не нашли это слово в субтитрах");
+                            if (listenHintTimeoutRef.current) {
+                              window.clearTimeout(listenHintTimeoutRef.current);
                             }
-                            setListenHint(null);
-                            const el = videoRef.current;
-                            if (!el) return;
-                            el.currentTime = ts;
-                            el.play().catch(() => null);
-                          }}
-                        >
-                          <Icon name="volume-on" size={18} />
-                        </S.ListenButton>
-                      )}
-                    </div>
+                            listenHintTimeoutRef.current = window.setTimeout(
+                              () => setListenHint(null),
+                              1400,
+                            );
+                            return;
+                          }
+                          setListenHint(null);
+                          const el = videoRef.current;
+                          if (!el) return;
+                          el.currentTime = ts;
+                          el.play().catch(() => null);
+                        }}
+                      >
+                        <Icon name="volume-on" size={18} />
+                      </S.ListenButton>
+                    )}
+                  </div>
                 </div>
                 {listenHint && (
                   <div
@@ -1266,16 +1278,16 @@ export function VideoCard({
                     {listenHint}
                   </div>
                 )}
-                  <S.ExerciseOptions>
-                    {exerciseOptions.map((opt, i) => {
+                <S.ExerciseOptions>
+                  {exerciseOptions.map((opt, i) => {
                     const state =
                       selectedOption === null
                         ? "neutral"
                         : opt === currentExercise.correctAnswer
-                        ? "correct"
-                        : opt === selectedOption
-                        ? "wrong"
-                        : "neutral";
+                          ? "correct"
+                          : opt === selectedOption
+                            ? "wrong"
+                            : "neutral";
                     return (
                       <S.ExerciseOption
                         key={i}
@@ -1484,8 +1496,8 @@ export function VideoCard({
                             item.id,
                             cefr,
                             auth.profile.id,
-                            auth.profile.role
-                          )
+                            auth.profile.role,
+                          ),
                         );
                       }
                       if (speech !== initialSpeech) {
@@ -1494,8 +1506,8 @@ export function VideoCard({
                             item.id,
                             speech,
                             auth.profile.id,
-                            auth.profile.role
-                          )
+                            auth.profile.role,
+                          ),
                         );
                       }
                       if (author !== initialAuthor) {
@@ -1504,8 +1516,8 @@ export function VideoCard({
                             item.id,
                             author,
                             auth.profile.id,
-                            auth.profile.role
-                          )
+                            auth.profile.role,
+                          ),
                         );
                       }
                       if (isAdult !== initialAdult) {
@@ -1514,8 +1526,8 @@ export function VideoCard({
                             item.id,
                             isAdult,
                             auth.profile.id,
-                            auth.profile.role
-                          )
+                            auth.profile.role,
+                          ),
                         );
                       }
                       if (isModerated !== initialModerated) {
@@ -1524,8 +1536,8 @@ export function VideoCard({
                             item.id,
                             isModerated,
                             auth.profile.id,
-                            auth.profile.role
-                          )
+                            auth.profile.role,
+                          ),
                         );
                       }
                       await Promise.all(requests);
@@ -1671,7 +1683,7 @@ export function VideoCard({
                         translation: { ...translationChunk, text: ruEdit },
                       },
                       auth.profile.id,
-                      auth.profile.role
+                      auth.profile.role,
                     );
                     const nextTrans = [...localTranscription];
                     const nextRu = [...localTranslation];
