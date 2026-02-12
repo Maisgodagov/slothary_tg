@@ -8,20 +8,16 @@ import {
   type DictionaryStatsWord,
 } from "../features/dictionary/api";
 import { WordCard } from "../features/dictionary/components/WordCard";
-import { Icon } from "../shared/ui/Icon";
 import { PageShell } from "../shared/ui/PageShell";
 import {
   EmptyState,
   ListSection,
-  ListTitle,
   LoadingState,
   PageWrap,
   ProgressFill,
   ProgressTrack,
   StatChip,
   StatusBadge,
-  SummaryCard,
-  SummaryHeader,
   SummaryTab,
   SummaryTabs,
   SummaryTitle,
@@ -129,10 +125,9 @@ export default function WordProgressPage() {
     [auth.profile?.id, fetchAllByStatus],
   );
 
-  const handleStatsTabClick = (tab: StatsTab) => {
+  const handleStatsTabClick = (tab: StatsTab | null) => {
     if (!auth.profile?.id) return;
-    const nextTab = statsTab === tab ? null : tab;
-    setStatsTab(nextTab);
+    setStatsTab(tab);
   };
 
   const loadMoreStatsWords = () => {
@@ -194,49 +189,46 @@ export default function WordProgressPage() {
   return (
     <PageShell>
       <PageWrap>
-        <SummaryCard>
-          <SummaryHeader>
-            <SummaryTitle>Мой прогресс</SummaryTitle>
-          </SummaryHeader>
-          {statsLoading && <LoadingState>Загружаем статистику...</LoadingState>}
-          {!statsLoading && wordStats && (
-            <SummaryTabs>
-              <SummaryTab
-                type="button"
-                $tone="learning"
-                $active={statsTab === "learning"}
-                onClick={() => handleStatsTabClick("learning")}
-              >
-                <Icon name="exercise" size={18} color="#5ab0ff" />
-                <strong>{wordStats.learningCount}</strong>
-                <span>Изучаю</span>
-              </SummaryTab>
-              <SummaryTab
-                type="button"
-                $tone="known"
-                $active={statsTab === "known"}
-                onClick={() => handleStatsTabClick("known")}
-              >
-                <Icon name="trophy" size={18} color="#f3c44a" />
-                <strong>{wordStats.knownCount}</strong>
-                <span>Выучено</span>
-              </SummaryTab>
-              <SummaryTab
-                type="button"
-                $tone="viewed"
-                $active={statsTab === "viewed"}
-                onClick={() => handleStatsTabClick("viewed")}
-              >
-                <Icon name="history" size={18} color="#5cd48a" />
-                <strong>{wordStats.viewedCount}</strong>
-                <span>Смотрел</span>
-              </SummaryTab>
-            </SummaryTabs>
-          )}
-        </SummaryCard>
+        <SummaryTitle>Мой прогресс</SummaryTitle>
+        {statsLoading && <LoadingState>Загружаем статистику...</LoadingState>}
+        {!statsLoading && wordStats && (
+          <SummaryTabs>
+            <SummaryTab
+              type="button"
+              $tone="learning"
+              $active={statsTab === null}
+              onClick={() => handleStatsTabClick(null)}
+            >
+              все
+            </SummaryTab>
+            <SummaryTab
+              type="button"
+              $tone="learning"
+              $active={statsTab === "learning"}
+              onClick={() => handleStatsTabClick("learning")}
+            >
+              {`изучаю - ${wordStats.learningCount}`}
+            </SummaryTab>
+            <SummaryTab
+              type="button"
+              $tone="known"
+              $active={statsTab === "known"}
+              onClick={() => handleStatsTabClick("known")}
+            >
+              {`выучено - ${wordStats.knownCount}`}
+            </SummaryTab>
+            <SummaryTab
+              type="button"
+              $tone="viewed"
+              $active={statsTab === "viewed"}
+              onClick={() => handleStatsTabClick("viewed")}
+            >
+              {`переводил - ${wordStats.viewedCount}`}
+            </SummaryTab>
+          </SummaryTabs>
+        )}
 
         <ListSection>
-          <ListTitle>Список слов</ListTitle>
           {statsWordsLoading && <LoadingState>Загружаем слова...</LoadingState>}
           {!statsWordsLoading && statsWords.length === 0 && (
             <EmptyState>Пока нет слов в этой категории.</EmptyState>

@@ -7,26 +7,6 @@ export const PageWrap = styled.div`
   padding: 12px 12px 60px;
 `;
 
-export const SummaryCard = styled.div`
-  border-radius: 20px;
-  border: none;
-  background: var(--tg-surface);
-  padding: 16px;
-  display: grid;
-  gap: 14px;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
-
-  [data-theme="light"] & {
-    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
-  }
-`;
-
-export const SummaryHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
 export const SummaryTitle = styled.h1`
   margin: 0;
   font-size: 18px;
@@ -35,67 +15,49 @@ export const SummaryTitle = styled.h1`
 `;
 
 export const SummaryTabs = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 export const SummaryTab = styled.button<{
   $active?: boolean;
   $tone: "learning" | "known" | "viewed";
 }>`
-  border: none;
+  border: 1px solid var(--tg-border);
   cursor: pointer;
-  border-radius: 16px;
-  padding: 10px 12px;
-  display: grid;
-  gap: 6px;
-  text-align: center;
-  justify-items: center;
-  color: var(--tg-text);
-  background: var(--tg-bg);
-  border: 1px solid ${({ $active }) =>
-    $active ? "var(--tg-accent)" : "var(--tg-border)"};
-  box-shadow: ${({ $active }) =>
-    $active ? "0 1px 4px rgba(15, 23, 42, 0.06)" : "none"};
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-color: var(--tg-border);
+  background: ${({ $active }) =>
+    $active ? "var(--tg-card)" : "var(--tg-card-strong)"};
+  color: ${({ $active }) => ($active ? "var(--tg-text)" : "var(--tg-subtle)")};
 
-  span {
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    opacity: 0.7;
-  }
-
-  strong {
-    font-size: 18px;
-    font-weight: 800;
-  }
-
-  [data-theme="light"] & {
-    color: var(--tg-text);
-    background: var(--tg-bg);
-    border: 1px solid ${({ $active }) =>
-      $active ? "var(--tg-accent)" : "var(--tg-border)"};
-    box-shadow: ${({ $active }) =>
-      $active ? "0 1px 4px rgba(15, 23, 42, 0.06)" : "none"};
-
-    span {
-      opacity: 0.6;
-    }
+  body[data-theme="dark"] & {
+    ${({ $active }) =>
+      $active
+        ? `
+      border-color: var(--tg-accent-strong);
+      background: var(--tg-card);
+    `
+        : ""}
   }
 `;
 
 export const ListSection = styled.div`
   display: grid;
   gap: 12px;
-`;
-
-export const ListTitle = styled.h2`
-  margin: 0;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--tg-subtle);
 `;
 
 export const WordsList = styled.div`
