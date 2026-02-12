@@ -16,15 +16,20 @@ import {
   PageWrap,
   ProgressFill,
   ProgressTrack,
+  SkeletonChip,
+  SkeletonLine,
+  SkeletonStatsRow,
   StatChip,
   StatusBadge,
   SummaryTab,
   SummaryTabs,
   SummaryTitle,
+  WordCardSkeleton,
   WordCardWrap,
   WordMeta,
   WordStatsRow,
   WordsList,
+  WordsListSkeleton,
 } from "./WordProgressPage.styles";
 
 const STATS_PAGE_SIZE = 20;
@@ -186,12 +191,35 @@ export default function WordProgressPage() {
       viewed: "СМОТРЕЛ",
     })[status];
 
+  const showPageSkeleton = statsLoading || (statsWordsLoading && statsWords.length === 0);
+
   return (
     <PageShell>
       <PageWrap>
         <SummaryTitle>Мой прогресс</SummaryTitle>
-        {statsLoading && <LoadingState>Загружаем статистику...</LoadingState>}
-        {!statsLoading && wordStats && (
+        {showPageSkeleton ? (
+          <>
+            <SummaryTabs>
+              <SkeletonChip $w="42px" />
+              <SkeletonChip $w="106px" />
+              <SkeletonChip $w="112px" />
+              <SkeletonChip $w="118px" />
+            </SummaryTabs>
+            <WordsListSkeleton>
+              {Array.from({ length: 7 }).map((_, index) => (
+                <WordCardSkeleton key={index}>
+                  <SkeletonLine $w="44%" $h="30px" />
+                  <SkeletonLine $w="36%" $h="16px" />
+                  <SkeletonStatsRow>
+                    <SkeletonLine $w="40%" $h="18px" />
+                    <SkeletonLine $w="44px" $h="4px" />
+                  </SkeletonStatsRow>
+                </WordCardSkeleton>
+              ))}
+            </WordsListSkeleton>
+          </>
+        ) : (
+          wordStats && (
           <SummaryTabs>
             <SummaryTab
               type="button"
@@ -226,10 +254,13 @@ export default function WordProgressPage() {
               {`переводил - ${wordStats.viewedCount}`}
             </SummaryTab>
           </SummaryTabs>
+          )
         )}
 
         <ListSection>
-          {statsWordsLoading && <LoadingState>Загружаем слова...</LoadingState>}
+          {statsWordsLoading && !showPageSkeleton && (
+            <LoadingState>Загружаем слова...</LoadingState>
+          )}
           {!statsWordsLoading && statsWords.length === 0 && (
             <EmptyState>Пока нет слов в этой категории.</EmptyState>
           )}

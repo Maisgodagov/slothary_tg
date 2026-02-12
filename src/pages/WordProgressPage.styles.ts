@@ -1,5 +1,12 @@
 import styled from "styled-components";
 
+const shimmer = `
+  @keyframes wordProgressSkeletonShimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+  }
+`;
+
 export const PageWrap = styled.div`
   display: flex;
   flex-direction: column;
@@ -26,6 +33,21 @@ export const SummaryTabs = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+`;
+
+export const SkeletonChip = styled.div<{ $w?: string }>`
+  height: 32px;
+  min-width: ${({ $w }) => $w ?? "74px"};
+  border-radius: 999px;
+  border: 1px solid var(--tg-border);
+  background: linear-gradient(
+    90deg,
+    var(--tg-card) 0%,
+    var(--tg-border) 50%,
+    var(--tg-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: wordProgressSkeletonShimmer 1.2s linear infinite;
 `;
 
 export const SummaryTab = styled.button<{
@@ -57,6 +79,43 @@ export const SummaryTab = styled.button<{
 
 export const ListSection = styled.div`
   display: grid;
+  gap: 12px;
+`;
+
+export const WordsListSkeleton = styled.div`
+  display: grid;
+  gap: 12px;
+  ${shimmer}
+`;
+
+export const WordCardSkeleton = styled.div`
+  border-radius: 20px;
+  border: 1px solid var(--tg-border);
+  background: var(--tg-card-strong);
+  padding: 14px 14px 12px;
+  display: grid;
+  gap: 10px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+`;
+
+export const SkeletonLine = styled.div<{ $w?: string; $h?: string }>`
+  width: ${({ $w }) => $w ?? "100%"};
+  height: ${({ $h }) => $h ?? "14px"};
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    var(--tg-card) 0%,
+    var(--tg-border) 50%,
+    var(--tg-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: wordProgressSkeletonShimmer 1.2s linear infinite;
+`;
+
+export const SkeletonStatsRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
 `;
 
