@@ -728,7 +728,75 @@ export function VideoCard({
 
       {showSpinner && (
         <S.SpinnerOverlay>
-          <Loader />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(110deg, #070a16 0%, #111a35 45%, #070a16 100%)",
+              backgroundSize: "220% 100%",
+              animation: "videoCardSkeletonShimmer 1.35s linear infinite",
+              opacity: 0.45,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              right: 12,
+              display: "flex",
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                width: 54,
+                height: 26,
+                borderRadius: 14,
+                background: "rgba(255,255,255,0.08)",
+              }}
+            />
+            <div
+              style={{
+                width: 116,
+                height: 26,
+                borderRadius: 14,
+                background: "rgba(255,255,255,0.08)",
+              }}
+            />
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 16,
+              right: 16,
+              bottom: 18,
+              display: "grid",
+              gap: 8,
+              justifyItems: "center",
+            }}
+          >
+            <div
+              style={{
+                width: "82%",
+                height: 16,
+                borderRadius: 10,
+                background: "rgba(255,255,255,0.1)",
+              }}
+            />
+            <div
+              style={{
+                width: "66%",
+                height: 16,
+                borderRadius: 10,
+                background: "rgba(255,255,255,0.1)",
+              }}
+            />
+          </div>
+          <style>
+            {`@keyframes videoCardSkeletonShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }`}
+          </style>
         </S.SpinnerOverlay>
       )}
 
@@ -1643,8 +1711,16 @@ export function VideoCard({
       {authorModal && (
         <S.ModalBackdrop onClick={() => setAuthorModal(null)}>
           <S.ModalCard onClick={(e) => e.stopPropagation()}>
-            <S.ModalClose onClick={() => setAuthorModal(null)}>×</S.ModalClose>
+            <S.ModalClose
+              onClick={() => setAuthorModal(null)}
+              style={{ border: "none", background: "transparent" }}
+            >
+              ×
+            </S.ModalClose>
             <S.ModalTitle>Авторское право</S.ModalTitle>
+            <S.ModalText style={{ marginTop: -6 }}>
+              {authorModal.startsWith("@") ? authorModal : `@${authorModal}`}
+            </S.ModalText>
             <S.ModalText>
               Все права на видеоматериал принадлежат его законному автору. Ролик
               получен из открытых источников и используется исключительно в
@@ -1658,11 +1734,16 @@ export function VideoCard({
                 }`}
                 target="_blank"
                 rel="noreferrer"
-                $primary
-                style={{ textDecoration: "none" }}
+                style={{
+                  textDecoration: "none",
+                  background: "var(--tg-card)",
+                  border: "1px solid var(--tg-border)",
+                  color: "var(--tg-text)",
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
               >
-                Перейти к автору (
-                {authorModal.startsWith("@") ? authorModal : `@${authorModal}`})
+                Перейти к автору
               </S.ModalButton>
             </S.ModalActions>
           </S.ModalCard>

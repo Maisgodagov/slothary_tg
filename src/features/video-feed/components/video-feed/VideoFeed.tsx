@@ -227,6 +227,11 @@ export function VideoFeed({
   }, [dispatch, feed.hasMore, isLoadingMore]);
 
   const items = feed.items;
+  const isInitialFeedLoading =
+    items.length === 0 &&
+    (feed.status === "loading" ||
+      feed.status === "refreshing" ||
+      feed.fetchedCursors.length === 0);
   const activeIndex = useMemo(
     () => items.findIndex((i: VideoFeedItem) => i.id === activeId),
     [activeId, items]
@@ -265,9 +270,9 @@ export function VideoFeed({
 
   return (
     <S.FeedContainer $navOffset={NAV_OFFSET}>
-      {feed.status === "loading" && <Loader />}
-
-      {items.length === 0 && feed.status === "idle" ? (
+      {isInitialFeedLoading ? (
+        <FeedLoadingSkeleton />
+      ) : items.length === 0 && feed.status === "idle" ? (
         <S.EmptyState>
           <S.EmptyTitle>Видео по текущим фильтрам закончились</S.EmptyTitle>
           <S.EmptyText>
@@ -408,6 +413,114 @@ export function VideoFeed({
       )}
 
     </S.FeedContainer>
+  );
+}
+
+function FeedLoadingSkeleton() {
+  return (
+    <div
+      style={{
+        position: "relative",
+        height: "100%",
+        width: "100%",
+        background: "var(--tg-bg)",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(110deg, var(--tg-bg) 0%, var(--tg-surface) 45%, var(--tg-bg) 100%)",
+          backgroundSize: "220% 100%",
+          animation: "videoFeedSkeletonShimmer 1.4s linear infinite",
+          opacity: 0.35,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: 12,
+          left: 12,
+          right: 12,
+          display: "flex",
+          gap: 8,
+        }}
+      >
+        <div
+          style={{
+            width: 56,
+            height: 28,
+            borderRadius: 14,
+            background: "var(--tg-card)",
+            border: "1px solid var(--tg-border)",
+          }}
+        />
+        <div
+          style={{
+            width: 120,
+            height: 28,
+            borderRadius: 14,
+            background: "var(--tg-card)",
+            border: "1px solid var(--tg-border)",
+          }}
+        />
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          right: 16,
+          top: "42%",
+          display: "grid",
+          gap: 18,
+        }}
+      >
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              background: "var(--tg-card)",
+              border: "1px solid var(--tg-border)",
+            }}
+          />
+        ))}
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          left: 16,
+          right: 16,
+          bottom: 20,
+          display: "grid",
+          gap: 8,
+          justifyItems: "center",
+        }}
+      >
+        <div
+          style={{
+            width: "82%",
+            height: 18,
+            borderRadius: 10,
+            background: "rgba(0,0,0,0.45)",
+          }}
+        />
+        <div
+          style={{
+            width: "68%",
+            height: 18,
+            borderRadius: 10,
+            background: "rgba(0,0,0,0.45)",
+          }}
+        />
+      </div>
+      <style>
+        {`@keyframes videoFeedSkeletonShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }`}
+      </style>
+    </div>
   );
 }
 
@@ -747,8 +860,8 @@ function LevelFilterModal({
                   padding: "10px 14px",
                   borderRadius: 14,
                   border: "none",
-                  background: isActive ? "#3c4f70" : "var(--tg-card, #1f273b)",
-                  color: "var(--tg-text, #e9edf7)",
+                  background: isActive ? "#6f86af" : "var(--tg-card, #1f273b)",
+                  color: isActive ? "#ffffff" : "var(--tg-text, #e9edf7)",
                   fontWeight: 700,
                   cursor: "pointer",
                 }}
@@ -764,8 +877,8 @@ function LevelFilterModal({
               borderRadius: 14,
               border: "none",
               background:
-                selected === null ? "#3c4f70" : "var(--tg-card, #1f273b)",
-              color: "var(--tg-text, #e9edf7)",
+                selected === null ? "#6f86af" : "var(--tg-card, #1f273b)",
+              color: selected === null ? "#ffffff" : "var(--tg-text, #e9edf7)",
               fontWeight: 700,
               cursor: "pointer",
             }}
@@ -774,7 +887,16 @@ function LevelFilterModal({
           </button>
         </div>
         <S.ModalActions style={{ justifyContent: "flex-end" }}>
-          <S.ModalButton $primary onClick={onSave}>
+          <S.ModalButton
+            onClick={onSave}
+            style={{
+              background: "var(--tg-card)",
+              border: "1px solid var(--tg-border)",
+              color: "var(--tg-text)",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
             Применить
           </S.ModalButton>
         </S.ModalActions>
