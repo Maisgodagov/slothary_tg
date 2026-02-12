@@ -11,7 +11,6 @@ import { muellerApi, type MuellerEntry } from "../../../mueller/api";
 import { wordIdsFromSubtitles } from "../../../exercises/lib/wordIds";
 import { exercisesApi, type ExerciseItem } from "../../../exercises/api";
 import { usersApi } from "../../../users/api";
-import type { SpeechSpeedFilter } from "../../slice";
 import { moderationApi } from "../../moderationApi";
 import type { VideoCardProps } from "./types";
 import * as S from "./styles";
@@ -34,15 +33,12 @@ export function VideoCard({
   // onOpenSettings,
   onOpenLevelFilter,
   // selectedLevelFilters,
-  onOpenSpeedFilter,
-  // selectedSpeedFilters,
   onExercisesToggle,
   registerRef,
 }: VideoCardProps) {
   const content = contentState.data;
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
@@ -151,13 +147,6 @@ export function VideoCard({
       setIsPaused(true);
     }
   }, [isActive]);
-
-  useEffect(() => {
-    const el = videoRef.current;
-    if (el) {
-      el.muted = isMuted;
-    }
-  }, [isMuted]);
 
   useEffect(() => {
     return () => {
@@ -405,13 +394,6 @@ export function VideoCard({
   const likesCount = item.likesCount ?? content?.likesCount ?? 0;
 
   const contentAnalysis = content?.analysis ?? item.analysis;
-  const speedLabel = (value: SpeechSpeedFilter | null | undefined) => {
-    if (!value) return null;
-    if (value === "slow") return "Медленная речь";
-    if (value === "fast") return "Быстрая речь";
-    return "Обычная скорость речи";
-  };
-
   const tags: {
     label: string;
     type: "author" | "level" | "speed" | "plain";
@@ -420,15 +402,6 @@ export function VideoCard({
     contentAnalysis?.cefrLevel ?? item.analysis?.cefrLevel ?? null;
   if (currentLevel) {
     tags.push({ label: currentLevel, type: "level" });
-  }
-  const currentSpeed = (contentAnalysis?.speechSpeed ??
-    item.analysis?.speechSpeed ??
-    null) as SpeechSpeedFilter | null;
-  if (currentSpeed) {
-    const speedText = speedLabel(currentSpeed);
-    if (speedText) {
-      tags.push({ label: speedText, type: "speed" });
-    }
   }
   if (item.author) tags.push({ label: item.author, type: "author" });
   if (item.isAdultContent) tags.push({ label: "18+", type: "plain" });
@@ -718,7 +691,6 @@ export function VideoCard({
         src={shouldLoad ? item.videoUrl : undefined}
         playsInline
         autoPlay={false}
-        muted={isMuted}
         preload={shouldLoad ? "metadata" : "none"}
         loop
         $shrink={showExercises}
@@ -788,21 +760,6 @@ export function VideoCard({
               />
             </S.ModerationButton>
           )}
-          <S.IconButton
-            onClick={() => {
-              setIsMuted((v) => {
-                const el = videoRef.current;
-                if (el) el.muted = !v;
-                return !v;
-              });
-            }}
-          >
-            <Icon
-              name={isMuted ? "volume-off" : "volume-on"}
-              size={30}
-              color="#fff"
-            />
-          </S.IconButton>
         </S.TopRightStack>
       )}
       {!showSpinner && !showExercises && (
@@ -854,31 +811,7 @@ export function VideoCard({
               );
             }
             if (tag.type === "speed") {
-              return (
-                <S.Badge
-                  key={tag.label}
-                  as="button"
-                  type="button"
-                  onClick={() => onOpenSpeedFilter?.(currentSpeed)}
-                  style={{
-                    cursor: "pointer",
-                    border: "none",
-                    outline: "none",
-                    padding: "8px 12px",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
-                  <span>{tag.label}</span>
-                  <Icon
-                    name="chevron-down"
-                    size={18}
-                    color="#fff"
-                    style={{ flexShrink: 0 }}
-                  />
-                </S.Badge>
-              );
+              return <S.Badge key={tag.label}>{tag.label}</S.Badge>;
             }
             return <S.Badge key={tag.label}>{tag.label}</S.Badge>;
           })}

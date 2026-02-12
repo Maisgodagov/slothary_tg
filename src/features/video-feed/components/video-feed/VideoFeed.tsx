@@ -9,7 +9,6 @@ import {
   setFilters,
   toggleLike,
   upsertItem,
-  type SpeechSpeedFilter,
 } from "../../slice";
 import { videoFeedApi } from "../../api";
 import type { VideoFeedItem } from "../../types";
@@ -45,17 +44,6 @@ export function VideoFeed({
   );
   const [tempLevelFilters, setTempLevelFilters] = useState<string[] | null>(
     feed.filters.cefrLevels ?? null
-  );
-  const [speedModalOpen, setSpeedModalOpen] = useState(false);
-  const [speedModalCurrent, setSpeedModalCurrent] = useState<
-    SpeechSpeedFilter | null
-  >(
-    null
-  );
-  const [tempSpeedFilters, setTempSpeedFilters] = useState<
-    SpeechSpeedFilter[] | null
-  >(
-    feed.filters.speechSpeeds ?? null
   );
   const [showEndModal, setShowEndModal] = useState(false);
   const [exercisesOpen, setExercisesOpen] = useState(false);
@@ -123,14 +111,14 @@ export function VideoFeed({
   ]);
 
   useEffect(() => {
-    if (settingsOpen || levelModalOpen || speedModalOpen) {
+    if (settingsOpen || levelModalOpen) {
       const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = prevOverflow;
       };
     }
-  }, [settingsOpen, levelModalOpen, speedModalOpen]);
+  }, [settingsOpen, levelModalOpen]);
 
   useEffect(() => {
     if (feed.items.length === 0) {
@@ -278,7 +266,6 @@ export function VideoFeed({
   return (
     <S.FeedContainer $navOffset={NAV_OFFSET}>
       {feed.status === "loading" && <Loader />}
-      {feed.error && <S.ErrorText>{feed.error}</S.ErrorText>}
 
       {items.length === 0 && feed.status === "idle" ? (
         <S.EmptyState>
@@ -334,12 +321,6 @@ export function VideoFeed({
                   setLevelModalOpen(true);
                 }}
                 selectedLevelFilters={feed.filters.cefrLevels ?? null}
-                onOpenSpeedFilter={(speed) => {
-                  setTempSpeedFilters(feed.filters.speechSpeeds ?? null);
-                  setSpeedModalCurrent(speed);
-                  setSpeedModalOpen(true);
-                }}
-                selectedSpeedFilters={feed.filters.speechSpeeds ?? null}
                 onExercisesToggle={(open) => setExercisesOpen(open)}
               />
             );
@@ -426,27 +407,6 @@ export function VideoFeed({
         />
       )}
 
-      {speedModalOpen && (
-        <SpeedFilterModal
-          currentSpeed={speedModalCurrent}
-          selected={tempSpeedFilters}
-          onClose={() => setSpeedModalOpen(false)}
-          onChange={setTempSpeedFilters}
-          onSave={() => {
-            setSpeedModalOpen(false);
-            setContentMap({});
-            setActiveId(null);
-            lastCursorRequested.current = null;
-            dispatch(
-              setFilters({
-                ...feed.filters,
-                speechSpeeds: tempSpeedFilters ?? null,
-              })
-            );
-            dispatch(loadFeed({ reset: true }));
-          }}
-        />
-      )}
     </S.FeedContainer>
   );
 }
@@ -823,115 +783,3 @@ function LevelFilterModal({
   );
 }
 
-function SpeedFilterModal({
-  currentSpeed,
-  selected,
-  onClose,
-  onChange,
-  onSave,
-}: {
-  currentSpeed: SpeechSpeedFilter | null;
-  selected: SpeechSpeedFilter[] | null;
-  onClose: () => void;
-  onChange: (next: SpeechSpeedFilter[] | null) => void;
-  onSave: () => void;
-}) {
-  const speedLabel = (value: SpeechSpeedFilter | null) => {
-    if (!value) return "не определена";
-    if (value === "slow") return "медленная";
-    if (value === "fast") return "быстрая";
-    return "обычная";
-  };
-
-  const speeds: { value: SpeechSpeedFilter; label: string }[] = [
-    { value: "slow", label: "Медленная речь" },
-    { value: "normal", label: "Обычная скорость речи" },
-    { value: "fast", label: "Быстрая речь" },
-  ];
-
-  const toggleSpeed = (value: SpeechSpeedFilter) => {
-    if (!selected) {
-      onChange([value]);
-      return;
-    }
-    if (selected.includes(value)) {
-      const next = selected.filter((item) => item !== value);
-      onChange(next.length ? next : null);
-      return;
-    }
-    onChange([...selected, value]);
-  };
-
-  return (
-    <S.ModalBackdrop onClick={onClose}>
-      <S.ModalCard onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={onClose}
-          aria-label="Закрыть"
-          style={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            width: 32,
-            height: 32,
-            borderRadius: 12,
-            border: "1px solid var(--tg-border, #2b3245)",
-            background: "var(--tg-card, #1f273b)",
-            color: "var(--tg-text, #e9edf7)",
-            cursor: "pointer",
-          }}
-        >
-          <Icon name="close" size={18} />
-        </button>
-        <S.ModalTitle style={{ textAlign: "center", fontSize: 20 }}>
-          Скорость речи
-        </S.ModalTitle>
-        <S.ModalText style={{ fontSize: 15 }}>
-          У текущего видео {speedLabel(currentSpeed)} скорость речи.
-        </S.ModalText>
-        <S.ModalText style={{ fontSize: 15 }}>
-          Выберите какие видео показывать в ленте.
-        </S.ModalText>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 6 }}>
-          {speeds.map((speed) => {
-            const isActive = selected?.includes(speed.value) ?? false;
-            return (
-              <button
-                key={speed.value}
-                onClick={() => toggleSpeed(speed.value)}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 14,
-                  border: "none",
-                  background: isActive ? "#3c4f70" : "var(--tg-card, #1f273b)",
-                  color: "var(--tg-text, #e9edf7)",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                {speed.label}
-              </button>
-            );
-          })}
-          <button
-            onClick={() => onChange(null)}
-            style={{
-              padding: "10px 14px",
-              borderRadius: 14,
-              border: "none",
-              background: selected === null ? "#3c4f70" : "var(--tg-card, #1f273b)",
-              color: "var(--tg-text, #e9edf7)",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Все
-          </button>
-        </div>
-        <S.ModalActions style={{ justifyContent: "flex-end" }}>
-          <S.ModalButton $primary onClick={onSave}>Применить</S.ModalButton>
-        </S.ModalActions>
-      </S.ModalCard>
-    </S.ModalBackdrop>
-  );
-}

@@ -83,7 +83,6 @@ export const loadFeed = createAsyncThunk<VideoFeedResponse, { reset?: boolean } 
         moderationFilter,
         showAdultContent: filters.showAdultContent,
         cefrLevels: filters.cefrLevels ? filters.cefrLevels.join(",") : undefined,
-        speechSpeeds: filters.speechSpeeds ? filters.speechSpeeds.join(",") : undefined,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Не удалось загрузить ленту";
