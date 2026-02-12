@@ -12,7 +12,17 @@ import { AddToHomeBanner } from "../../components/AddToHomeBanner";
 import { HomeHeader } from "../../components/HomeHeader";
 import ProgressSummary from "../../components/ProgressSummary";
 import { setLastStatsUpdatedAt } from "../../store/slice";
-import { HomeWrapper } from "./styles";
+import {
+  HomeSkeletonAvatar,
+  HomeSkeletonCard,
+  HomeSkeletonHeader,
+  HomeSkeletonHeaderLeft,
+  HomeSkeletonHeaderText,
+  HomeSkeletonLayout,
+  HomeSkeletonLine,
+  HomeSkeletonStreak,
+  HomeWrapper,
+} from "./styles";
 
 export function HomeContainer() {
   const auth = useAppSelector(selectAuth);
@@ -117,7 +127,7 @@ export function HomeContainer() {
     };
   }, [webApp]);
 
-  const showAddToHome = true; // debug: show banner for all users
+  const showAddToHome = homeScreenStatus === "missed";
 
   const handleAddToHome = () => {
     if (!webApp || typeof webApp.addToHomeScreen !== "function") return;
@@ -129,32 +139,65 @@ export function HomeContainer() {
     }
   };
 
+  const showSkeleton = statsLoading && !wordStats;
+
   return (
     <PageShell>
-      <HomeWrapper>
-        <HomeHeader
-          streakDays={streakDays}
-          levelLabel={levelInfo.level}
-          xpPoints={xpPoints}
-          avatarUrl={avatarUrl}
-          displayName={displayName}
-          initial={initial}
-          isLightTheme={isLightTheme}
-          onOpenStreak={() => navigate("/streak")}
-          onOpenProfile={() => navigate("/profile")}
-        />
+      {showSkeleton ? (
+        <HomeSkeletonLayout>
+          <HomeSkeletonHeader>
+            <HomeSkeletonHeaderLeft>
+              <HomeSkeletonAvatar />
+              <HomeSkeletonHeaderText>
+                <HomeSkeletonLine $w="160px" $h="22px" />
+                <HomeSkeletonLine $w="124px" $h="12px" />
+              </HomeSkeletonHeaderText>
+            </HomeSkeletonHeaderLeft>
+            <HomeSkeletonStreak />
+          </HomeSkeletonHeader>
+          <HomeSkeletonCard>
+            <HomeSkeletonLine $w="36%" $h="20px" />
+            <HomeSkeletonLine $w="100%" $h="78px" />
+          </HomeSkeletonCard>
+          <HomeSkeletonCard>
+            <HomeSkeletonLine $w="64%" $h="18px" />
+            <HomeSkeletonLine $w="44%" $h="32px" />
+          </HomeSkeletonCard>
+          <HomeSkeletonCard>
+            <HomeSkeletonLine $w="52%" $h="16px" />
+            <HomeSkeletonLine $w="88%" $h="14px" />
+            <HomeSkeletonLine $w="72%" $h="14px" />
+          </HomeSkeletonCard>
+          <HomeSkeletonCard>
+            <HomeSkeletonLine $w="48%" $h="16px" />
+            <HomeSkeletonLine $w="90%" $h="40px" />
+          </HomeSkeletonCard>
+        </HomeSkeletonLayout>
+      ) : (
+        <HomeWrapper>
+          <HomeHeader
+            streakDays={streakDays}
+            levelLabel={levelInfo.level}
+            xpPoints={xpPoints}
+            avatarUrl={avatarUrl}
+            displayName={displayName}
+            initial={initial}
+            isLightTheme={isLightTheme}
+            onOpenStreak={() => navigate("/streak")}
+            onOpenProfile={() => navigate("/profile")}
+          />
 
-        <ProgressSummary
-          stats={wordStats}
-          loading={statsLoading}
-          onDetails={() => navigate("/admin/word-progress")}
-        />
+          <ProgressSummary
+            stats={wordStats}
+            loading={statsLoading}
+            onDetails={() => navigate("/admin/word-progress")}
+          />
 
-        {showAddToHome && (
-          <AddToHomeBanner onInstall={handleAddToHome} installing={installing} />
-        )}
-
-      </HomeWrapper>
+          {showAddToHome && (
+            <AddToHomeBanner onInstall={handleAddToHome} installing={installing} />
+          )}
+        </HomeWrapper>
+      )}
     </PageShell>
   );
 }
