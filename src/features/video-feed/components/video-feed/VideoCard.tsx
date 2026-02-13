@@ -391,6 +391,14 @@ export function VideoCard({
   };
 
   const likesCount = item.likesCount ?? content?.likesCount ?? 0;
+  const cefrLabelMap: Record<string, string> = {
+    A1: "Начинающий",
+    A2: "Базовый",
+    B1: "Средний",
+    B2: "Выше среднего",
+    C1: "Продвинутый",
+    C2: "Профессиональный",
+  };
 
   const contentAnalysis = content?.analysis ?? item.analysis;
   const tags: {
@@ -902,7 +910,9 @@ export function VideoCard({
                     gap: 6,
                   }}
                 >
-                  <span>{tag.label}</span>
+                  <span>
+                    {`${tag.label} - ${cefrLabelMap[tag.label] ?? "Уровень"}`}
+                  </span>
                   <Icon
                     name="chevron-down"
                     size={18}
