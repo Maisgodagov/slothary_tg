@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
@@ -55,7 +55,7 @@ import {
 const PAGE_SIZE = 6;
 const MAIN_PAGE_SIZE = 10;
 const INITIAL_PAGE_SIZE = 2;
-const SAMPLE_STAGE_SIZES = [300, 1500, 3000, 5000, 8000, 13000];
+const SAMPLE_STAGE_SIZES = [400, 1900, 3700, 5000, 9000, 15000];
 const TARGET_SNIPPETS_COUNT = 30;
 const LAST_SAMPLE_STAGE_INDEX = SAMPLE_STAGE_SIZES.length - 1;
 const STORAGE_KEY = "videoDictionaryState";
@@ -98,7 +98,7 @@ const mergeSnippets = (base: PhraseSnippet[], next: PhraseSnippet[]) => {
   return merged;
 };
 
-const detectLanguage = (value: string) => /[а-яё]/i.test(value);
+const detectLanguage = (value: string) => /[Р°-СЏС‘]/i.test(value);
 
 const filterPureTranslations = (list: string[]) =>
   list.filter((value) => !/[a-z]/i.test(value));
@@ -231,6 +231,7 @@ export function DictionaryContainer() {
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
+  const loadMoreAbortRef = useRef<AbortController | null>(null);
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const firstCardRef = useRef<HTMLDivElement | null>(null);
   const cardWidthRef = useRef(0);
@@ -238,6 +239,13 @@ export function DictionaryContainer() {
   const scrollEndTimer = useRef<number | null>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const lastSettledIndex = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      loadMoreAbortRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -361,6 +369,8 @@ export function DictionaryContainer() {
   }, []);
 
   const handleClear = useCallback(() => {
+    abortRef.current?.abort();
+    loadMoreAbortRef.current?.abort();
     setQuery("");
     setVideoQuery("");
     setDictEntries([]);
@@ -411,6 +421,7 @@ export function DictionaryContainer() {
       });
 
       abortRef.current?.abort();
+      loadMoreAbortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
 
@@ -652,6 +663,9 @@ export function DictionaryContainer() {
 
       isLoadingMoreRef.current = true;
       setIsLoadingMore(true);
+      loadMoreAbortRef.current?.abort();
+      const loadMoreController = new AbortController();
+      loadMoreAbortRef.current = loadMoreController;
       const nextStage =
         !hasMore && force
           ? Math.min(sampleStage + 1, LAST_SAMPLE_STAGE_INDEX)
@@ -669,6 +683,7 @@ export function DictionaryContainer() {
           paddingSeconds: computePaddingSeconds(videoQuery),
           sampleSize: SAMPLE_STAGE_SIZES[nextStage],
           userId: auth.profile?.id ?? null,
+          signal: loadMoreController.signal,
         });
 
         setItems((prev) => {
@@ -682,6 +697,7 @@ export function DictionaryContainer() {
       } catch (err: any) {
         setError(err?.message ?? "Не удалось загрузить еще результаты");
       } finally {
+        loadMoreAbortRef.current = null;
         isLoadingMoreRef.current = false;
         setIsLoadingMore(false);
       }
@@ -1574,7 +1590,7 @@ export function DictionaryContainer() {
                             )}
                             {state.status === "ready" &&
                               state.items.length === 0 && (
-                                <SubtleText>Примеры не найдены.</SubtleText>
+                                <SubtleText></SubtleText>
                               )}
                             {state.items.length > 0 && (
                               <SnippetCarousel
