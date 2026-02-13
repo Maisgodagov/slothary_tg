@@ -9,6 +9,13 @@ const adminHeaders = (userId?: string | null, role?: UserRole | null) => {
   return headers;
 };
 
+export type VideoTagSummary = {
+  totalVideos: number;
+  videosWithTags: number;
+  videosWithoutTags: number;
+  tags: Array<{ id: number; name: string; usageCount: number }>;
+};
+
 export const moderationApi = {
   updateCefrLevel(contentId: string, cefrLevel: CEFRLevel, userId?: string | null, role?: UserRole | null) {
     return apiFetch<VideoContent>(`video-learning/${contentId}/moderation/cefr-level`, {
@@ -70,6 +77,39 @@ export const moderationApi = {
   getAuthors(userId?: string | null, role?: UserRole | null) {
     return apiFetch<{ username: string }[]>(`video-learning/authors`, {
       method: 'GET',
+      headers: adminHeaders(userId, role),
+    });
+  },
+  getTags(userId?: string | null, role?: UserRole | null) {
+    return apiFetch<VideoTagSummary>(`video-learning/tags`, {
+      method: 'GET',
+      headers: adminHeaders(userId, role),
+    });
+  },
+  createTag(name: string, userId?: string | null, role?: UserRole | null) {
+    return apiFetch<{ id: number; name: string; usageCount: number }>(`video-learning/tags`, {
+      method: 'POST',
+      body: { name },
+      headers: adminHeaders(userId, role),
+    });
+  },
+  deleteTag(tagId: number, userId?: string | null, role?: UserRole | null) {
+    return apiFetch<void>(`video-learning/tags/${tagId}`, {
+      method: 'DELETE',
+      headers: adminHeaders(userId, role),
+    });
+  },
+  updateVideoTags(contentId: string, tagIds: number[], userId?: string | null, role?: UserRole | null) {
+    return apiFetch<VideoContent>(`video-learning/${contentId}/moderation/tags`, {
+      method: 'PATCH',
+      body: { tagIds },
+      headers: adminHeaders(userId, role),
+    });
+  },
+  assignTagToAuthor(author: string, tagId: number, userId?: string | null, role?: UserRole | null) {
+    return apiFetch<{ updatedVideos: number; tag: string; author: string }>(`video-learning/moderation/tags/assign-author`, {
+      method: 'POST',
+      body: { author, tagId },
       headers: adminHeaders(userId, role),
     });
   },

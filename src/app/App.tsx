@@ -14,6 +14,7 @@ import { TelegramProvider, useTelegram } from "./providers/TelegramProvider";
 import { store, persistor } from "./store";
 import UserAdminPage from "../pages/UserAdminPage";
 import GameSnippetsAdminPage from "../pages/GameSnippetsAdminPage";
+import VideoTagsAdminPage from "../pages/VideoTagsAdminPage";
 import UserDictionaryPage from "../pages/UserDictionaryPage";
 import WordProgressPage from "../pages/WordProgressPage";
 import StreakPage from "../pages/StreakPage";
@@ -183,6 +184,7 @@ function AppRoutes() {
             element={<Navigate to="/dictionary" replace />}
           />
           <Route path="/admin/users" element={<UserAdminPage />} />
+          <Route path="/admin/video-tags" element={<VideoTagsAdminPage />} />
           <Route path="/admin/word-progress" element={<WordProgressPage />} />
           <Route path="/streak" element={<StreakPage />} />
           <Route

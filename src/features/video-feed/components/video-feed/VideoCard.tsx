@@ -56,6 +56,13 @@ export function VideoCard({
   const [showModeration, setShowModeration] = useState(false);
   const [savingModeration, setSavingModeration] = useState(false);
   const [authors, setAuthors] = useState<string[]>([]);
+  const [tagCatalog, setTagCatalog] = useState<
+    Array<{ id: number; name: string; usageCount: number }>
+  >([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [authorTagId, setAuthorTagId] = useState<number | null>(null);
+  const [tagsLoading, setTagsLoading] = useState(false);
+  const [tagsError, setTagsError] = useState<string | null>(null);
   const [subtitleModal, setSubtitleModal] = useState(false);
   const [enEdit, setEnEdit] = useState("");
   const [ruEdit, setRuEdit] = useState("");
@@ -472,6 +479,7 @@ export function VideoCard({
   };
   const initialCefr = contentAnalysis?.cefrLevel ?? "A2";
   const initialSpeech = contentAnalysis?.speechSpeed ?? "normal";
+  const initialTopics = contentAnalysis?.topics ?? item.analysis?.topics ?? [];
   const initialAuthor = content?.author ?? item.author ?? "";
   const initialAdult = content?.isAdultContent ?? item.isAdultContent ?? false;
   const initialModerated = content?.isModerated ?? item.isModerated ?? false;
@@ -521,18 +529,24 @@ export function VideoCard({
 
   useEffect(() => {
     if (!showModeration || !isAdmin) return;
-    const loadAuthors = async () => {
+    const loadModerationData = async () => {
+      setTagsError(null);
+      setTagsLoading(true);
       try {
-        const list = await moderationApi.getAuthors(
-          auth.profile?.id,
-          auth.profile?.role,
-        );
+        const [list, tags] = await Promise.all([
+          moderationApi.getAuthors(auth.profile?.id, auth.profile?.role),
+          moderationApi.getTags(auth.profile?.id, auth.profile?.role),
+        ]);
         setAuthors(list?.map((a) => a.username) ?? []);
+        setTagCatalog(tags?.tags ?? []);
       } catch (err) {
-        console.error("Failed to load authors", err);
+        console.error("Failed to load moderation metadata", err);
+        setTagsError("Не удалось загрузить теги");
+      } finally {
+        setTagsLoading(false);
       }
     };
-    loadAuthors();
+    loadModerationData();
   }, [showModeration, isAdmin, auth.profile?.id, auth.profile?.role]);
 
   useEffect(() => {
@@ -541,6 +555,7 @@ export function VideoCard({
     setAuthor(initialAuthor);
     setIsAdult(initialAdult);
     setIsModerated(initialModerated);
+    setAuthorTagId(null);
   }, [
     initialAdult,
     initialAuthor,
@@ -548,6 +563,37 @@ export function VideoCard({
     initialModerated,
     initialSpeech,
   ]);
+
+  useEffect(() => {
+    if (!showModeration) return;
+    if (!tagCatalog.length) {
+      setSelectedTagIds([]);
+      return;
+    }
+    const initialTagSet = new Set(
+      initialTopics.map((topic) => topic.trim().toLowerCase()),
+    );
+    const mappedIds = tagCatalog
+      .filter((tag) => initialTagSet.has(tag.name.trim().toLowerCase()))
+      .map((tag) => tag.id);
+    setSelectedTagIds(mappedIds);
+  }, [showModeration, tagCatalog, initialTopics]);
+
+  const initialTagIds = useMemo(() => {
+    if (!tagCatalog.length) return [];
+    const initialTagSet = new Set(
+      initialTopics.map((topic) => topic.trim().toLowerCase()),
+    );
+    return tagCatalog
+      .filter((tag) => initialTagSet.has(tag.name.trim().toLowerCase()))
+      .map((tag) => tag.id)
+      .sort((a, b) => a - b);
+  }, [tagCatalog, initialTopics]);
+
+  const currentTagIdsSorted = useMemo(
+    () => [...selectedTagIds].sort((a, b) => a - b),
+    [selectedTagIds],
+  );
 
   const handleOptionSelect = async (option: string) => {
     if (!currentExercise) return;
@@ -1394,11 +1440,11 @@ export function VideoCard({
             style={{
               width: "100%",
               maxWidth: 640,
-              background: "#ffffff",
-              border: "1px solid #e6e8ef",
+              background: "var(--tg-card)",
+              border: "1px solid var(--tg-border)",
               borderRadius: 20,
               padding: "22px 20px 26px",
-              color: "#1a1d29",
+              color: "var(--tg-text)",
               boxShadow: "0 20px 60px rgba(0,0,0,0.28)",
               position: "relative",
             }}
@@ -1407,7 +1453,7 @@ export function VideoCard({
               style={{
                 width: 44,
                 height: 4,
-                background: "#d9dce3",
+                background: "var(--tg-border)",
                 borderRadius: 4,
                 margin: "0 auto 18px",
               }}
@@ -1424,16 +1470,16 @@ export function VideoCard({
                 <div style={{ fontSize: 18, fontWeight: 800 }}>
                   Модерация видео
                 </div>
-                <div style={{ fontSize: 12, color: "#6a6f7a" }}>
+                <div style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
                   ID: {item.id}
                 </div>
               </div>
               <button
                 onClick={() => setShowModeration(false)}
                 style={{
-                  border: "1px solid #e6e8ef",
-                  background: "#f5f6fa",
-                  color: "#404658",
+                  border: "1px solid var(--tg-border)",
+                  background: "var(--tg-surface)",
+                  color: "var(--tg-text)",
                   cursor: "pointer",
                   width: 32,
                   height: 32,
@@ -1489,6 +1535,100 @@ export function VideoCard({
                 </datalist>
               </label>
 
+              <label style={labelStyle}>
+                Теги видео
+                <select
+                  multiple
+                  value={selectedTagIds.map(String)}
+                  onChange={(e) => {
+                    const values = Array.from(e.target.selectedOptions)
+                      .map((option) => Number(option.value))
+                      .filter((value) => Number.isInteger(value) && value > 0);
+                    setSelectedTagIds(Array.from(new Set(values)).slice(0, 20));
+                  }}
+                  style={{ ...inputStyle, minHeight: 120 }}
+                >
+                  {tagCatalog.map((tag) => (
+                    <option key={tag.id} value={tag.id}>
+                      {tag.name} ({tag.usageCount})
+                    </option>
+                  ))}
+                </select>
+                {tagsLoading && (
+                  <span style={{ fontSize: 12, color: "var(--tg-subtle)" }}>
+                    Загружаем теги...
+                  </span>
+                )}
+                {tagsError && (
+                  <span style={{ fontSize: 12, color: "var(--tg-danger)" }}>
+                    {tagsError}
+                  </span>
+                )}
+              </label>
+
+              {author.trim() && (
+                <div
+                  style={{
+                    border: "1px solid var(--tg-border)",
+                    borderRadius: 12,
+                    padding: 12,
+                    display: "grid",
+                    gap: 8,
+                  }}
+                >
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>
+                    Один тег для всех видео автора
+                    <select
+                      value={authorTagId ? String(authorTagId) : ""}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        setAuthorTagId(
+                          Number.isInteger(value) && value > 0 ? value : null,
+                        );
+                      }}
+                      style={inputStyle}
+                    >
+                      <option value="">Выберите один тег</option>
+                      {tagCatalog.map((tag) => (
+                        <option key={tag.id} value={tag.id}>
+                          {tag.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    style={{
+                      ...buttonStyle,
+                      background: "var(--tg-surface)",
+                      border: "1px solid var(--tg-border)",
+                      color: "var(--tg-text)",
+                    }}
+                    disabled={!authorTagId || savingModeration}
+                    onClick={async () => {
+                      if (!auth.profile?.id || !authorTagId) return;
+                      try {
+                        setSavingModeration(true);
+                        const result = await moderationApi.assignTagToAuthor(
+                          author.trim(),
+                          authorTagId,
+                          auth.profile.id,
+                          auth.profile.role,
+                        );
+                        alert(`Обновлено видео автора: ${result.updatedVideos}`);
+                      } catch (err) {
+                        console.error("Assign tag to author failed", err);
+                        alert("Не удалось проставить тег автору");
+                      } finally {
+                        setSavingModeration(false);
+                      }
+                    }}
+                  >
+                    Проставить тег всем видео автора
+                  </button>
+                </div>
+              )}
+
               <ToggleRow
                 label="18+ контент"
                 checked={isAdult}
@@ -1522,9 +1662,9 @@ export function VideoCard({
                   onClick={() => setShowModeration(false)}
                   style={{
                     ...buttonStyle,
-                    background: "#f5f6fa",
-                    border: "1px solid #d8dadd",
-                    color: "#1a1d29",
+                    background: "var(--tg-surface)",
+                    border: "1px solid var(--tg-border)",
+                    color: "var(--tg-text)",
                   }}
                 >
                   Отмена
@@ -1585,6 +1725,20 @@ export function VideoCard({
                           ),
                         );
                       }
+                      const initialTagIdsSerialized =
+                        JSON.stringify(initialTagIds);
+                      const currentTagIdsSerialized =
+                        JSON.stringify(currentTagIdsSorted);
+                      if (currentTagIdsSerialized !== initialTagIdsSerialized) {
+                        requests.push(
+                          moderationApi.updateVideoTags(
+                            item.id,
+                            currentTagIdsSorted,
+                            auth.profile.id,
+                            auth.profile.role,
+                          ),
+                        );
+                      }
                       await Promise.all(requests);
                       setShowModeration(false);
                     } catch (err) {
@@ -1596,8 +1750,8 @@ export function VideoCard({
                   }}
                   style={{
                     ...buttonStyle,
-                    background: "#0f7aa7",
-                    color: "#fff",
+                    background: "var(--tg-link)",
+                    color: "var(--tg-button-text)",
                     minWidth: 120,
                   }}
                   disabled={savingModeration}
@@ -1816,10 +1970,12 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
   border: "1px solid var(--tg-border)",
-  background: "rgba(255,255,255,0.04)",
+  background: "var(--tg-surface)",
   color: "var(--tg-text)",
+  WebkitTextFillColor: "var(--tg-text)",
   padding: "10px 12px",
   fontSize: 14,
+  fontWeight: 600,
 };
 
 const labelStyle: React.CSSProperties = {
@@ -1863,7 +2019,7 @@ function ToggleRow({
         justifyContent: "space-between",
       }}
     >
-      <span style={{ fontWeight: 700, color: "#1a1d29" }}>{label}</span>
+      <span style={{ fontWeight: 700, color: "var(--tg-text)" }}>{label}</span>
       <span
         style={{
           position: "relative",

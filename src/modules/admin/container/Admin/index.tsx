@@ -52,6 +52,11 @@ export function AdminContainer() {
           description="Просматривайте активность и меняйте роли пользователей."
           onClick={() => navigate('/admin/users')}
         />
+        <AdminNavCard
+          title="Теги видео"
+          description="Создавайте теги и смотрите покрытие видео."
+          onClick={() => navigate('/admin/video-tags')}
+        />
       </AdminWrapper>
     </PageShell>
   );
