@@ -15,7 +15,6 @@ import { moderationApi } from "../../moderationApi";
 import type { VideoCardProps } from "./types";
 import * as S from "./styles";
 import { Icon } from "../../../../shared/ui/Icon";
-import { Loader } from "../../../../shared/ui/Loader";
 import { WordCard } from "../../../dictionary/components/WordCard";
 
 export function VideoCard({
@@ -1013,13 +1012,49 @@ export function VideoCard({
               style={{
                 background: "var(--tg-surface)",
                 border: "1px solid var(--tg-border)",
-                borderRadius: 14,
-                padding: 12,
+                borderRadius: 16,
+                padding: "12px 12px 10px",
                 display: "grid",
-                placeItems: "center",
+                gap: 10,
+                width: "min(280px, 86vw)",
               }}
             >
-              <Loader />
+              <div
+                style={{
+                  height: 24,
+                  width: "58%",
+                  borderRadius: 8,
+                  background:
+                    "linear-gradient(90deg, var(--tg-card) 0%, var(--tg-border) 50%, var(--tg-card) 100%)",
+                  backgroundSize: "200% 100%",
+                  animation: "video-word-popover-shimmer 1.2s linear infinite",
+                }}
+              />
+              <div
+                style={{
+                  height: 14,
+                  width: "96%",
+                  borderRadius: 8,
+                  background:
+                    "linear-gradient(90deg, var(--tg-card) 0%, var(--tg-border) 50%, var(--tg-card) 100%)",
+                  backgroundSize: "200% 100%",
+                  animation: "video-word-popover-shimmer 1.2s linear infinite",
+                }}
+              />
+              <div
+                style={{
+                  height: 14,
+                  width: "72%",
+                  borderRadius: 8,
+                  background:
+                    "linear-gradient(90deg, var(--tg-card) 0%, var(--tg-border) 50%, var(--tg-card) 100%)",
+                  backgroundSize: "200% 100%",
+                  animation: "video-word-popover-shimmer 1.2s linear infinite",
+                }}
+              />
+              <style>
+                {`@keyframes video-word-popover-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }`}
+              </style>
             </div>
           )}
           {subtitleLookup?.status === "error" && (

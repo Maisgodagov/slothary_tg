@@ -466,25 +466,48 @@ export function SnippetCard({
                 style={{
                   background: "var(--tg-surface)",
                   border: "1px solid var(--tg-border)",
-                  borderRadius: 20,
-                  padding: 6,
+                  borderRadius: 16,
+                  padding: "12px 12px 10px",
                   display: "grid",
-                  placeItems: "center",
-                  minHeight: 44,
+                  gap: 10,
+                  width: "min(280px, 86vw)",
                 }}
               >
                 <div
                   style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    border: "3px solid rgba(109, 211, 255, 0.28)",
-                    borderTopColor: "var(--tg-accent-strong)",
-                    animation: "dictionary-mini-spin 0.9s linear infinite",
+                    height: 24,
+                    width: "58%",
+                    borderRadius: 8,
+                    background:
+                      "linear-gradient(90deg, var(--tg-card) 0%, var(--tg-border) 50%, var(--tg-card) 100%)",
+                    backgroundSize: "200% 100%",
+                    animation: "dictionary-mini-shimmer 1.2s linear infinite",
+                  }}
+                />
+                <div
+                  style={{
+                    height: 14,
+                    width: "96%",
+                    borderRadius: 8,
+                    background:
+                      "linear-gradient(90deg, var(--tg-card) 0%, var(--tg-border) 50%, var(--tg-card) 100%)",
+                    backgroundSize: "200% 100%",
+                    animation: "dictionary-mini-shimmer 1.2s linear infinite",
+                  }}
+                />
+                <div
+                  style={{
+                    height: 14,
+                    width: "72%",
+                    borderRadius: 8,
+                    background:
+                      "linear-gradient(90deg, var(--tg-card) 0%, var(--tg-border) 50%, var(--tg-card) 100%)",
+                    backgroundSize: "200% 100%",
+                    animation: "dictionary-mini-shimmer 1.2s linear infinite",
                   }}
                 />
                 <style>
-                  {`@keyframes dictionary-mini-spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}
+                  {`@keyframes dictionary-mini-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }`}
                 </style>
               </div>
             )}
