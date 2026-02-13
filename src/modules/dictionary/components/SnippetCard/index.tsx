@@ -1,11 +1,20 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+﻿import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 
-import { dictionaryApi } from '../../../../features/dictionary/api';
-import { WordCard } from '../../../../features/dictionary/components/WordCard';
-import { muellerApi, type MuellerEntry } from '../../../../features/mueller/api';
-import { Loader } from '../../../../shared/ui/Loader';
-import type { SnippetCardProps } from './types';
+import { dictionaryApi } from "../../../../features/dictionary/api";
+import { WordCard } from "../../../../features/dictionary/components/WordCard";
+import {
+  muellerApi,
+  type MuellerEntry,
+} from "../../../../features/mueller/api";
+import { Loader } from "../../../../shared/ui/Loader";
+import type { SnippetCardProps } from "./types";
 import {
   CardPlaceholder,
   CardShell,
@@ -18,28 +27,36 @@ import {
   PlayButton,
   PlayIcon,
   Video,
-} from './styles';
+} from "./styles";
 
 const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const normalizeHighlightToken = (value: string) =>
+  value
+    .trim()
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/^[\s"'`\u2018\u2019\u201C\u201D.,;:!?()[\]{}-]+/g, "")
+    .replace(/[\s"'`\u2018\u2019\u201C\u201D.,;:!?()[\]{}-]+$/g, "");
 
 const buildTokenPattern = (token: string) => {
-  const normalized = token.replace(/['’]/g, '');
-  if (!normalized) return '';
-  const chars = normalized.split('').map(escapeRegExp);
-  return `\\b${chars.join("['’]?")}\\b`;
+  const normalized = normalizeHighlightToken(token).replace(
+    /["'\u2018\u2019]/g,
+    "",
+  );
+  if (!normalized) return "";
+  const chars = normalized.split("").map(escapeRegExp);
+  return `\\b${chars.join("['\u2019]?")}\\b`;
 };
 
 const createHighlightRegex = (value: string): RegExp | null => {
   const trimmed = value.trim();
   if (!trimmed) return null;
-  const parts = trimmed
-    .split(/\s+/)
-    .map(buildTokenPattern)
-    .filter(Boolean);
+  const parts = trimmed.split(/\s+/).map(buildTokenPattern).filter(Boolean);
   if (!parts.length) return null;
-  const pattern = parts.join('\\s+');
-  return new RegExp(pattern, 'gi');
+  const separatorPattern = `[\\s"'\\u2018\\u2019\\u201C\\u201D.,;:!?()[\\]{}-]+`;
+  const pattern = parts.join(separatorPattern);
+  return new RegExp(pattern, "gi");
 };
 
 const buildHighlightedText = (text: string, highlight: string): ReactNode => {
@@ -65,6 +82,32 @@ const buildHighlightedText = (text: string, highlight: string): ReactNode => {
   return nodes.length ? nodes : text;
 };
 
+const buildTokenHighlightSet = (highlight: string): Set<string> =>
+  new Set(
+    highlight
+      .split(/\s+/)
+      .map((token) =>
+        normalizeHighlightToken(token).toLowerCase().replace(/["'\u2018\u2019]/g, ""),
+      )
+      .filter(Boolean),
+  );
+
+const buildHighlightedTokenText = (
+  tokenValue: string,
+  highlight: string,
+  isPhraseHighlight: boolean,
+  phraseTokenSet: Set<string>,
+): ReactNode => {
+  if (!isPhraseHighlight) return buildHighlightedText(tokenValue, highlight);
+  const normalizedToken = normalizeHighlightToken(tokenValue)
+    .toLowerCase()
+    .replace(/["'\u2018\u2019]/g, "");
+  if (!normalizedToken || !phraseTokenSet.has(normalizedToken)) {
+    return tokenValue;
+  }
+  return <Highlight>{tokenValue}</Highlight>;
+};
+
 export function SnippetCard({
   snippet,
   isActive,
@@ -78,7 +121,7 @@ export function SnippetCard({
   const [isReady, setIsReady] = useState(false);
   const [subtitleLookup, setSubtitleLookup] = useState<{
     word: string;
-    status: 'idle' | 'loading' | 'ready' | 'error';
+    status: "idle" | "loading" | "ready" | "error";
     entry?: MuellerEntry;
     error?: string;
   } | null>(null);
@@ -86,16 +129,16 @@ export function SnippetCard({
     top: number;
     left: number;
     width: number;
-    placement: 'top' | 'bottom';
+    placement: "top" | "bottom";
   } | null>(null);
   const subtitleWasPlayingRef = useRef(false);
 
   const resolveUserId = () => {
     try {
-      const fromStorage = localStorage.getItem('guestUserId');
+      const fromStorage = localStorage.getItem("guestUserId");
       if (fromStorage) return fromStorage;
       const newId = crypto.randomUUID();
-      localStorage.setItem('guestUserId', newId);
+      localStorage.setItem("guestUserId", newId);
       return newId;
     } catch {
       return `guest-${Math.random().toString(36).slice(2, 10)}`;
@@ -131,7 +174,14 @@ export function SnippetCard({
         .then(() => setIsPlaying(true))
         .catch(() => setIsPlaying(false));
     }
-  }, [isActive, isReady, shouldRender, snippet.endSeconds, snippet.id, snippet.startSeconds]);
+  }, [
+    isActive,
+    isReady,
+    shouldRender,
+    snippet.endSeconds,
+    snippet.id,
+    snippet.startSeconds,
+  ]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -166,12 +216,12 @@ export function SnippetCard({
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target) return;
-      if (target.closest('[data-subtitle-popover]')) return;
+      if (target.closest("[data-subtitle-popover]")) return;
       setSubtitlePopover(null);
       setSubtitleLookup(null);
     };
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
   }, [subtitlePopover]);
 
   useEffect(() => {
@@ -180,11 +230,11 @@ export function SnippetCard({
       setSubtitlePopover(null);
       setSubtitleLookup(null);
     };
-    window.addEventListener('scroll', handleScroll, true);
-    window.addEventListener('touchmove', handleScroll, { passive: true });
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("touchmove", handleScroll, { passive: true });
     return () => {
-      window.removeEventListener('scroll', handleScroll, true);
-      window.removeEventListener('touchmove', handleScroll);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("touchmove", handleScroll);
     };
   }, [subtitlePopover]);
 
@@ -197,71 +247,80 @@ export function SnippetCard({
         }),
       )
     : [];
+  const isPhraseHighlight =
+    highlight.trim().split(/\s+/).filter(Boolean).length > 1;
+  const phraseTokenSet = buildTokenHighlightSet(highlight);
 
-  const handleSubtitleWordClick = useCallback(async (word: string, rect: DOMRect) => {
-    const normalized = word.toLowerCase();
-    const viewportWidth = window.innerWidth || 0;
-    const viewportHeight = window.innerHeight || 0;
-    const popoverWidth = Math.min(280, viewportWidth * 0.88);
-    const margin = 12;
-    const centeredLeft = rect.left + rect.width / 2;
-    const clampedLeft = Math.min(
-      viewportWidth - margin - popoverWidth / 2,
-      Math.max(margin + popoverWidth / 2, centeredLeft),
-    );
-    const estimatedHeight = 200;
-    let placement: 'top' | 'bottom' = 'top';
-    if (rect.top < estimatedHeight + margin) placement = 'bottom';
-    if (
-      placement === 'bottom' &&
-      rect.bottom + estimatedHeight + margin > viewportHeight
-    ) {
-      placement = 'top';
-    }
-    const top = placement === 'top' ? rect.top - 8 : rect.bottom + 8;
-
-    const video = videoRef.current;
-    if (video && !video.paused) {
-      subtitleWasPlayingRef.current = true;
-      video.pause();
-      setIsPlaying(false);
-    }
-
-    setSubtitlePopover({
-      top,
-      left: clampedLeft,
-      width: popoverWidth,
-      placement,
-    });
-    setSubtitleLookup({ word: normalized, status: 'loading' });
-
-    try {
-      const entries = await muellerApi.lookup({ word: normalized, lang: 'en' });
-      const primary = entries[0];
-      setSubtitleLookup({
-        word: normalized,
-        status: 'ready',
-        entry: primary,
-      });
-
-      if (primary?.word && primary.translations?.[0]) {
-        dictionaryApi
-          .recordView(resolveUserId(), {
-            query: normalized,
-            lang: 'en',
-            word: primary.word,
-            translation: primary.translations[0],
-          })
-          .catch(() => null);
+  const handleSubtitleWordClick = useCallback(
+    async (word: string, rect: DOMRect) => {
+      const normalized = word.toLowerCase();
+      const viewportWidth = window.innerWidth || 0;
+      const viewportHeight = window.innerHeight || 0;
+      const popoverWidth = Math.min(280, viewportWidth * 0.88);
+      const margin = 12;
+      const centeredLeft = rect.left + rect.width / 2;
+      const clampedLeft = Math.min(
+        viewportWidth - margin - popoverWidth / 2,
+        Math.max(margin + popoverWidth / 2, centeredLeft),
+      );
+      const estimatedHeight = 200;
+      let placement: "top" | "bottom" = "top";
+      if (rect.top < estimatedHeight + margin) placement = "bottom";
+      if (
+        placement === "bottom" &&
+        rect.bottom + estimatedHeight + margin > viewportHeight
+      ) {
+        placement = "top";
       }
-    } catch (err: any) {
-      setSubtitleLookup({
-        word: normalized,
-        status: 'error',
-        error: err?.message ?? 'Failed to load translation.',
+      const top = placement === "top" ? rect.top - 8 : rect.bottom + 8;
+
+      const video = videoRef.current;
+      if (video && !video.paused) {
+        subtitleWasPlayingRef.current = true;
+        video.pause();
+        setIsPlaying(false);
+      }
+
+      setSubtitlePopover({
+        top,
+        left: clampedLeft,
+        width: popoverWidth,
+        placement,
       });
-    }
-  }, []);
+      setSubtitleLookup({ word: normalized, status: "loading" });
+
+      try {
+        const entries = await muellerApi.lookup({
+          word: normalized,
+          lang: "en",
+        });
+        const primary = entries[0];
+        setSubtitleLookup({
+          word: normalized,
+          status: "ready",
+          entry: primary,
+        });
+
+        if (primary?.word && primary.translations?.[0]) {
+          dictionaryApi
+            .recordView(resolveUserId(), {
+              query: normalized,
+              lang: "en",
+              word: primary.word,
+              translation: primary.translations[0],
+            })
+            .catch(() => null);
+        }
+      } catch (err: any) {
+        setSubtitleLookup({
+          word: normalized,
+          status: "error",
+          error: err?.message ?? "Failed to load translation.",
+        });
+      }
+    },
+    [],
+  );
 
   const handleTogglePlay = useCallback(() => {
     const video = videoRef.current;
@@ -343,21 +402,38 @@ export function SnippetCard({
                   type="button"
                   onClick={(event) => {
                     event.stopPropagation();
-                    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+                    const rect = (
+                      event.currentTarget as HTMLElement
+                    ).getBoundingClientRect();
                     handleSubtitleWordClick(token.value, rect);
                   }}
                 >
-                  {buildHighlightedText(token.value, highlight)}
+                  {buildHighlightedTokenText(
+                    token.value,
+                    highlight,
+                    isPhraseHighlight,
+                    phraseTokenSet,
+                  )}
                 </ContextWordButton>
               ) : (
-                <span key={token.key}>{buildHighlightedText(token.value, highlight)}</span>
+                <span key={token.key}>
+                  {buildHighlightedTokenText(
+                    token.value,
+                    highlight,
+                    isPhraseHighlight,
+                    phraseTokenSet,
+                  )}
+                </span>
               ),
             )}
           </ContextText>
         </ContextWrapper>
       )}
-      <PlayButton type="button" aria-label={isPlaying ? 'Пауза' : 'Проиграть'}>
-        {!isPlaying && <PlayIcon>▶</PlayIcon>}
+      <PlayButton
+        type="button"
+        aria-label={isPlaying ? "РџР°СѓР·Р°" : "РџСЂРѕРёРіСЂР°С‚СЊ"}
+      >
+        {!isPlaying && <PlayIcon>в–¶</PlayIcon>}
       </PlayButton>
       {!isReady && (
         <LoadingOverlay>
@@ -369,31 +445,31 @@ export function SnippetCard({
           <div
             data-subtitle-popover
             style={{
-              position: 'fixed',
+              position: "fixed",
               left: subtitlePopover.left,
               top: subtitlePopover.top,
               transform:
-                subtitlePopover.placement === 'top'
-                  ? 'translate(-50%, -100%)'
-                  : 'translate(-50%, 0)',
+                subtitlePopover.placement === "top"
+                  ? "translate(-50%, -100%)"
+                  : "translate(-50%, 0)",
               zIndex: 10000,
-              width: 'max-content',
+              width: "max-content",
               maxWidth: `${subtitlePopover.width}px`,
-              minWidth: '112px',
-              pointerEvents: 'auto',
-              fontFamily: 'inherit',
+              minWidth: "112px",
+              pointerEvents: "auto",
+              fontFamily: "inherit",
             }}
             onClick={(event) => event.stopPropagation()}
           >
-            {subtitleLookup?.status === 'loading' && (
+            {subtitleLookup?.status === "loading" && (
               <div
                 style={{
-                  background: 'var(--tg-surface)',
-                  border: '1px solid var(--tg-border)',
+                  background: "var(--tg-surface)",
+                  border: "1px solid var(--tg-border)",
                   borderRadius: 20,
                   padding: 6,
-                  display: 'grid',
-                  placeItems: 'center',
+                  display: "grid",
+                  placeItems: "center",
                   minHeight: 44,
                 }}
               >
@@ -401,10 +477,10 @@ export function SnippetCard({
                   style={{
                     width: 20,
                     height: 20,
-                    borderRadius: '50%',
-                    border: '3px solid rgba(109, 211, 255, 0.28)',
-                    borderTopColor: 'var(--tg-accent-strong)',
-                    animation: 'dictionary-mini-spin 0.9s linear infinite',
+                    borderRadius: "50%",
+                    border: "3px solid rgba(109, 211, 255, 0.28)",
+                    borderTopColor: "var(--tg-accent-strong)",
+                    animation: "dictionary-mini-spin 0.9s linear infinite",
                   }}
                 />
                 <style>
@@ -412,26 +488,27 @@ export function SnippetCard({
                 </style>
               </div>
             )}
-            {subtitleLookup?.status === 'error' && (
+            {subtitleLookup?.status === "error" && (
               <div
                 style={{
-                  background: 'var(--tg-surface)',
-                  border: '1px solid var(--tg-border)',
+                  background: "var(--tg-surface)",
+                  border: "1px solid var(--tg-border)",
                   borderRadius: 14,
                   padding: 12,
-                  color: 'var(--tg-danger)',
+                  color: "var(--tg-danger)",
                   fontSize: 13,
                 }}
               >
                 {subtitleLookup.error}
               </div>
             )}
-            {subtitleLookup?.status === 'ready' &&
+            {subtitleLookup?.status === "ready" &&
               subtitleLookup.entry &&
               (() => {
                 const entry = subtitleLookup.entry;
                 const translation =
-                  entry.translations.find((value) => value.trim().length > 0) ?? '';
+                  entry.translations.find((value) => value.trim().length > 0) ??
+                  "";
                 return (
                   <WordCard
                     word={entry.word}

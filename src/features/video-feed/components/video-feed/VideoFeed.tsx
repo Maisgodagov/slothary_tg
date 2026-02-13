@@ -818,24 +818,9 @@ function LevelFilterModal({
   return (
     <S.ModalBackdrop onClick={onClose}>
       <S.ModalCard onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={onClose}
-          aria-label="Закрыть"
-          style={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            width: 32,
-            height: 32,
-            borderRadius: 12,
-            border: "1px solid var(--tg-border, #2b3245)",
-            background: "var(--tg-card, #1f273b)",
-            color: "var(--tg-text, #e9edf7)",
-            cursor: "pointer",
-          }}
-        >
+        <S.ModalClose onClick={onClose} aria-label="Закрыть">
           <Icon name="close" size={18} />
-        </button>
+        </S.ModalClose>
         <S.ModalTitle style={{ textAlign: "center", fontSize: 20 }}>
           Уровень языка
         </S.ModalTitle>

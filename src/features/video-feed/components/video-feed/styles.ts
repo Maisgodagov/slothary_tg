@@ -122,8 +122,8 @@ export const ModalClose = styled.button`
   width: 32px;
   height: 32px;
   border-radius: 12px;
-  border: 1px solid var(--tg-border, #30384a);
-  background: var(--tg-card, #1f273b);
+  border: none;
+  background: transparent;
   color: var(--tg-text, #e9edf7);
   font-size: 18px;
   cursor: pointer;
