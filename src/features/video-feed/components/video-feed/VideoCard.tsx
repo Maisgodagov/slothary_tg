@@ -751,10 +751,10 @@ export function VideoCard({
 
   const karaokeTokens = useMemo(() => {
     if (!enSub) return [];
-    const parts = enSub.match(/([A-Za-z']+|[^A-Za-z']+)/g) ?? [];
+    const parts = enSub.match(/([A-Za-z0-9'\u2019:]+|[^A-Za-z0-9'\u2019:]+)/g) ?? [];
     let pointer = 0;
     return parts.map((part, index) => {
-      const isWord = /^[A-Za-z']+$/.test(part);
+      const isWord = /^[A-Za-z0-9'\u2019:]+$/.test(part);
       if (!isWord) {
         return { value: part, isWord, key: `${part}-${index}`, state: "idle" as const };
       }
@@ -1104,7 +1104,7 @@ export function VideoCard({
               )}
               {enSub && (
                 <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 18 }}>
-                  {karaokeTokens.map((token) =>
+                  {karaokeTokens.map((token, tokenIndex) =>
                     token.isWord ? (
                       <button
                         key={token.key}
@@ -1133,7 +1133,31 @@ export function VideoCard({
                         {token.value}
                       </button>
                     ) : (
-                      <span key={token.key}>{token.value}</span>
+                      <span
+                        key={token.key}
+                        style={{
+                          color: (() => {
+                            const onlyPunctuation = /^[\s.,!?;:()[\]{}"'\u2018\u2019\u201C\u201D`-]+$/.test(
+                              token.value,
+                            );
+                            if (!onlyPunctuation) return "inherit";
+                            const prev = tokenIndex > 0 ? karaokeTokens[tokenIndex - 1] : null;
+                            const next =
+                              tokenIndex >= 0 && tokenIndex < karaokeTokens.length - 1
+                                ? karaokeTokens[tokenIndex + 1]
+                                : null;
+                            const nearHighlighted =
+                              (prev?.isWord &&
+                                (prev.state === "active" || prev.state === "passed")) ||
+                              (next?.isWord &&
+                                (next.state === "active" || next.state === "passed"));
+                            return nearHighlighted ? "#ffd54a" : "inherit";
+                          })(),
+                          transition: "color 120ms linear",
+                        }}
+                      >
+                        {token.value}
+                      </span>
                     ),
                   )}
                 </S.SubtitleLine>
