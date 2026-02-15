@@ -761,10 +761,15 @@ export function VideoCard({
       let state: "idle" | "passed" | "active" = "idle";
       if (matchIndex !== -1) {
         const timing = currentChunkWordTimings[matchIndex];
+        const nextTiming = currentChunkWordTimings[matchIndex + 1];
+        const activeUntil =
+          nextTiming && Number.isFinite(nextTiming.start)
+            ? nextTiming.start
+            : timing.end;
         pointer = Math.max(pointer, matchIndex + 1);
-        if (currentTime >= timing.end) {
+        if (currentTime >= activeUntil) {
           state = "passed";
-        } else if (currentTime >= timing.start && currentTime < timing.end) {
+        } else if (currentTime >= timing.start && currentTime < activeUntil) {
           state = "active";
         }
       }
