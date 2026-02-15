@@ -22,6 +22,7 @@ import LessonStepCardDemoPage from "../pages/LessonStepCardDemoPage";
 import LessonStepCardQuizDemoPage from "../pages/LessonStepCardQuizDemoPage";
 import LessonStepCardFillGapDemoPage from "../pages/LessonStepCardFillGapDemoPage";
 import LessonStepCardAssembleDemoPage from "../pages/LessonStepCardAssembleDemoPage";
+import WordTrainingPage from "../pages/WordTrainingPage";
 import { HomeContainer } from "../modules/home";
 import { VideoContainer } from "../modules/video";
 import { DictionaryContainer } from "../modules/dictionary";
@@ -127,6 +128,8 @@ function BackHandler() {
 }
 
 function AppRoutes() {
+  const auth = useAppSelector(selectAuth);
+  const isAdmin = auth.profile?.role === "admin";
   const location = useLocation();
 
   useEffect(() => {
@@ -178,6 +181,10 @@ function AppRoutes() {
           <Route path="/profile" element={<ProfileContainer />} />
           <Route path="/video" element={<VideoContainer />} />
           <Route path="/dictionary" element={<DictionaryContainer />} />
+          <Route
+            path="/training"
+            element={isAdmin ? <WordTrainingPage /> : <Navigate to="/" replace />}
+          />
           <Route path="/user-dictionary" element={<UserDictionaryPage />} />
           <Route
             path="/video-dictionary"

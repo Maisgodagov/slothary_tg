@@ -1,5 +1,8 @@
-﻿import type { CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { NavLink } from "react-router-dom";
+
+import { useAppSelector } from "../../app/hooks";
+import { selectAuth } from "../../features/auth/slice";
 import { Icon } from "./Icon";
 
 const linkStyle: CSSProperties = {
@@ -19,8 +22,14 @@ const linkStyle: CSSProperties = {
 };
 
 export function NavBar() {
+  const auth = useAppSelector(selectAuth);
+  const isAdmin = auth.profile?.role === "admin";
+
   const items = [
     { to: "/", label: "Главная", icon: "home", iconActive: "home-filled" },
+    ...(isAdmin
+      ? [{ to: "/training", label: "Учить", icon: "exercise", iconActive: "exercise-filled" as const }]
+      : []),
     { to: "/video", label: "Видео", icon: "video", iconActive: "video-filled" },
     {
       to: "/dictionary",
@@ -76,4 +85,3 @@ export function NavBar() {
     </nav>
   );
 }
-
