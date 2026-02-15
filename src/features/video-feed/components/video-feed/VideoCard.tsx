@@ -326,16 +326,6 @@ export function VideoCard({
     };
   }, [subtitlePopover]);
 
-  const englishTokens = useMemo(() => {
-    if (!enSub) return [];
-    const parts = enSub.match(/([A-Za-z']+|[^A-Za-z']+)/g) ?? [];
-    return parts.map((part, index) => ({
-      value: part,
-      isWord: /^[A-Za-z']+$/.test(part),
-      key: `${part}-${index}`,
-    }));
-  }, [enSub]);
-
   const handleSubtitleWordClick = async (word: string, rect: DOMRect) => {
     const normalized = word.toLowerCase();
     const viewportWidth = window.innerWidth || 0;
@@ -711,6 +701,78 @@ export function VideoCard({
       .replace(/[^a-z0-9-]+/g, "")
       .trim();
 
+  const normalizeKaraokeToken = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[\u2019']/g, "")
+      .replace(/[^a-z0-9]+/g, "")
+      .trim();
+
+  const currentChunkWordTimings = useMemo(() => {
+    if (enIndex < 0) return [];
+    const chunk = localTranscription[enIndex];
+    if (!chunk) return [];
+    const [chunkStart, chunkEnd] = chunk.timestamp;
+    return wordChunks
+      .filter((word) => {
+        const [wordStart, wordEnd] = word.timestamp;
+        return (
+          Number.isFinite(wordStart) &&
+          Number.isFinite(wordEnd) &&
+          wordEnd > chunkStart &&
+          wordStart < chunkEnd &&
+          typeof word.text === "string" &&
+          word.text.trim().length > 0
+        );
+      })
+      .map((word) => ({
+        normalized: normalizeKaraokeToken(word.text),
+        start: Number(word.timestamp[0]),
+        end: Number(word.timestamp[1]),
+      }));
+  }, [enIndex, localTranscription, wordChunks]);
+
+  const karaokeTokens = useMemo(() => {
+    if (!enSub) return [];
+    const parts = enSub.match(/([A-Za-z']+|[^A-Za-z']+)/g) ?? [];
+    let pointer = 0;
+    return parts.map((part, index) => {
+      const isWord = /^[A-Za-z']+$/.test(part);
+      if (!isWord) {
+        return { value: part, isWord, key: `${part}-${index}`, state: "idle" as const };
+      }
+      const normalized = normalizeKaraokeToken(part);
+      let matchIndex = -1;
+      for (let i = pointer; i < currentChunkWordTimings.length; i += 1) {
+        if (currentChunkWordTimings[i].normalized === normalized) {
+          matchIndex = i;
+          break;
+        }
+      }
+      if (matchIndex === -1 && pointer > 0) {
+        for (let i = 0; i < pointer; i += 1) {
+          if (currentChunkWordTimings[i].normalized === normalized) {
+            matchIndex = i;
+            break;
+          }
+        }
+      }
+
+      let state: "idle" | "passed" | "active" = "idle";
+      if (matchIndex !== -1) {
+        const timing = currentChunkWordTimings[matchIndex];
+        pointer = Math.max(pointer, matchIndex + 1);
+        if (currentTime >= timing.end) {
+          state = "passed";
+        } else if (currentTime >= timing.start && currentTime < timing.end) {
+          state = "active";
+        }
+      }
+
+      return { value: part, isWord, key: `${part}-${index}`, state };
+    });
+  }, [enSub, currentChunkWordTimings, currentTime]);
+
   const extractLookupTokens = (value: string) =>
     normalizeLookupText(value).split(/\s+/).map(toToken).filter(Boolean);
 
@@ -992,7 +1054,7 @@ export function VideoCard({
               )}
               {enSub && (
                 <S.SubtitleLine style={{ fontSize: showExercises ? 18 : 18 }}>
-                  {englishTokens.map((token) =>
+                  {karaokeTokens.map((token) =>
                     token.isWord ? (
                       <button
                         key={token.key}
@@ -1009,9 +1071,13 @@ export function VideoCard({
                           background: "transparent",
                           padding: 0,
                           margin: 0,
-                          color: "inherit",
+                          color:
+                            token.state === "active"
+                              ? "#ffd54a"
+                              : "inherit",
                           font: "inherit",
                           cursor: "pointer",
+                          transition: "color 120ms linear",
                         }}
                       >
                         {token.value}
