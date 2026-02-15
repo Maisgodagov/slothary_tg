@@ -1121,10 +1121,7 @@ export function VideoCard({
                           background: "transparent",
                           padding: 0,
                           margin: 0,
-                          color:
-                            token.state === "active"
-                              ? "#ffd54a"
-                              : "inherit",
+                          color: token.state === "passed" ? "#ffd54a" : "inherit",
                           font: "inherit",
                           cursor: "pointer",
                           transition: "color 120ms linear",
