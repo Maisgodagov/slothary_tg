@@ -468,13 +468,11 @@ export function VideoCard({
     event.stopPropagation();
   };
   const initialCefr = contentAnalysis?.cefrLevel ?? "A2";
-  const initialSpeech = contentAnalysis?.speechSpeed ?? "normal";
   const initialTopics = contentAnalysis?.topics ?? item.analysis?.topics ?? [];
   const initialAuthor = content?.author ?? item.author ?? "";
   const initialAdult = content?.isAdultContent ?? item.isAdultContent ?? false;
   const initialModerated = content?.isModerated ?? item.isModerated ?? false;
   const [cefr, setCefr] = useState(initialCefr);
-  const [speech, setSpeech] = useState(initialSpeech);
   const [author, setAuthor] = useState(initialAuthor);
   const [isAdult, setIsAdult] = useState(initialAdult);
   const [isModerated, setIsModerated] = useState(initialModerated);
@@ -541,7 +539,6 @@ export function VideoCard({
 
   useEffect(() => {
     setCefr(initialCefr);
-    setSpeech(initialSpeech);
     setAuthor(initialAuthor);
     setIsAdult(initialAdult);
     setIsModerated(initialModerated);
@@ -551,7 +548,6 @@ export function VideoCard({
     initialAuthor,
     initialCefr,
     initialModerated,
-    initialSpeech,
   ]);
 
   useEffect(() => {
@@ -1578,19 +1574,6 @@ export function VideoCard({
               </label>
 
               <label style={labelStyle}>
-                Скорость речи
-                <select
-                  value={speech}
-                  onChange={(e) => setSpeech(e.target.value as any)}
-                  style={inputStyle}
-                >
-                  <option value="slow">Медленная речь</option>
-                  <option value="normal">Обычная скорость речи</option>
-                  <option value="fast">Быстрая речь</option>
-                </select>
-              </label>
-
-              <label style={labelStyle}>
                 Автор видео
                 <input
                   list="author-list"
@@ -1751,16 +1734,6 @@ export function VideoCard({
                           moderationApi.updateCefrLevel(
                             item.id,
                             cefr,
-                            auth.profile.id,
-                            auth.profile.role,
-                          ),
-                        );
-                      }
-                      if (speech !== initialSpeech) {
-                        requests.push(
-                          moderationApi.updateSpeechSpeed(
-                            item.id,
-                            speech,
                             auth.profile.id,
                             auth.profile.role,
                           ),
