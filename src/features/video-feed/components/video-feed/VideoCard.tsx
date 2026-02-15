@@ -751,10 +751,13 @@ export function VideoCard({
 
   const karaokeTokens = useMemo(() => {
     if (!enSub) return [];
-    const parts = enSub.match(/([A-Za-z0-9'\u2019:]+|[^A-Za-z0-9'\u2019:]+)/g) ?? [];
+    const parts =
+      enSub.match(
+        /([A-Za-z0-9'\u2019:]+(?:-[A-Za-z0-9'\u2019:]+)*|[^A-Za-z0-9'\u2019:-]+)/g,
+      ) ?? [];
     let pointer = 0;
     return parts.map((part, index) => {
-      const isWord = /^[A-Za-z0-9'\u2019:]+$/.test(part);
+      const isWord = /^[A-Za-z0-9'\u2019:]+(?:-[A-Za-z0-9'\u2019:]+)*$/.test(part);
       if (!isWord) {
         return { value: part, isWord, key: `${part}-${index}`, state: "idle" as const };
       }
