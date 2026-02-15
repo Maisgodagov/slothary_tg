@@ -6,6 +6,7 @@
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { Play } from "lucide-react";
 
 import { dictionaryApi } from "../../../../features/dictionary/api";
 import { WordCard } from "../../../../features/dictionary/components/WordCard";
@@ -59,6 +60,20 @@ const createHighlightRegex = (value: string): RegExp | null => {
   return new RegExp(pattern, "gi");
 };
 
+const buildHighlightRanges = (
+  text: string,
+  highlight: string,
+): Array<{ start: number; end: number }> => {
+  const regex = createHighlightRegex(highlight);
+  if (!regex) return [];
+  const ranges: Array<{ start: number; end: number }> = [];
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    ranges.push({ start: match.index, end: match.index + match[0].length });
+  }
+  return ranges;
+};
+
 const buildHighlightedText = (text: string, highlight: string): ReactNode => {
   const regex = createHighlightRegex(highlight);
   if (!regex) return text;
@@ -107,6 +122,12 @@ const buildHighlightedTokenText = (
   }
   return <Highlight>{tokenValue}</Highlight>;
 };
+
+const isTokenInRanges = (
+  tokenStart: number,
+  tokenEnd: number,
+  ranges: Array<{ start: number; end: number }>,
+): boolean => ranges.some((range) => tokenStart < range.end && tokenEnd > range.start);
 
 export function SnippetCard({
   snippet,
@@ -239,17 +260,28 @@ export function SnippetCard({
   }, [subtitlePopover]);
 
   const englishTokens = snippet.contextText
-    ? (snippet.contextText.match(/([A-Za-z']+|[^A-Za-z']+)/g) ?? []).map(
-        (part, index) => ({
-          value: part,
-          isWord: /^[A-Za-z']+$/.test(part),
-          key: `${part}-${index}`,
-        }),
+    ? Array.from(snippet.contextText.matchAll(/([A-Za-z']+|[^A-Za-z']+)/g)).map(
+        (match, index) => {
+          const value = match[0] ?? "";
+          const start = match.index ?? 0;
+          const end = start + value.length;
+          return {
+            value,
+            isWord: /^[A-Za-z']+$/.test(value),
+            key: `${value}-${index}`,
+            start,
+            end,
+          };
+        },
       )
     : [];
   const isPhraseHighlight =
     highlight.trim().split(/\s+/).filter(Boolean).length > 1;
   const phraseTokenSet = buildTokenHighlightSet(highlight);
+  const phraseRanges =
+    isPhraseHighlight && snippet.contextText
+      ? buildHighlightRanges(snippet.contextText, highlight)
+      : [];
 
   const handleSubtitleWordClick = useCallback(
     async (word: string, rect: DOMRect) => {
@@ -408,21 +440,29 @@ export function SnippetCard({
                     handleSubtitleWordClick(token.value, rect);
                   }}
                 >
-                  {buildHighlightedTokenText(
-                    token.value,
-                    highlight,
-                    isPhraseHighlight,
-                    phraseTokenSet,
-                  )}
+                  {isPhraseHighlight
+                    ? isTokenInRanges(token.start, token.end, phraseRanges)
+                      ? <Highlight>{token.value}</Highlight>
+                      : token.value
+                    : buildHighlightedTokenText(
+                        token.value,
+                        highlight,
+                        false,
+                        phraseTokenSet,
+                      )}
                 </ContextWordButton>
               ) : (
                 <span key={token.key}>
-                  {buildHighlightedTokenText(
-                    token.value,
-                    highlight,
-                    isPhraseHighlight,
-                    phraseTokenSet,
-                  )}
+                  {isPhraseHighlight
+                    ? isTokenInRanges(token.start, token.end, phraseRanges)
+                      ? <Highlight>{token.value}</Highlight>
+                      : token.value
+                    : buildHighlightedTokenText(
+                        token.value,
+                        highlight,
+                        false,
+                        phraseTokenSet,
+                      )}
                 </span>
               ),
             )}
@@ -431,9 +471,13 @@ export function SnippetCard({
       )}
       <PlayButton
         type="button"
-        aria-label={isPlaying ? "РџР°СѓР·Р°" : "РџСЂРѕРёРіСЂР°С‚СЊ"}
+        aria-label={isPlaying ? "Пауза" : "Воспроизвести"}
       >
-        {!isPlaying && <PlayIcon>в–¶</PlayIcon>}
+        {!isPlaying && (
+          <PlayIcon>
+            <Play size={32} strokeWidth={2.5} aria-hidden />
+          </PlayIcon>
+        )}
       </PlayButton>
       {!isReady && (
         <LoadingOverlay>
