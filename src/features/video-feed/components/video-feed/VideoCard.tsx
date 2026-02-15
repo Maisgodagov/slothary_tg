@@ -977,6 +977,10 @@ export function VideoCard({
               <span>{exercisesCount}</span>
             </S.ExerciseButton>
           )}
+        </S.TopRightStack>
+      )}
+      {!showSpinner && !showExercises && isAdmin && (
+        <S.TopLeftStack $withSheet={showExercises}>
           {isAdmin && (
             <S.ModerationButton
               onClick={() => setShowModeration(true)}
@@ -995,7 +999,7 @@ export function VideoCard({
               aria-label="Настройки ленты"
               title="Настройки ленты"
             >
-              <Icon name="admin" size={28} color="#ffffff" />
+              <Icon name="filter" size={28} color="#ffffff" />
             </S.IconButton>
           )}
           {isAdmin && (
@@ -1024,7 +1028,7 @@ export function VideoCard({
               />
             </S.IconButton>
           )}
-        </S.TopRightStack>
+        </S.TopLeftStack>
       )}
       {!showSpinner && !showExercises && (
         <S.TagsRow>

@@ -34,6 +34,7 @@ import {
   Plus,
   Check,
   Trash2,
+  Filter,
 } from "lucide-react";
 
 type IconName =
@@ -76,7 +77,8 @@ type IconName =
   | "forward"
   | "plus"
   | "check"
-  | "trash";
+  | "trash"
+  | "filter";
 
 const ICON_MAP: Record<
   IconName,
@@ -128,6 +130,7 @@ const ICON_MAP: Record<
   plus: Plus,
   check: Check,
   trash: Trash2,
+  filter: Filter,
 };
 
 interface IconProps {

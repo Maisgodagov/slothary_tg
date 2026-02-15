@@ -173,6 +173,17 @@ export const TopRightStack = styled.div<{ $withSheet?: boolean }>`
   z-index: 140;
 `;
 
+export const TopLeftStack = styled.div<{ $withSheet?: boolean }>`
+  position: absolute;
+  left: 10px;
+  top: ${({ $withSheet }) => ($withSheet ? "18%" : "45%")};
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  transition: top 0.24s ease;
+  z-index: 140;
+`;
+
 export const SettingsButton = styled.button`
   position: absolute;
   right: 8px;
