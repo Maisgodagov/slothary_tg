@@ -29,7 +29,7 @@ export function VideoCard({
   isActive,
   onVisibleChange,
   shouldLoad,
-  // onOpenSettings,
+  onOpenSettings,
   onOpenLevelFilter,
   // selectedLevelFilters,
   onExercisesToggle,
@@ -661,6 +661,27 @@ export function VideoCard({
     }
   };
 
+  const handleQuickModerationToggle = async () => {
+    if (!auth.profile?.id) return;
+    if (savingModeration) return;
+    const next = !isModerated;
+    try {
+      setSavingModeration(true);
+      await moderationApi.updateModerationStatus(
+        item.id,
+        next,
+        auth.profile.id,
+        auth.profile.role,
+      );
+      setIsModerated(next);
+    } catch (err) {
+      console.error("Quick moderation toggle failed", err);
+      alert("Не удалось обновить модерацию");
+    } finally {
+      setSavingModeration(false);
+    }
+  };
+
   const showSpinner = isContentLoading;
   const showExerciseButton = !showSpinner && exercisesCount > 0;
 
@@ -970,6 +991,15 @@ export function VideoCard({
           )}
           {isAdmin && (
             <S.IconButton
+              onClick={onOpenSettings}
+              aria-label="Настройки ленты"
+              title="Настройки ленты"
+            >
+              <Icon name="admin" size={28} color="#ffffff" />
+            </S.IconButton>
+          )}
+          {isAdmin && (
+            <S.IconButton
               onClick={handleDeleteVideo}
               disabled={savingModeration}
               aria-label="Удалить видео"
@@ -977,6 +1007,21 @@ export function VideoCard({
               style={{ opacity: savingModeration ? 0.6 : 1 }}
             >
               <Icon name="trash" size={30} color="#ff6b6b" />
+            </S.IconButton>
+          )}
+          {isAdmin && (
+            <S.IconButton
+              onClick={handleQuickModerationToggle}
+              disabled={savingModeration}
+              aria-label={isModerated ? "Снять модерацию" : "Подтвердить модерацию"}
+              title={isModerated ? "Снять модерацию" : "Подтвердить модерацию"}
+              style={{ opacity: savingModeration ? 0.6 : 1 }}
+            >
+              <Icon
+                name="check"
+                size={30}
+                color={isModerated ? "#3ec985" : "#ffffff"}
+              />
             </S.IconButton>
           )}
         </S.TopRightStack>
