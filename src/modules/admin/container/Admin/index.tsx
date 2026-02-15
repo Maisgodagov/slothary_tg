@@ -53,8 +53,8 @@ export function AdminContainer() {
           onClick={() => navigate('/admin/users')}
         />
         <AdminNavCard
-          title="Теги видео"
-          description="Создавайте теги и смотрите покрытие видео."
+          title="Видео"
+          description="Теги и сводка по модерации видео."
           onClick={() => navigate('/admin/video-tags')}
         />
       </AdminWrapper>

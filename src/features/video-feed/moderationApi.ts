@@ -13,6 +13,8 @@ export type VideoTagSummary = {
   totalVideos: number;
   videosWithTags: number;
   videosWithoutTags: number;
+  moderatedVideos: number;
+  unmoderatedVideos: number;
   tags: Array<{ id: number; name: string; usageCount: number }>;
 };
 

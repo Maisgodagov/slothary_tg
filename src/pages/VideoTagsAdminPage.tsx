@@ -54,7 +54,7 @@ export default function VideoTagsAdminPage() {
     <PageShell>
       <div style={wrapperStyle}>
         <div className="page-header" style={titleStyle}>
-          Теги видео
+          Видео
         </div>
 
         <div style={statsGrid}>
@@ -66,6 +66,14 @@ export default function VideoTagsAdminPage() {
           <StatCard
             title="Без тегов"
             value={String(data?.videosWithoutTags ?? 0)}
+          />
+          <StatCard
+            title="Промодерировано"
+            value={String(data?.moderatedVideos ?? 0)}
+          />
+          <StatCard
+            title="Не промодерировано"
+            value={String(data?.unmoderatedVideos ?? 0)}
           />
         </div>
 
@@ -181,7 +189,7 @@ const titleStyle: CSSProperties = {
 
 const statsGrid: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
   gap: 8,
 };
 
