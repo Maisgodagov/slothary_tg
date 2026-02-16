@@ -4,7 +4,7 @@ type SessionStatus = 'active' | 'completed' | 'interrupted';
 type SourceType = 'manual' | 'viewed' | 'exercise';
 type QueueReason = 'review' | 'mistake' | 'new' | 'retry';
 type RecognitionGrade = 'again' | 'hard' | 'good' | 'easy';
-type ExerciseType = 'fill-gap' | 'assemble';
+type ExerciseType = 'assemble';
 
 export interface WordTrainingOverview {
   dueCount: number;
@@ -55,6 +55,7 @@ export interface RecognitionTask {
   itemId: number;
   wordKey: string;
   word: string;
+  pronunciationAudioUrl?: string | null;
   translation: string;
   sourceType: SourceType;
   reason: QueueReason;
@@ -62,6 +63,7 @@ export interface RecognitionTask {
   queuePosition: number;
   queueTotal: number;
   context: WordTrainingContext | null;
+  recognitionOptions: string[];
   showReinforcementAfter: boolean;
 }
 
@@ -70,6 +72,7 @@ export interface ReinforcementTask {
   itemId: number;
   wordKey: string;
   word: string;
+  pronunciationAudioUrl?: string | null;
   translation: string;
   sourceType: SourceType;
   reason: QueueReason;
@@ -79,6 +82,7 @@ export interface ReinforcementTask {
   reinforcement: {
     type: ExerciseType;
     sentence: string;
+    sentenceTranslation?: string | null;
     assembleTokens: string[];
     targetWord: string;
   };

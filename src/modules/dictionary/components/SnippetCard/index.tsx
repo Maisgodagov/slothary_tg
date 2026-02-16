@@ -136,6 +136,8 @@ export function SnippetCard({
   highlight,
   onOpenFullVideo,
   compact = false,
+  loop = true,
+  showFullVideoButton = true,
 }: SnippetCardProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -381,14 +383,19 @@ export function SnippetCard({
       return;
     }
     if (video.currentTime >= snippet.endSeconds) {
-      video.currentTime = snippet.startSeconds;
-      if (isActive) {
-        video.play().catch(() => undefined);
+      if (loop) {
+        video.currentTime = snippet.startSeconds;
+        if (isActive) {
+          video.play().catch(() => undefined);
+        } else {
+          video.pause();
+        }
       } else {
         video.pause();
+        setIsPlaying(false);
       }
     }
-  }, [isActive, snippet.endSeconds, snippet.startSeconds]);
+  }, [isActive, loop, snippet.endSeconds, snippet.startSeconds]);
 
   if (!shouldRender) {
     return <CardPlaceholder className="page-header" $compact={compact} />;
@@ -396,15 +403,17 @@ export function SnippetCard({
 
   return (
     <CardShell $compact={compact}>
-      <FullVideoButton
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          onOpenFullVideo(snippet);
-        }}
-      >
-        Полное видео
-      </FullVideoButton>
+      {showFullVideoButton && (
+        <FullVideoButton
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenFullVideo(snippet);
+          }}
+        >
+          Полное видео
+        </FullVideoButton>
+      )}
       <Video
         ref={videoRef}
         src={snippet.videoUrl}

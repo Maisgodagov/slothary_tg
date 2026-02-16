@@ -7,4 +7,6 @@ export type SnippetCardProps = {
   highlight: string;
   onOpenFullVideo: (snippet: PhraseSnippet) => void;
   compact?: boolean;
+  loop?: boolean;
+  showFullVideoButton?: boolean;
 };

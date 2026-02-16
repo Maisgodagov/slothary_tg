@@ -43,11 +43,6 @@ export function AdminContainer() {
         </HeaderRow>
 
         <AdminNavCard
-          title="Модерация сниппетов"
-          description="Редактируйте и подтверждайте игровые сниппеты."
-          onClick={() => navigate('/admin/game-snippets')}
-        />
-        <AdminNavCard
           title="Пользователи"
           description="Просматривайте активность и меняйте роли пользователей."
           onClick={() => navigate('/admin/users')}
@@ -56,6 +51,16 @@ export function AdminContainer() {
           title="Видео"
           description="Теги и сводка по модерации видео."
           onClick={() => navigate('/admin/video-tags')}
+        />
+        <AdminNavCard
+          title="Сниппеты слов"
+          description="Выбор предпочтительных сниппетов для тренировки слов."
+          onClick={() => navigate('/admin/word-training-snippets')}
+        />
+        <AdminNavCard
+          title="Фразы слов"
+          description="Список сгенерированных фраз для тренировки слов."
+          onClick={() => navigate('/admin/word-training-phrases')}
         />
       </AdminWrapper>
     </PageShell>

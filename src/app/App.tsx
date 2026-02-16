@@ -23,6 +23,8 @@ import LessonStepCardQuizDemoPage from "../pages/LessonStepCardQuizDemoPage";
 import LessonStepCardFillGapDemoPage from "../pages/LessonStepCardFillGapDemoPage";
 import LessonStepCardAssembleDemoPage from "../pages/LessonStepCardAssembleDemoPage";
 import WordTrainingPage from "../pages/WordTrainingPage";
+import WordTrainingSnippetsAdminPage from "../pages/WordTrainingSnippetsAdminPage";
+import WordTrainingGeneratedPhrasesAdminPage from "../pages/WordTrainingGeneratedPhrasesAdminPage";
 import { HomeContainer } from "../modules/home";
 import { VideoContainer } from "../modules/video";
 import { DictionaryContainer } from "../modules/dictionary";
@@ -192,6 +194,14 @@ function AppRoutes() {
           />
           <Route path="/admin/users" element={<UserAdminPage />} />
           <Route path="/admin/video-tags" element={<VideoTagsAdminPage />} />
+          <Route
+            path="/admin/word-training-snippets"
+            element={<WordTrainingSnippetsAdminPage />}
+          />
+          <Route
+            path="/admin/word-training-phrases"
+            element={<WordTrainingGeneratedPhrasesAdminPage />}
+          />
           <Route path="/admin/word-progress" element={<WordProgressPage />} />
           <Route path="/streak" element={<StreakPage />} />
           <Route

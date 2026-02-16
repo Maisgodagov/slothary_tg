@@ -25,6 +25,7 @@ export function SearchSnippetsCarousel({
   onCardRef,
   onFirstCardRef,
   cardSize = "default",
+  showFullVideoButton = true,
 }: SearchSnippetsCarouselProps) {
   return (
     <>
@@ -49,6 +50,7 @@ export function SearchSnippetsCarousel({
               highlight={highlight}
               onOpenFullVideo={onOpenFullVideo}
               compact={cardSize === "compact"}
+              showFullVideoButton={showFullVideoButton}
             />
             </SliderItem>
           );

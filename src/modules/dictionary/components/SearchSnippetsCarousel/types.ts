@@ -13,4 +13,5 @@ export type SearchSnippetsCarouselProps = {
   onCardRef: (index: number, node: HTMLDivElement | null) => void;
   onFirstCardRef: (node: HTMLDivElement | null) => void;
   cardSize?: "default" | "compact";
+  showFullVideoButton?: boolean;
 };

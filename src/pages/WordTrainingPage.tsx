@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Volume2 } from 'lucide-react';
 
 import { useAppSelector } from '../app/hooks';
 import { selectAuth } from '../features/auth/slice';
 import {
   type RecognitionTask,
   type ReinforcementTask,
-  type WordTrainingContext,
   type WordTrainingOverview,
   type WordTrainingState,
   wordTrainingApi,
 } from '../features/word-training/api';
-import { PageShell } from '../shared/ui/PageShell';
 import { Button } from '../shared/ui/Button';
+import { PageShell } from '../shared/ui/PageShell';
 
 const normalize = (value: string): string =>
   value
@@ -28,23 +28,26 @@ export default function WordTrainingPage() {
   const [error, setError] = useState<string | null>(null);
   const [overview, setOverview] = useState<WordTrainingOverview | null>(null);
   const [state, setState] = useState<WordTrainingState | null>(null);
-  const [showTranslation, setShowTranslation] = useState(false);
-  const [examples, setExamples] = useState<WordTrainingContext[]>([]);
-  const [answerInput, setAnswerInput] = useState('');
   const [assembleAnswer, setAssembleAnswer] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const session = state?.session ?? null;
   const task = state?.task ?? null;
-  const energyPercent = session ? Math.max(0, Math.round((session.energyLeft / session.energyStart) * 100)) : 0;
+  const taskId = task?.itemId ?? null;
+  const energyPercent = session
+    ? Math.max(0, Math.round((session.energyLeft / session.energyStart) * 100))
+    : 0;
 
   const load = async () => {
     if (!userId) return;
     setLoading(true);
     setError(null);
+
     try {
       const data = await wordTrainingApi.getOverview(userId);
       setOverview(data);
+
       if (data.activeSession?.id) {
         const sessionState = await wordTrainingApi.getSession(data.activeSession.id, userId);
         setState(sessionState);
@@ -63,17 +66,55 @@ export default function WordTrainingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
+  const playPronunciation = useCallback(async (taskLike: RecognitionTask | ReinforcementTask | null) => {
+    const audioUrl = taskLike?.pronunciationAudioUrl?.trim();
+    if (!audioUrl) return;
+
+    try {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    } catch {
+      // ignore
+    }
+
+    const audio = new Audio(audioUrl);
+    audio.preload = 'auto';
+    audioRef.current = audio;
+
+    try {
+      await audio.play();
+    } catch {
+      // autoplay can be blocked in some browsers
+    }
+  }, []);
+
   useEffect(() => {
-    setShowTranslation(false);
-    setExamples([]);
-    setAnswerInput('');
     setAssembleAnswer([]);
-  }, [task?.mode, task && 'itemId' in task ? task.itemId : null]);
+    if (task) {
+      void playPronunciation(task);
+    }
+  }, [taskId, playPronunciation]);
+
+  useEffect(() => {
+    return () => {
+      if (!audioRef.current) return;
+      try {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      } catch {
+        // ignore
+      }
+      audioRef.current = null;
+    };
+  }, []);
 
   const startOrResume = async () => {
     if (!userId) return;
     setSubmitting(true);
     setError(null);
+
     try {
       const result = await wordTrainingApi.startSession(
         { targetWords: overview?.suggestedTargetWords ?? 20 },
@@ -93,6 +134,7 @@ export default function WordTrainingPage() {
     if (!userId || !session) return;
     setSubmitting(true);
     setError(null);
+
     try {
       const result = await wordTrainingApi.finishSession(session.id, { force: true }, userId);
       setState(result);
@@ -105,20 +147,22 @@ export default function WordTrainingPage() {
     }
   };
 
-  const submitGrade = async (grade: 'again' | 'hard' | 'good' | 'easy') => {
-    if (!userId || !session || !task || task.mode !== 'recognition') return;
+  const submitRecognitionOption = async (recognition: RecognitionTask, selectedOption: string) => {
+    if (!userId || !session) return;
+
+    const isCorrect = normalize(selectedOption) === normalize(recognition.translation);
+    const grade = isCorrect ? 'good' : 'again';
+
     setSubmitting(true);
     setError(null);
+
     try {
       const next = await wordTrainingApi.submitRecognition(
         session.id,
-        { itemId: task.itemId, grade },
+        { itemId: recognition.itemId, grade },
         userId,
       );
       setState(next);
-      if (next.alternateExample) {
-        setExamples([next.alternateExample]);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось сохранить ответ');
     } finally {
@@ -126,37 +170,19 @@ export default function WordTrainingPage() {
     }
   };
 
-  const loadMoreExamples = async () => {
-    if (!userId || !task) return;
-    setSubmitting(true);
-    try {
-      const result = await wordTrainingApi.getExamples(task.word, userId, 3);
-      setExamples(result.items);
-    } catch {
-      // ignore
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const canSubmitReinforcement = useMemo(() => {
     if (!task || task.mode !== 'reinforcement') return false;
-    if (task.reinforcement.type === 'fill-gap') {
-      return normalize(answerInput).length > 0;
-    }
     return assembleAnswer.length > 0;
-  }, [answerInput, assembleAnswer, task]);
+  }, [assembleAnswer, task]);
 
   const submitReinforcement = async () => {
     if (!userId || !session || !task || task.mode !== 'reinforcement') return;
-    const target = normalize(task.reinforcement.targetWord);
-    const isCorrect =
-      task.reinforcement.type === 'fill-gap'
-        ? normalize(answerInput) === target
-        : normalize(assembleAnswer.join(' ')) === normalize(task.reinforcement.sentence);
+
+    const isCorrect = normalize(assembleAnswer.join(' ')) === normalize(task.reinforcement.sentence);
 
     setSubmitting(true);
     setError(null);
+
     try {
       const next = await wordTrainingApi.submitReinforcement(
         session.id,
@@ -175,48 +201,63 @@ export default function WordTrainingPage() {
     }
   };
 
-  const renderRecognition = (recognition: RecognitionTask) => (
-    <div className="section" style={{ display: 'grid', gap: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <strong>Шаг 1. Узнавание</strong>
-        <span className="badge">{recognition.queuePosition}/{recognition.queueTotal}</span>
-      </div>
-      {recognition.context?.text && (
-        <div style={{ fontSize: 14, color: 'var(--tg-subtle)', lineHeight: 1.4 }}>
-          {recognition.context.text}
+  const renderRecognition = (recognition: RecognitionTask) => {
+    const rawOptions = (recognition as unknown as { recognitionOptions?: unknown }).recognitionOptions;
+    const recognitionOptions: string[] = Array.isArray(rawOptions)
+      ? rawOptions.filter((value: unknown): value is string => typeof value === 'string')
+      : [];
+    const options: string[] =
+      recognitionOptions.length > 0 ? recognitionOptions : [recognition.translation];
+
+    return (
+      <div className="section" style={{ display: 'grid', gap: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <strong>Шаг 1. Узнавание</strong>
+          <span className="badge">{recognition.queuePosition}/{recognition.queueTotal}</span>
         </div>
-      )}
-      <div style={{ fontSize: 34, fontWeight: 800 }}>{recognition.word}</div>
-      {!showTranslation ? (
-        <Button onClick={() => setShowTranslation(true)} style={{ width: '100%' }}>
-          Показать перевод
-        </Button>
-      ) : (
-        <>
-          <div style={{ fontSize: 18, fontWeight: 700 }}>{recognition.translation}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-            <Button variant="danger" onClick={() => submitGrade('again')} disabled={submitting}>Забыл</Button>
-            <Button variant="ghost" onClick={() => submitGrade('hard')} disabled={submitting}>Трудно</Button>
-            <Button variant="primary" onClick={() => submitGrade('good')} disabled={submitting}>Хорошо</Button>
-            <Button variant="primary" onClick={() => submitGrade('easy')} disabled={submitting}>Легко</Button>
-          </div>
-        </>
-      )}
-      <Button variant="ghost" onClick={loadMoreExamples} disabled={submitting}>
-        Показать еще 3 примера
-      </Button>
-      {examples.length > 0 && (
-        <div style={{ display: 'grid', gap: 8 }}>
-          {examples.map((example) => (
-            <div key={`${example.contentId}-${example.startSeconds ?? 0}`} style={{ border: '1px solid var(--tg-border)', borderRadius: 12, padding: 10 }}>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>{example.videoName || `Видео #${example.contentId}`}</div>
-              <div style={{ fontSize: 13, color: 'var(--tg-subtle)' }}>{example.text}</div>
-            </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.1 }}>{recognition.word}</div>
+          <button
+            type="button"
+            onClick={() => void playPronunciation(recognition)}
+            disabled={!recognition.pronunciationAudioUrl}
+            aria-label="Проиграть произношение"
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 12,
+              border: '1px solid var(--tg-border)',
+              background: 'var(--tg-card)',
+              color: 'var(--tg-text)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: recognition.pronunciationAudioUrl ? 1 : 0.45,
+            }}
+          >
+            <Volume2 size={19} />
+          </button>
+        </div>
+
+        <div style={{ fontSize: 14, color: 'var(--tg-subtle)' }}>Выбери правильный перевод:</div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+          {options.map((option, index) => (
+            <Button
+              key={`${option}-${index}`}
+              variant="ghost"
+              onClick={() => submitRecognitionOption(recognition, option)}
+              disabled={submitting}
+              style={{ minHeight: 44 }}
+            >
+              {option}
+            </Button>
           ))}
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   const renderReinforcement = (reinforcement: ReinforcementTask) => (
     <div className="section" style={{ display: 'grid', gap: 12 }}>
@@ -224,62 +265,75 @@ export default function WordTrainingPage() {
         <strong>Шаг 2. Закрепление</strong>
         <span className="badge">{reinforcement.queuePosition}/{reinforcement.queueTotal}</span>
       </div>
-      <div style={{ fontSize: 14, color: 'var(--tg-subtle)' }}>
-        {reinforcement.reinforcement.type === 'fill-gap'
-          ? 'Впиши слово в пропуск'
-          : 'Собери фразу в правильном порядке'}
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.15 }}>{reinforcement.word}</div>
+        <button
+          type="button"
+          onClick={() => void playPronunciation(reinforcement)}
+          disabled={!reinforcement.pronunciationAudioUrl}
+          aria-label="Проиграть произношение"
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            border: '1px solid var(--tg-border)',
+            background: 'var(--tg-card)',
+            color: 'var(--tg-text)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: reinforcement.pronunciationAudioUrl ? 1 : 0.45,
+          }}
+        >
+          <Volume2 size={18} />
+        </button>
       </div>
-      {reinforcement.reinforcement.type === 'fill-gap' ? (
-        <>
-          <div style={{ fontSize: 16, lineHeight: 1.45 }}>
-            {reinforcement.reinforcement.sentence.replace(
-              new RegExp(reinforcement.word, 'i'),
-              '_____',
-            )}
-          </div>
-          <input
-            value={answerInput}
-            onChange={(e) => setAnswerInput(e.target.value)}
-            placeholder="Введите слово"
+
+      <div style={{ fontSize: 14, color: 'var(--tg-subtle)' }}>Собери фразу в правильном порядке</div>
+      {reinforcement.reinforcement.sentenceTranslation ? (
+        <div style={{ fontSize: 14, color: 'var(--tg-subtle)' }}>
+          Перевод: {reinforcement.reinforcement.sentenceTranslation}
+        </div>
+      ) : null}
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {reinforcement.reinforcement.assembleTokens.map((token, index) => (
+          <button
+            key={`${token}-${index}`}
+            type="button"
+            onClick={() => setAssembleAnswer((prev) => [...prev, token])}
             style={{
-              width: '100%',
-              borderRadius: 12,
               border: '1px solid var(--tg-border)',
-              background: 'var(--tg-surface)',
+              borderRadius: 12,
+              background: 'var(--tg-card)',
               color: 'var(--tg-text)',
-              padding: '10px 12px',
-              fontSize: 15,
+              padding: '6px 10px',
             }}
-          />
-        </>
-      ) : (
-        <>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {reinforcement.reinforcement.assembleTokens.map((token, index) => (
-              <button
-                key={`${token}-${index}`}
-                type="button"
-                onClick={() => setAssembleAnswer((prev) => [...prev, token])}
-                style={{
-                  border: '1px solid var(--tg-border)',
-                  borderRadius: 12,
-                  background: 'var(--tg-card)',
-                  color: 'var(--tg-text)',
-                  padding: '6px 10px',
-                }}
-              >
-                {token}
-              </button>
-            ))}
-          </div>
-          <div style={{ minHeight: 44, border: '1px dashed var(--tg-border)', borderRadius: 12, padding: 10, fontSize: 15 }}>
-            {assembleAnswer.join(' ')}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="ghost" onClick={() => setAssembleAnswer([])} style={{ flex: 1 }}>Сбросить</Button>
-          </div>
-        </>
-      )}
+          >
+            {token}
+          </button>
+        ))}
+      </div>
+
+      <div
+        style={{
+          minHeight: 44,
+          border: '1px dashed var(--tg-border)',
+          borderRadius: 12,
+          padding: 10,
+          fontSize: 15,
+        }}
+      >
+        {assembleAnswer.join(' ')}
+      </div>
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Button variant="ghost" onClick={() => setAssembleAnswer([])} style={{ flex: 1 }}>
+          Сбросить
+        </Button>
+      </div>
+
       <Button onClick={submitReinforcement} disabled={!canSubmitReinforcement || submitting}>
         Проверить
       </Button>
@@ -302,9 +356,17 @@ export default function WordTrainingPage() {
           <div style={{ color: 'var(--tg-subtle)', fontSize: 14 }}>
             Сначала повторение, затем ошибки, потом новые слова.
           </div>
+
           {session && (
             <div style={{ display: 'grid', gap: 8 }}>
-              <div style={{ height: 10, background: 'var(--tg-border)', borderRadius: 999, overflow: 'hidden' }}>
+              <div
+                style={{
+                  height: 10,
+                  background: 'var(--tg-border)',
+                  borderRadius: 999,
+                  overflow: 'hidden',
+                }}
+              >
                 <div
                   style={{
                     width: `${energyPercent}%`,
