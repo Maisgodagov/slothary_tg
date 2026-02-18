@@ -85,6 +85,9 @@ export function WordCard({
   const showShareAction = Boolean(shareActionLabel && onShare);
   const canPlayPronunciation = Boolean(showPronunciationButton && onPlayPronunciation);
   const showDeleteAction = Boolean(deleteActionLabel && onDeleteAction);
+  const hasMainActionButtons =
+    showDeleteAction || canPlayPronunciation || showFooterAction;
+  const pinShareToRight = showShareAction && hasMainActionButtons;
   const dictionaryLabelText = (dictionaryActionLabel ?? "").replace(/^\+\s*/, "");
   const displayWord = word.toLowerCase();
   const normalizedCefrLevel = (cefrLevel ?? "").trim().toUpperCase();
@@ -278,8 +281,8 @@ export function WordCard({
         <div
           style={{
             display: "flex",
-            gap: isCompact ? 10 : 14,
-            justifyContent: actionsJustify,
+            gap: pinShareToRight ? (isCompact ? 8 : 10) : isCompact ? 10 : 14,
+            justifyContent: pinShareToRight ? "flex-start" : actionsJustify,
             alignItems: "center",
             flexWrap: reading ? "nowrap" : "wrap",
             width: "100%",
@@ -439,6 +442,7 @@ export function WordCard({
                 placeItems: "center",
                 cursor: shareActionLoading ? "default" : "pointer",
                 opacity: shareActionLoading ? 0.6 : 1,
+                marginLeft: pinShareToRight ? "auto" : 0,
               }}
               aria-label="Поделиться"
             >
