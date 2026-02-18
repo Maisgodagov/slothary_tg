@@ -30,7 +30,6 @@ import { SnippetCarousel } from "../../components/SnippetCarousel";
 import { setLastQuery } from "../../store/slice";
 import {
   Clickable,
-  DeleteEntryButton,
   DictionarySection,
   DictionaryLayout,
   DictionaryListSkeleton,
@@ -217,6 +216,7 @@ export function DictionaryContainer() {
         status: "idle" | "loading" | "ready" | "error";
         translationsRu: string[];
         synonyms: string[];
+        cefrLevel?: string | null;
         error?: string;
       }
     >
@@ -229,6 +229,7 @@ export function DictionaryContainer() {
   } | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const pronunciationAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
   const loadMoreAbortRef = useRef<AbortController | null>(null);
@@ -395,6 +396,37 @@ export function DictionaryContainer() {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
       // ignore storage errors
+    }
+  }, []);
+
+  const playPronunciation = useCallback((audioUrl?: string | null) => {
+    const url = (audioUrl ?? "").trim();
+    if (!url) return;
+    const audio =
+      pronunciationAudioRef.current ??
+      (() => {
+        const created = new Audio();
+        pronunciationAudioRef.current = created;
+        return created;
+      })();
+    try {
+      if (typeof document !== "undefined") {
+        document.querySelectorAll("video").forEach((video) => {
+          try {
+            video.pause();
+          } catch {
+            // ignore per-video pause errors
+          }
+        });
+      }
+      audio.pause();
+      if (audio.src !== url) {
+        audio.src = url;
+      }
+      audio.currentTime = 0;
+      audio.play().catch(() => undefined);
+    } catch {
+      // ignore playback errors
     }
   }, []);
 
@@ -1002,7 +1034,12 @@ export function DictionaryContainer() {
     async (entryId: string, word: string) => {
       setUserDictionaryDetails((prev) => ({
         ...prev,
-        [entryId]: { status: "loading", translationsRu: [], synonyms: [] },
+        [entryId]: {
+          status: "loading",
+          translationsRu: [],
+          synonyms: [],
+          cefrLevel: null,
+        },
       }));
 
       try {
@@ -1021,6 +1058,7 @@ export function DictionaryContainer() {
             status: "ready",
             translationsRu,
             synonyms,
+            cefrLevel: primary?.cefrLevel ?? null,
           },
         }));
       } catch (err: any) {
@@ -1030,6 +1068,7 @@ export function DictionaryContainer() {
             status: "error",
             translationsRu: [],
             synonyms: [],
+            cefrLevel: null,
             error: err?.message ?? "Не удалось загрузить переводы.",
           },
         }));
@@ -1153,6 +1192,11 @@ export function DictionaryContainer() {
               <WordCard
                 word={primaryEnglish}
                 translation={primaryRussian}
+                cefrLevel={primaryEntry?.cefrLevel ?? null}
+                showPronunciationButton={Boolean(primaryEntry?.audioUrl)}
+                onPlayPronunciation={() =>
+                  playPronunciation(primaryEntry?.audioUrl)
+                }
                 otherTranslationsRu={otherTranslationsRu}
                 synonyms={synonyms}
                 onSynonymClick={(value) => {
@@ -1524,24 +1568,6 @@ export function DictionaryContainer() {
 
                 return (
                   <UserEntryWrapper key={entry.id}>
-                    {(expanded || phraseExpanded) && (
-                      <DeleteEntryButton
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setDeleteTarget({
-                            id: entry.id,
-                            word: displayWord,
-                            translation: displayTranslation,
-                            type: entry.type ?? "word",
-                          });
-                        }}
-                        aria-label="Удалить"
-                      >
-                        <Icon name="close" size={14} />
-                      </DeleteEntryButton>
-                    )}
-
                     <Clickable
                       onClick={(event) => {
                         if ((event.target as HTMLElement).closest("button"))
@@ -1563,6 +1589,11 @@ export function DictionaryContainer() {
                       <WordCard
                         word={displayWord}
                         translation={displayTranslation}
+                        cefrLevel={
+                          !isPhraseEntry && expanded
+                            ? (details?.cefrLevel ?? null)
+                            : null
+                        }
                         otherTranslationsRu={
                           detailsTranslations ?? otherTranslationsRu
                         }
@@ -1575,6 +1606,21 @@ export function DictionaryContainer() {
                           if (isPhraseEntry && !phraseExpanded) return;
                           toggleUserExamples(entry.id, displayWord);
                         }}
+                        deleteActionLabel={
+                          expanded || phraseExpanded ? "Удалить" : undefined
+                        }
+                        onDeleteAction={
+                          expanded || phraseExpanded
+                            ? () => {
+                                setDeleteTarget({
+                                  id: entry.id,
+                                  word: displayWord,
+                                  translation: displayTranslation,
+                                  type: entry.type ?? "word",
+                                });
+                              }
+                            : undefined
+                        }
                         dictionaryActionMode="none"
                         variant="compact"
                       >

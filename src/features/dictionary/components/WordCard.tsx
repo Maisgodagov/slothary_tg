@@ -5,6 +5,7 @@ import { Icon } from "../../../shared/ui/Icon";
 type WordCardProps = {
   word: string;
   translation: string;
+  cefrLevel?: string | null;
   otherTranslationsRu?: string[];
   synonyms?: string[];
   onSynonymClick?: (value: string) => void;
@@ -26,12 +27,18 @@ type WordCardProps = {
   shareActionLabel?: ReactNode;
   shareActionLoading?: boolean;
   onShare?: () => void;
+  showPronunciationButton?: boolean;
+  onPlayPronunciation?: () => void;
+  deleteActionLabel?: string;
+  deleteActionDisabled?: boolean;
+  onDeleteAction?: () => void;
   children?: ReactNode;
 };
 
 export function WordCard({
   word,
   translation,
+  cefrLevel,
   otherTranslationsRu,
   synonyms,
   onSynonymClick,
@@ -53,6 +60,11 @@ export function WordCard({
   shareActionLabel,
   shareActionLoading = false,
   onShare,
+  showPronunciationButton = false,
+  onPlayPronunciation,
+  deleteActionLabel,
+  deleteActionDisabled = false,
+  onDeleteAction,
   children,
 }: WordCardProps) {
   const showOtherTranslations = Boolean(
@@ -71,8 +83,12 @@ export function WordCard({
   const showFooterAction =
     showDictionaryAction && dictionaryActionPlacement !== "inline";
   const showShareAction = Boolean(shareActionLabel && onShare);
+  const canPlayPronunciation = Boolean(showPronunciationButton && onPlayPronunciation);
+  const showDeleteAction = Boolean(deleteActionLabel && onDeleteAction);
   const dictionaryLabelText = (dictionaryActionLabel ?? "").replace(/^\+\s*/, "");
   const displayWord = word.toLowerCase();
+  const normalizedCefrLevel = (cefrLevel ?? "").trim().toUpperCase();
+  const showCefrLevel = /^(A1|A2|B1|B2|C1|C2)$/.test(normalizedCefrLevel);
   const effectiveLayout = summary ? "tight" : layoutMode;
   const outerGap = effectiveLayout === "tight" ? 5 : isSubtitle ? 8 : isCompact ? 10 : 14;
 
@@ -114,8 +130,25 @@ export function WordCard({
           gap: isSubtitle ? 6 : isCompact ? 4 : 12,
           textAlign: "left",
           color: "var(--tg-text)",
+          paddingRight: showCefrLevel ? 56 : 0,
         }}
       >
+        {showCefrLevel && (
+          <div
+            style={{
+              position: "absolute",
+              top: isSubtitle ? 10 : effectiveLayout === "tight" ? 12 : 16,
+              right: isSubtitle ? 10 : effectiveLayout === "tight" ? 12 : 16,
+              color: "var(--tg-text)",
+              fontWeight: 700,
+              fontSize: isSubtitle ? 11 : 12,
+              lineHeight: 1,
+              letterSpacing: "0.02em",
+            }}
+          >
+            {normalizedCefrLevel}
+          </div>
+        )}
         <div
           style={{
             display: "flex",
@@ -254,28 +287,7 @@ export function WordCard({
         >
           {showExamplesButton && (
             showShareAction ? (
-              <button
-                type="button"
-                onClick={shareActionLoading ? undefined : onShare}
-                style={{
-                  border: "1px solid var(--tg-border)",
-                  background: "var(--tg-card)",
-                  color: "var(--tg-text)",
-                  fontWeight: 700,
-                  fontSize: buttonFontSize,
-                  lineHeight: 1,
-                  borderRadius: 999,
-                  padding: isCompact ? "6px 12px" : "8px 14px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  cursor: shareActionLoading ? "default" : "pointer",
-                  opacity: shareActionLoading ? 0.6 : 1,
-                }}
-              >
-                Поделиться
-                <Icon name="forward" size={14} />
-              </button>
+              <></>
             ) : (
               <button
                 type="button"
@@ -305,6 +317,57 @@ export function WordCard({
                 />
               </button>
             )
+          )}
+          {showDeleteAction && (
+            <button
+              type="button"
+              onClick={deleteActionDisabled ? undefined : onDeleteAction}
+              disabled={deleteActionDisabled}
+              style={{
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                fontWeight: 700,
+                fontSize: buttonFontSize,
+                lineHeight: 1,
+                borderRadius: 999,
+                padding: isCompact ? "6px 12px" : "8px 14px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                cursor: deleteActionDisabled ? "default" : "pointer",
+                opacity: deleteActionDisabled ? 0.6 : 1,
+              }}
+            >
+              <span style={{ display: "inline-flex", alignItems: "center" }}>
+                <Icon name="trash" size={14} />
+              </span>
+              {deleteActionLabel}
+            </button>
+          )}
+          {canPlayPronunciation && (
+            <button
+              type="button"
+              onClick={onPlayPronunciation}
+              style={{
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                fontWeight: 700,
+                fontSize: buttonFontSize,
+                lineHeight: 1,
+                borderRadius: 999,
+                padding: isCompact ? "6px 12px" : "8px 14px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                cursor: "pointer",
+              }}
+              aria-label="Воспроизвести произношение"
+            >
+              <Icon name="volume-on" size={16} />
+              произношение
+            </button>
           )}
           {showFooterAction &&
             (dictionaryActionMode === "tag" ? (
@@ -360,6 +423,28 @@ export function WordCard({
                 {dictionaryLabelText}
               </button>
             ))}
+          {showShareAction && (
+            <button
+              type="button"
+              onClick={shareActionLoading ? undefined : onShare}
+              style={{
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-card)",
+                color: "var(--tg-text)",
+                borderRadius: 999,
+                width: isCompact ? 32 : 36,
+                height: isCompact ? 32 : 36,
+                padding: 0,
+                display: "inline-grid",
+                placeItems: "center",
+                cursor: shareActionLoading ? "default" : "pointer",
+                opacity: shareActionLoading ? 0.6 : 1,
+              }}
+              aria-label="Поделиться"
+            >
+              {shareActionLabel ?? <Icon name="forward" size={14} />}
+            </button>
+          )}
         </div>
       )}
 

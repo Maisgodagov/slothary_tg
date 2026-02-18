@@ -6,6 +6,8 @@ export type MuellerEntry = {
   partOfSpeech: string | null;
   translations: string[];
   synonyms?: string[];
+  cefrLevel?: string | null;
+  audioUrl?: string | null;
 };
 
 type LookupParams = {
