@@ -12,6 +12,12 @@ export type StreakHistoryResponse = {
   dates: string[];
 };
 
+export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+
+export type UpdateLevelResponse = {
+  level: CefrLevel;
+};
+
 const buildHeaders = (userId?: string | null) => {
   const headers: Record<string, string> = {};
   if (userId) headers['x-user-id'] = userId;
@@ -36,6 +42,13 @@ export const usersApi = {
   getStreakHistory(userId?: string | null) {
     return apiFetch<StreakHistoryResponse>('users/streak/history', {
       headers: buildHeaders(userId),
+    });
+  },
+  updateLevel(level: CefrLevel, userId?: string | null) {
+    return apiFetch<UpdateLevelResponse>('users/level', {
+      method: 'PATCH',
+      headers: buildHeaders(userId),
+      body: { level },
     });
   },
 };

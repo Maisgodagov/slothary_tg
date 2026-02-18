@@ -2,8 +2,9 @@
 import { useNavigate } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
-import { logout, selectAuth } from "../../../../features/auth/slice";
+import { logout, selectAuth, setProfile } from "../../../../features/auth/slice";
 import { dictionaryApi, type DictionaryStats } from "../../../../features/dictionary/api";
+import { usersApi, type CefrLevel } from "../../../../features/users/api";
 import { getLevelInfo } from "../../../../shared/lib/xp";
 import { PageShell } from "../../../../shared/ui/PageShell";
 import { useTelegram } from "../../../../app/providers/TelegramProvider";
@@ -22,6 +23,8 @@ export function ProfileContainer() {
   const isDark =
     themeMode === "dark" || (themeMode === "system" && theme === "dark");
   const [wordStats, setWordStats] = useState<DictionaryStats | null>(null);
+  const [selectedCefrLevel, setSelectedCefrLevel] = useState<CefrLevel>("A1");
+  const [savingLevel, setSavingLevel] = useState(false);
 
   useEffect(() => {
     dispatch(setLastVisitedAt(new Date().toISOString()));
@@ -34,6 +37,15 @@ export function ProfileContainer() {
       .then((stats) => setWordStats(stats))
       .catch(() => setWordStats(null));
   }, [auth.profile?.id]);
+
+  useEffect(() => {
+    const level = String(auth.profile?.level ?? "A1").toUpperCase() as CefrLevel;
+    if (["A1", "A2", "B1", "B2", "C1", "C2"].includes(level)) {
+      setSelectedCefrLevel(level);
+    } else {
+      setSelectedCefrLevel("A1");
+    }
+  }, [auth.profile?.level]);
 
   const initials = useMemo(() => {
     const name = auth.profile?.fullName || auth.profile?.email || "";
@@ -61,6 +73,25 @@ export function ProfileContainer() {
   const xpPoints = auth.profile.xpPoints ?? 0;
   const levelInfo = getLevelInfo(xpPoints);
 
+  const handleCefrLevelChange = async (nextLevel: CefrLevel) => {
+    setSelectedCefrLevel(nextLevel);
+    if (!auth.profile?.id || savingLevel) return;
+    const currentLevel = String(auth.profile.level ?? "A1").toUpperCase() as CefrLevel;
+    if (nextLevel === currentLevel) return;
+    setSavingLevel(true);
+    try {
+      const result = await usersApi.updateLevel(nextLevel, auth.profile.id);
+      dispatch(
+        setProfile({
+          ...auth.profile,
+          level: result.level,
+        }),
+      );
+    } finally {
+      setSavingLevel(false);
+    }
+  };
+
   return (
     <PageShell>
       <ProfileWrapper>
@@ -78,6 +109,11 @@ export function ProfileContainer() {
           onOpenAdmin={role === "admin" ? () => navigate("/admin") : undefined}
           onContact={() => undefined}
           onOpenWordProgress={() => navigate("/admin/word-progress")}
+          cefrLevel={selectedCefrLevel}
+          onCefrLevelChange={(level) => {
+            void handleCefrLevelChange(level);
+          }}
+          savingCefrLevel={savingLevel}
         >
           <ThemeToggle
             themeMode={themeMode}

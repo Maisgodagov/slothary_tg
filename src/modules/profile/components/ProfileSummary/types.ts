@@ -14,5 +14,8 @@ export type ProfileSummaryProps = {
   onOpenAdmin?: () => void;
   onContact?: () => void;
   onOpenWordProgress?: () => void;
+  cefrLevel: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+  onCefrLevelChange: (level: "A1" | "A2" | "B1" | "B2" | "C1" | "C2") => void;
+  savingCefrLevel: boolean;
   children?: ReactNode;
 };

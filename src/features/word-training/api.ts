@@ -4,7 +4,7 @@ type SessionStatus = 'active' | 'completed' | 'interrupted';
 type SourceType = 'manual' | 'viewed' | 'exercise';
 type QueueReason = 'review' | 'mistake' | 'new' | 'retry';
 type RecognitionGrade = 'again' | 'hard' | 'good' | 'easy';
-type ExerciseType = 'assemble';
+type ExerciseType = 'missing' | 'audio_assemble' | 'match_pairs';
 
 export interface WordTrainingOverview {
   dueCount: number;
@@ -81,10 +81,21 @@ export interface ReinforcementTask {
   context: WordTrainingContext | null;
   reinforcement: {
     type: ExerciseType;
-    sentence: string;
+    sentence?: string;
+    sentenceWithBlank?: string;
     sentenceTranslation?: string | null;
-    assembleTokens: string[];
+    phraseAudioUrl?: string | null;
+    options?: string[];
+    correctWord?: string;
+    assembleTokens?: string[];
+    targetTokens?: string[];
     targetWord: string;
+    pairs?: Array<{
+      word: string;
+      translation: string;
+      pronunciationAudioUrl?: string | null;
+    }>;
+    shuffledTranslations?: string[];
   };
 }
 

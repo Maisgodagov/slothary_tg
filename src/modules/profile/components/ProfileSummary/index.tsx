@@ -41,6 +41,9 @@ export function ProfileSummary({
   onOpenAdmin,
   onContact,
   onOpenWordProgress,
+  cefrLevel,
+  onCefrLevelChange,
+  savingCefrLevel,
   children,
 }: ProfileSummaryProps) {
   const displayName = fullName || "Профиль";
@@ -122,6 +125,39 @@ export function ProfileSummary({
       <SettingsSection>
         <SettingsTitle>Дополнительно</SettingsTitle>
         <SettingsList>
+          <SettingsItem as="div">
+            <SettingsLeft>
+              <SettingsIcon>
+                <Icon name="profile" size={18} />
+              </SettingsIcon>
+              <SettingsText>Уровень английского</SettingsText>
+            </SettingsLeft>
+            <select
+              value={cefrLevel}
+              onChange={(event) =>
+                onCefrLevelChange(event.target.value as "A1" | "A2" | "B1" | "B2" | "C1" | "C2")
+              }
+              disabled={savingCefrLevel}
+              style={{
+                height: 34,
+                borderRadius: 10,
+                border: "1px solid var(--tg-border)",
+                background: "var(--tg-surface)",
+                color: "var(--tg-text)",
+                padding: "0 10px",
+                fontWeight: 700,
+                minWidth: 86,
+              }}
+            >
+              <option value="A1">A1</option>
+              <option value="A2">A2</option>
+              <option value="B1">B1</option>
+              <option value="B2">B2</option>
+              <option value="C1">C1</option>
+              <option value="C2">C2</option>
+            </select>
+          </SettingsItem>
+
           {role === "admin" && (
             <SettingsItem type="button" onClick={onOpenAdmin}>
               <SettingsLeft>
