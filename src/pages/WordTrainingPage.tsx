@@ -46,6 +46,7 @@ export default function WordTrainingPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const feedbackAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const session = state?.session ?? null;
   const task = state?.task ?? null;
@@ -88,6 +89,27 @@ export default function WordTrainingPage() {
       // autoplay can be blocked
     }
   }, [stopAudio]);
+
+  const playFeedbackSound = useCallback(async (isCorrect: boolean) => {
+    const soundUrl = isCorrect ? '/sounds/right.wav' : '/sounds/wrong.wav';
+    if (feedbackAudioRef.current) {
+      try {
+        feedbackAudioRef.current.pause();
+        feedbackAudioRef.current.currentTime = 0;
+      } catch {
+        // ignore
+      }
+    }
+
+    const sound = new Audio(soundUrl);
+    sound.preload = 'auto';
+    feedbackAudioRef.current = sound;
+    try {
+      await sound.play();
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const playPronunciation = useCallback(
     async (taskLike: RecognitionTask | ReinforcementTask | null) => {
@@ -149,6 +171,20 @@ export default function WordTrainingPage() {
   }, [taskId, playPronunciation, stopAudio, task]);
 
   useEffect(() => () => stopAudio(), [stopAudio]);
+
+  useEffect(
+    () => () => {
+      if (!feedbackAudioRef.current) return;
+      try {
+        feedbackAudioRef.current.pause();
+        feedbackAudioRef.current.currentTime = 0;
+      } catch {
+        // ignore
+      }
+      feedbackAudioRef.current = null;
+    },
+    [],
+  );
 
   const startOrResume = async () => {
     if (!userId) return;
@@ -287,6 +323,7 @@ export default function WordTrainingPage() {
     }
 
     if (!reinforcementChecked) {
+      void playFeedbackSound(isReinforcementCorrect);
       setReinforcementChecked(true);
       return;
     }
@@ -360,12 +397,14 @@ export default function WordTrainingPage() {
                 onClick={() => {
                   if (recognitionChecked) return;
                   if (isCorrectOption) {
+                    void playFeedbackSound(true);
                     setRecognitionSelected(option);
                     setRecognitionChecked(true);
                     setRecognitionWrongOption(null);
                     setRecognitionResult('correct');
                     return;
                   }
+                  void playFeedbackSound(false);
                   setRecognitionSelected(null);
                   setRecognitionWrongOption(option);
                   setRecognitionResult('wrong');
@@ -646,6 +685,7 @@ export default function WordTrainingPage() {
       if (!target) return;
 
       if (normalize(target.translation) === normalize(translation)) {
+        void playFeedbackSound(true);
         setPairMatches((prev) => ({ ...prev, [word]: translation }));
         setPairWrongWord(null);
         setPairWrongTranslation(null);
@@ -654,6 +694,7 @@ export default function WordTrainingPage() {
         return;
       }
 
+      void playFeedbackSound(false);
       setPairWrongWord(word);
       setPairWrongTranslation(translation);
       setPairLeftSelected(null);
