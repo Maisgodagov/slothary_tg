@@ -5,6 +5,7 @@ type SourceType = 'manual' | 'viewed' | 'exercise';
 type QueueReason = 'review' | 'mistake' | 'new' | 'retry';
 type RecognitionGrade = 'again' | 'hard' | 'good' | 'easy';
 type ExerciseType = 'missing' | 'audio_assemble' | 'match_pairs';
+type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 
 export interface WordTrainingOverview {
   dueCount: number;
@@ -104,6 +105,8 @@ export type WordTrainingTask = RecognitionTask | ReinforcementTask;
 export interface WordTrainingState {
   session: WordTrainingSession;
   task: WordTrainingTask | null;
+  retryPhase?: boolean;
+  retryPhaseTitle?: string | null;
   summary?: {
     totalXpToday: number;
     totalWordsToday: number;
@@ -119,7 +122,27 @@ export const wordTrainingApi = {
       headers: headersWithUser(userId),
     });
   },
-  startSession(body: { targetWords?: number }, userId?: string | null) {
+  startSession(
+    body: {
+      targetWords?: number;
+      preferences?: {
+        cefrLevel?: CefrLevel;
+        maxUniqueWords?: number;
+        maxMatchPairsPerSession?: number;
+        prioritizeUserInteractions?: boolean;
+        levelMix?: {
+          currentLevelWeight?: number;
+          lowerLevelWeight?: number;
+          higherLevelWeight?: number;
+        };
+        reinforcementMode?: {
+          phraseExercisesPerWord?: number;
+          retryMistakesAtEnd?: boolean;
+        };
+      };
+    },
+    userId?: string | null,
+  ) {
     return apiFetch<WordTrainingState>('word-training/sessions', {
       method: 'POST',
       headers: headersWithUser(userId),
@@ -160,8 +183,12 @@ export const wordTrainingApi = {
       body,
     });
   },
-  getExamples(word: string, userId?: string | null, limit = 3) {
-    const query = new URLSearchParams({ word, limit: String(limit) });
+  getExamples(word: string, userId?: string | null, limit = 3, paddingSeconds = 2) {
+    const query = new URLSearchParams({
+      word,
+      limit: String(limit),
+      paddingSeconds: String(paddingSeconds),
+    });
     return apiFetch<{ items: WordTrainingContext[] }>(`word-training/examples?${query.toString()}`, {
       headers: headersWithUser(userId),
     });
