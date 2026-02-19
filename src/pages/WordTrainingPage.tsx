@@ -88,9 +88,11 @@ export default function WordTrainingPage() {
     }
     const targetWords = Math.max(1, overview.suggestedTargetWords || 5);
     const dayWordPool = Math.max(0, overview.dueCount + overview.mistakeCount + Math.min(overview.newCount, 24));
-    const totalSessions = Math.max(1, Math.min(12, Math.ceil(dayWordPool / targetWords)));
-    const completedSessions = Math.min(totalSessions, Math.max(0, overview.todayProgress.sessionsDone || 0));
-    const nextSession = Math.min(totalSessions, completedSessions + 1);
+    const baseTotalSessions = Math.max(1, Math.min(12, Math.ceil(dayWordPool / targetWords)));
+    const completedSessions = Math.max(0, overview.todayProgress.sessionsDone || 0);
+    // Always keep one more session open so user can continue training without a hard stop.
+    const totalSessions = Math.max(baseTotalSessions, completedSessions + 1);
+    const nextSession = completedSessions + 1;
     const dayGoal = Math.max(3, Math.min(8, totalSessions));
     const weekGoal = dayGoal * 7;
     const monthGoal = dayGoal * 30;
@@ -114,6 +116,15 @@ export default function WordTrainingPage() {
     }
     return 0;
   }, [session, task]);
+  const isNewWordIntroVisible = Boolean(
+    session &&
+      task &&
+      task.mode === 'recognition' &&
+      task.isNewWord &&
+      !introducedWordKeys[task.wordKey] &&
+      !practiceView &&
+      !postPracticeTransitioning,
+  );
 
   useEffect(() => {
     if (loading || session || !overview) return;
@@ -769,26 +780,15 @@ export default function WordTrainingPage() {
         </div>
 
         {otherTranslations.length ? (
-          <div style={{ color: 'var(--tg-subtle)', fontSize: 14, lineHeight: 1.45 }}>
-            {otherTranslations.join(', ')}
+          <div style={{ display: 'grid', gap: 6 }}>
+            <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>
+              Другие переводы:
+            </div>
+            <div style={{ color: 'var(--tg-subtle)', fontSize: 14, lineHeight: 1.45 }}>
+              {otherTranslations.join(', ')}
+            </div>
           </div>
         ) : null}
-
-        <Button
-          onClick={() => {
-            setIntroducedWordKeys((prev) => ({ ...prev, [recognition.wordKey]: true }));
-          }}
-          style={{
-            width: '100%',
-            minHeight: 52,
-            borderRadius: 14,
-            fontSize: 32,
-            fontWeight: 700,
-            lineHeight: 1,
-          }}
-        >
-          Понятно
-        </Button>
       </div>
     );
   };
@@ -1133,6 +1133,7 @@ export default function WordTrainingPage() {
     title: string;
     subtitle?: string | null;
     onNext: () => void;
+    buttonLabel?: string;
   }) => {
     if (!params.visible) return null;
     if (typeof document === 'undefined') return null;
@@ -1181,7 +1182,7 @@ export default function WordTrainingPage() {
           disabled={submitting}
           style={{ minHeight: 50, fontSize: 22, fontWeight: 700, borderRadius: 14, background: '#2ea3ff', boxShadow: 'none' }}
         >
-          Далее
+          {params.buttonLabel ?? 'Далее'}
         </Button>
       </div>,
       document.body,
@@ -1357,13 +1358,7 @@ export default function WordTrainingPage() {
         {error && <div className="section" style={{ color: 'var(--tg-danger)' }}>{error}</div>}
         {loading && <div className="section">Загрузка...</div>}
 
-        {(() => {
-          if (!session || !task || task.mode !== 'recognition') return null;
-          if (!task.isNewWord) return null;
-          if (introducedWordKeys[task.wordKey]) return null;
-          if (practiceView || postPracticeTransitioning) return null;
-          return renderNewWordIntro(task);
-        })()}
+        {isNewWordIntroVisible && task && task.mode === 'recognition' ? renderNewWordIntro(task) : null}
 
         {!loading && !session && overview && (
           <>
@@ -1374,9 +1369,8 @@ export default function WordTrainingPage() {
                 gap: 12,
                 borderRadius: 24,
                 padding: 14,
-                background:
-                  'radial-gradient(120% 70% at 50% -5%, rgba(78,197,255,0.2) 0%, rgba(29,39,74,0.96) 58%, rgba(14,19,38,1) 100%)',
-                border: '1px solid rgba(78,197,255,0.24)',
+                background: 'var(--tg-card)',
+                border: '1px solid var(--tg-border)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -1384,8 +1378,8 @@ export default function WordTrainingPage() {
                 <span
                   style={{
                     borderRadius: 999,
-                    border: '1px solid rgba(78,197,255,0.42)',
-                    color: '#9ddfff',
+                    border: '1px solid var(--tg-border)',
+                    color: 'var(--tg-text)',
                     fontSize: 12,
                     fontWeight: 800,
                     padding: '5px 10px',
@@ -1410,7 +1404,7 @@ export default function WordTrainingPage() {
                   style={{
                     borderRadius: 14,
                     border: '1px solid var(--tg-border)',
-                    background: 'rgba(255,255,255,0.02)',
+                    background: 'var(--tg-card)',
                     padding: '8px 8px 7px',
                   }}
                 >
@@ -1421,7 +1415,7 @@ export default function WordTrainingPage() {
                   style={{
                     borderRadius: 14,
                     border: '1px solid var(--tg-border)',
-                    background: 'rgba(255,255,255,0.02)',
+                    background: 'var(--tg-card)',
                     padding: '8px 8px 7px',
                   }}
                 >
@@ -1432,7 +1426,7 @@ export default function WordTrainingPage() {
                   style={{
                     borderRadius: 14,
                     border: '1px solid var(--tg-border)',
-                    background: 'rgba(255,255,255,0.02)',
+                    background: 'var(--tg-card)',
                     padding: '8px 8px 7px',
                   }}
                 >
@@ -1454,13 +1448,9 @@ export default function WordTrainingPage() {
                         style={{
                           borderRadius: 12,
                           border: `1px solid ${
-                            isCurrent ? 'rgba(78,197,255,0.75)' : isPassed ? 'rgba(67, 201, 127, 0.65)' : 'var(--tg-border)'
+                            isCurrent ? 'rgba(96, 165, 250, 0.75)' : isPassed ? 'rgba(34, 197, 94, 0.65)' : 'var(--tg-border)'
                           }`,
-                          background: isCurrent
-                            ? 'rgba(46,163,255,0.14)'
-                            : isPassed
-                            ? 'rgba(67,201,127,0.1)'
-                            : 'rgba(255,255,255,0.02)',
+                          background: 'var(--tg-card)',
                           color: isLocked ? 'var(--tg-subtle)' : 'var(--tg-text)',
                           filter: isLocked ? 'grayscale(0.6)' : 'none',
                           opacity: isLocked ? 0.58 : 1,
@@ -1534,13 +1524,9 @@ export default function WordTrainingPage() {
                       style={{
                         borderRadius: 14,
                         border: `1px solid ${
-                          isCompleted ? 'rgba(67,201,127,0.65)' : isNext ? 'rgba(78,197,255,0.55)' : 'var(--tg-border)'
+                          isCompleted ? 'rgba(34, 197, 94, 0.65)' : isNext ? 'rgba(96, 165, 250, 0.7)' : 'var(--tg-border)'
                         }`,
-                        background: isCompleted
-                          ? 'rgba(67,201,127,0.1)'
-                          : isNext
-                          ? 'rgba(46,163,255,0.1)'
-                          : 'rgba(255,255,255,0.02)',
+                        background: 'var(--tg-card)',
                         padding: '9px 10px',
                         opacity: isLocked ? 0.55 : 1,
                         filter: isLocked ? 'grayscale(0.5)' : 'none',
@@ -1559,9 +1545,19 @@ export default function WordTrainingPage() {
                         </div>
                       </div>
                       {isCompleted ? (
-                        <span style={{ color: '#79dca3', fontSize: 12, fontWeight: 800 }}>Готово</span>
+                        <span style={{ color: 'rgba(34, 197, 94, 0.95)', fontSize: 12, fontWeight: 800 }}>Готово</span>
                       ) : isNext ? (
-                        <Button onClick={startOrResume} disabled={submitting} style={{ minHeight: 34, padding: '0 12px', fontSize: 14 }}>
+                        <Button
+                          onClick={startOrResume}
+                          disabled={submitting}
+                          style={{
+                            minHeight: 34,
+                            padding: '0 12px',
+                            fontSize: 14,
+                            background: 'var(--tg-accent)',
+                            boxShadow: 'none',
+                          }}
+                        >
                           Начать
                         </Button>
                       ) : (
@@ -1628,6 +1624,17 @@ export default function WordTrainingPage() {
               void proceedAfterRecognition(task);
             },
           })}
+        {!loading && task && task.mode === 'recognition' &&
+          renderBottomActionPanel({
+            visible: isNewWordIntroVisible,
+            isCorrect: true,
+            title: 'Новое слово',
+            subtitle: `${task.word} - ${task.translation}`,
+            buttonLabel: 'Понятно',
+            onNext: () => {
+              setIntroducedWordKeys((prev) => ({ ...prev, [task.wordKey]: true }));
+            },
+          })}
 
         {!loading && session && task && task.mode === 'reinforcement' &&
           renderBottomActionPanel({
@@ -1665,10 +1672,8 @@ export default function WordTrainingPage() {
               alignContent: 'start',
               borderRadius: 26,
               padding: 16,
-              background:
-                'radial-gradient(120% 80% at 50% -5%, rgba(78,197,255,0.22) 0%, rgba(31,42,80,0.96) 58%, rgba(14,19,38,1) 100%)',
-              border: '1px solid rgba(78,197,255,0.24)',
-              boxShadow: '0 22px 45px rgba(0,0,0,0.35)',
+              background: 'var(--tg-card)',
+              border: '1px solid var(--tg-border)',
             }}
           >
             <div style={{ display: 'grid', gap: 4 }}>
@@ -1690,8 +1695,8 @@ export default function WordTrainingPage() {
               <div
                 style={{
                   borderRadius: 16,
-                  border: '1px solid rgba(78,197,255,0.28)',
-                  background: 'rgba(15, 24, 48, 0.72)',
+                  border: '1px solid var(--tg-border)',
+                  background: 'var(--tg-card)',
                   padding: '10px 10px 8px',
                   display: 'grid',
                   gap: 4,
@@ -1703,8 +1708,8 @@ export default function WordTrainingPage() {
               <div
                 style={{
                   borderRadius: 16,
-                  border: '1px solid rgba(78,197,255,0.28)',
-                  background: 'rgba(15, 24, 48, 0.72)',
+                  border: '1px solid var(--tg-border)',
+                  background: 'var(--tg-card)',
                   padding: '10px 10px 8px',
                   display: 'grid',
                   gap: 4,
@@ -1716,8 +1721,8 @@ export default function WordTrainingPage() {
               <div
                 style={{
                   borderRadius: 16,
-                  border: '1px solid rgba(78,197,255,0.28)',
-                  background: 'rgba(15, 24, 48, 0.72)',
+                  border: '1px solid var(--tg-border)',
+                  background: 'var(--tg-card)',
                   padding: '10px 10px 8px',
                   display: 'grid',
                   gap: 4,
@@ -1735,8 +1740,8 @@ export default function WordTrainingPage() {
             <div
               style={{
                 borderRadius: 18,
-                border: '1px solid rgba(78,197,255,0.2)',
-                background: 'rgba(9, 14, 30, 0.72)',
+                border: '1px solid var(--tg-border)',
+                background: 'var(--tg-card)',
                 padding: 12,
                 display: 'grid',
                 gap: 10,
@@ -1766,11 +1771,11 @@ export default function WordTrainingPage() {
                         </div>
                       </div>
                       {item.cefrLevel ? (
-                        <span
+                          <span
                           style={{
                             borderRadius: 999,
-                            border: '1px solid rgba(78,197,255,0.42)',
-                            color: '#9ddfff',
+                            border: '1px solid var(--tg-border)',
+                            color: 'var(--tg-text)',
                             fontSize: 12,
                             fontWeight: 800,
                             padding: '4px 8px',
@@ -1790,7 +1795,17 @@ export default function WordTrainingPage() {
               )}
             </div>
 
-            <Button onClick={load} disabled={submitting} style={{ minHeight: 52, fontSize: 20, fontWeight: 800 }}>
+            <Button
+              onClick={load}
+              disabled={submitting}
+              style={{
+                minHeight: 52,
+                fontSize: 20,
+                fontWeight: 800,
+                background: 'var(--tg-accent)',
+                boxShadow: 'none',
+              }}
+            >
               К следующей тренировке
             </Button>
           </div>
