@@ -91,7 +91,9 @@ export default function WordTrainingPage() {
   }, [stopAudio]);
 
   const playFeedbackSound = useCallback(async (isCorrect: boolean) => {
-    const soundUrl = isCorrect ? '/sounds/right.wav' : '/sounds/wrong.wav';
+    const baseUrl = import.meta.env.BASE_URL ?? '/';
+    const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+    const soundUrl = `${normalizedBase}sounds/${isCorrect ? 'right.wav' : 'wrong.wav'}`;
     if (feedbackAudioRef.current) {
       try {
         feedbackAudioRef.current.pause();
