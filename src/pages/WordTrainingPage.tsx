@@ -1,5 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Volume2 } from 'lucide-react';
+import { Volume2, X } from 'lucide-react';
 
 import { useAppSelector } from '../app/hooks';
 import { selectAuth } from '../features/auth/slice';
@@ -50,9 +50,16 @@ export default function WordTrainingPage() {
   const session = state?.session ?? null;
   const task = state?.task ?? null;
   const taskId = task?.itemId ?? null;
-  const energyPercent = session
-    ? Math.max(0, Math.round((session.energyLeft / session.energyStart) * 100))
-    : 0;
+  const lessonProgressPercent = useMemo(() => {
+    if (!session) return 0;
+    if (task && task.queueTotal > 0) {
+      return Math.max(0, Math.min(100, Math.round((task.queuePosition / task.queueTotal) * 100)));
+    }
+    if (session.targetWords > 0) {
+      return Math.max(0, Math.min(100, Math.round((session.wordsCompleted / session.targetWords) * 100)));
+    }
+    return 0;
+  }, [session, task]);
 
   const stopAudio = useCallback(() => {
     if (!audioRef.current) return;
@@ -315,7 +322,6 @@ export default function WordTrainingPage() {
       <div className="section" style={{ display: 'grid', gap: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <strong>Выбери правильный перевод</strong>
-          <span className="badge">{recognition.queuePosition}/{recognition.queueTotal}</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
@@ -794,7 +800,6 @@ export default function WordTrainingPage() {
             ? 'Собери фразу из слов'
             : 'Закрепление'}
         </strong>
-        <span className="badge">{reinforcement.queuePosition}/{reinforcement.queueTotal}</span>
       </div>
 
       {reinforcement.reinforcement.type === 'audio_assemble' && (
@@ -849,37 +854,48 @@ export default function WordTrainingPage() {
   return (
     <PageShell>
       <div style={{ padding: 14, display: 'grid', gap: 12 }}>
-        <div className="section" style={{ display: 'grid', gap: 8 }}>
-          <div style={{ fontSize: 20, fontWeight: 800 }}>Умная тренировка слов</div>
-          <div style={{ color: 'var(--tg-subtle)', fontSize: 14 }}>
-            Сначала повторение, затем ошибки, потом новые слова.
-          </div>
-
-          {session && (
-            <div style={{ display: 'grid', gap: 8 }}>
+        {session?.status === 'active' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => void finishEarly()}
+              disabled={submitting}
+              aria-label="Завершить урок"
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                border: '1px solid transparent',
+                background: 'transparent',
+                color: 'var(--tg-subtle)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: submitting ? 0.5 : 1,
+              }}
+            >
+              <X size={24} />
+            </button>
+            <div
+              style={{
+                height: 14,
+                flex: 1,
+                background: 'var(--tg-border)',
+                borderRadius: 999,
+                overflow: 'hidden',
+              }}
+            >
               <div
                 style={{
-                  height: 10,
-                  background: 'var(--tg-border)',
-                  borderRadius: 999,
-                  overflow: 'hidden',
+                  width: `${lessonProgressPercent}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #8fdc3f, #7ac734)',
+                  transition: 'width 220ms ease',
                 }}
-              >
-                <div
-                  style={{
-                    width: `${energyPercent}%`,
-                    height: '100%',
-                    background: 'linear-gradient(90deg, #ffc857, #6dd3ff)',
-                    transition: 'width 220ms ease',
-                  }}
-                />
-              </div>
-              <div style={{ fontSize: 13, color: 'var(--tg-subtle)' }}>
-                Энергия: {session.energyLeft}/{session.energyStart} • Выполнено слов: {session.wordsCompleted}/{session.targetWords}
-              </div>
+              />
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {error && <div className="section" style={{ color: 'var(--tg-danger)' }}>{error}</div>}
         {loading && <div className="section">Загрузка...</div>}
@@ -917,11 +933,6 @@ export default function WordTrainingPage() {
           </div>
         )}
 
-        {session?.status === 'active' && (
-          <Button variant="ghost" onClick={finishEarly} disabled={submitting}>
-            Завершить сессию
-          </Button>
-        )}
       </div>
     </PageShell>
   );
