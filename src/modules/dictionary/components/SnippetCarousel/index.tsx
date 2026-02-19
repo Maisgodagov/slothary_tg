@@ -19,6 +19,7 @@ export function SnippetCarousel({
   items,
   highlight,
   onOpenFullVideo,
+  showFullVideoButton = true,
   total,
   hasMore,
   isLoadingMore,
@@ -115,6 +116,7 @@ export function SnippetCarousel({
                 shouldRender={shouldRender}
                 highlight={highlight}
                 onOpenFullVideo={onOpenFullVideo}
+                showFullVideoButton={showFullVideoButton}
               />
             </CarouselItem>
           );

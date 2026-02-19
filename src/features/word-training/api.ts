@@ -64,6 +64,8 @@ export interface RecognitionTask {
   queuePosition: number;
   queueTotal: number;
   context: WordTrainingContext | null;
+  isNewWord?: boolean;
+  otherTranslations?: string[];
   recognitionOptions: string[];
   showReinforcementAfter: boolean;
 }
@@ -110,6 +112,12 @@ export interface WordTrainingState {
   summary?: {
     totalXpToday: number;
     totalWordsToday: number;
+    completedWords?: Array<{
+      wordKey: string;
+      word: string;
+      translation: string;
+      cefrLevel?: CefrLevel | null;
+    }>;
   };
   alternateExample?: WordTrainingContext | null;
 }
@@ -183,12 +191,25 @@ export const wordTrainingApi = {
       body,
     });
   },
-  getExamples(word: string, userId?: string | null, limit = 3, paddingSeconds = 2) {
+  getExamples(
+    word: string,
+    userId?: string | null,
+    limit = 3,
+    paddingSeconds = 2,
+    paddingBeforeSeconds?: number,
+    paddingAfterSeconds?: number,
+  ) {
     const query = new URLSearchParams({
       word,
       limit: String(limit),
       paddingSeconds: String(paddingSeconds),
     });
+    if (typeof paddingBeforeSeconds === 'number') {
+      query.set('paddingBeforeSeconds', String(paddingBeforeSeconds));
+    }
+    if (typeof paddingAfterSeconds === 'number') {
+      query.set('paddingAfterSeconds', String(paddingAfterSeconds));
+    }
     return apiFetch<{ items: WordTrainingContext[] }>(`word-training/examples?${query.toString()}`, {
       headers: headersWithUser(userId),
     });

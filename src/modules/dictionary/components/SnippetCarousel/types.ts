@@ -4,6 +4,7 @@ export type SnippetCarouselProps = {
   items: PhraseSnippet[];
   highlight: string;
   onOpenFullVideo: (snippet: PhraseSnippet) => void;
+  showFullVideoButton?: boolean;
   total?: number;
   hasMore?: boolean;
   isLoadingMore?: boolean;

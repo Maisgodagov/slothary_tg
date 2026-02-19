@@ -26,6 +26,7 @@ const normalize = (value: string): string =>
 
 const normalizeLoose = (value: string): string => normalize(value.replace(/[.,!?;:]/g, ' '));
 const isWordToken = (value: string): boolean => /^[A-Za-z][A-Za-z'-]*$/.test(value);
+const CEFR_LEVELS: Array<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'> = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 export default function WordTrainingPage() {
   const auth = useAppSelector(selectAuth);
@@ -59,13 +60,50 @@ export default function WordTrainingPage() {
     recognitionTask?: RecognitionTask | null;
   } | null>(null);
   const [practiceLoading, setPracticeLoading] = useState(false);
+  const [postPracticeTransitioning, setPostPracticeTransitioning] = useState(false);
+  const [introducedWordKeys, setIntroducedWordKeys] = useState<Record<string, true>>({});
   const snippetShownWordsRef = useRef<Set<string>>(new Set());
   const recognitionDoneWordsRef = useRef<Set<string>>(new Set());
   const lastStepHadSnippetRef = useRef(false);
+  const trainingListRef = useRef<HTMLDivElement | null>(null);
+  const currentTrainingRef = useRef<HTMLDivElement | null>(null);
 
   const session = state?.session ?? null;
   const task = state?.task ?? null;
   const taskId = task?.itemId ?? null;
+  const completedWords = state?.summary?.completedWords ?? [];
+  const userLevel = (auth.profile?.level || 'A1').toUpperCase();
+  const currentLevelIndex = Math.max(0, CEFR_LEVELS.indexOf(userLevel as (typeof CEFR_LEVELS)[number]));
+  const trainingPlan = useMemo(() => {
+    if (!overview) {
+      return {
+        targetWords: 5,
+        totalSessions: 1,
+        completedSessions: 0,
+        nextSession: 1,
+        dayGoal: 3,
+        weekGoal: 21,
+        monthGoal: 90,
+      };
+    }
+    const targetWords = Math.max(1, overview.suggestedTargetWords || 5);
+    const dayWordPool = Math.max(0, overview.dueCount + overview.mistakeCount + Math.min(overview.newCount, 24));
+    const totalSessions = Math.max(1, Math.min(12, Math.ceil(dayWordPool / targetWords)));
+    const completedSessions = Math.min(totalSessions, Math.max(0, overview.todayProgress.sessionsDone || 0));
+    const nextSession = Math.min(totalSessions, completedSessions + 1);
+    const dayGoal = Math.max(3, Math.min(8, totalSessions));
+    const weekGoal = dayGoal * 7;
+    const monthGoal = dayGoal * 30;
+    return {
+      targetWords,
+      totalSessions,
+      completedSessions,
+      nextSession,
+      dayGoal,
+      weekGoal,
+      monthGoal,
+    };
+  }, [overview]);
   const lessonProgressPercent = useMemo(() => {
     if (!session) return 0;
     if (task && task.queueTotal > 0) {
@@ -76,6 +114,27 @@ export default function WordTrainingPage() {
     }
     return 0;
   }, [session, task]);
+
+  useEffect(() => {
+    if (loading || session || !overview) return;
+    if (!trainingListRef.current || !currentTrainingRef.current) return;
+    const raf = window.requestAnimationFrame(() => {
+      currentTrainingRef.current?.scrollIntoView({
+        block: 'center',
+        inline: 'nearest',
+        behavior: 'auto',
+      });
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [
+    loading,
+    session,
+    overview,
+    userLevel,
+    trainingPlan.totalSessions,
+    trainingPlan.completedSessions,
+    trainingPlan.nextSession,
+  ]);
 
   const optionButtonBaseStyle = {
     minHeight: 48,
@@ -182,7 +241,7 @@ export default function WordTrainingPage() {
   const loadPracticeSnippets = useCallback(
     async (word: string): Promise<PhraseSnippet[]> => {
       try {
-        const response = await wordTrainingApi.getExamples(word, userId, 30, 2);
+        const response = await wordTrainingApi.getExamples(word, userId, 30, 2, 2, 4);
         return (response.items ?? [])
           .map((item, index) => mapContextToSnippet(item, index, word))
           .filter((item): item is PhraseSnippet => Boolean(item))
@@ -212,12 +271,17 @@ export default function WordTrainingPage() {
   const continueAfterPractice = useCallback(async () => {
     if (!practiceView) return;
     const payload = practiceView;
+    setPostPracticeTransitioning(true);
     setPracticeView(null);
-    if (payload.nextMode === 'recognition' && payload.recognitionTask) {
-      await submitRecognitionResult(payload.recognitionTask);
-      return;
+    try {
+      if (payload.nextMode === 'recognition' && payload.recognitionTask) {
+        await submitRecognitionResult(payload.recognitionTask);
+        return;
+      }
+      await submitReinforcement();
+    } finally {
+      setPostPracticeTransitioning(false);
     }
-    await submitReinforcement();
   }, [practiceView]);
 
   const playAudioUrl = useCallback(async (audioUrl?: string | null) => {
@@ -327,6 +391,8 @@ export default function WordTrainingPage() {
     lastStepHadSnippetRef.current = false;
     setPracticeView(null);
     setPracticeLoading(false);
+    setPostPracticeTransitioning(false);
+    setIntroducedWordKeys({});
   }, [session?.id]);
 
   useEffect(
@@ -662,6 +728,71 @@ export default function WordTrainingPage() {
     );
   };
 
+  const renderNewWordIntro = (recognition: RecognitionTask) => {
+    const otherTranslations = (recognition.otherTranslations ?? [])
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+
+    return (
+      <div className="section" style={{ display: 'grid', gap: 14, borderRadius: 22 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <strong style={{ fontSize: 25, lineHeight: 1.15, fontWeight: 600 }}>Новое слово</strong>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.1 }}>
+            {recognition.word} <span style={{ color: 'var(--tg-subtle)', fontWeight: 700 }}>-</span>{' '}
+            <span style={{ fontSize: 30 }}>{recognition.translation}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => void playPronunciation(recognition)}
+            disabled={!recognition.pronunciationAudioUrl}
+            aria-label="Проиграть произношение"
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 16,
+              border: '1px solid var(--tg-border)',
+              background: 'var(--tg-card)',
+              color: 'var(--tg-text)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: recognition.pronunciationAudioUrl ? 1 : 0.45,
+              flexShrink: 0,
+            }}
+          >
+            <Volume2 size={19} />
+          </button>
+        </div>
+
+        {otherTranslations.length ? (
+          <div style={{ color: 'var(--tg-subtle)', fontSize: 14, lineHeight: 1.45 }}>
+            {otherTranslations.join(', ')}
+          </div>
+        ) : null}
+
+        <Button
+          onClick={() => {
+            setIntroducedWordKeys((prev) => ({ ...prev, [recognition.wordKey]: true }));
+          }}
+          style={{
+            width: '100%',
+            minHeight: 52,
+            borderRadius: 14,
+            fontSize: 32,
+            fontWeight: 700,
+            lineHeight: 1,
+          }}
+        >
+          Понятно
+        </Button>
+      </div>
+    );
+  };
+
   const renderMissingExercise = (_reinforcement: ReinforcementTask) => {
     if (!missingExerciseModel) return null;
     const options = missingExerciseModel.options;
@@ -766,7 +897,15 @@ export default function WordTrainingPage() {
     return (
       <>
         {reinforcement.reinforcement.sentenceTranslation ? (
-          <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.25 }}>
+          <div
+            style={{
+              fontSize: 'clamp(30px, 7vw, 38px)',
+              fontWeight: 800,
+              lineHeight: 1.14,
+              letterSpacing: '-0.02em',
+              margin: '4px 0 10px',
+            }}
+          >
             {reinforcement.reinforcement.sentenceTranslation}
           </div>
         ) : null}
@@ -1004,15 +1143,16 @@ export default function WordTrainingPage() {
           position: 'fixed',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: 'calc(100% - 28px)',
+          width: '100%',
           maxWidth: 560,
-          bottom: 'calc(76px + env(safe-area-inset-bottom))',
+          bottom: 'calc(54px + var(--tg-safe-area-inset-bottom, 0px))',
           zIndex: 40,
-          borderRadius: 18,
+          borderRadius: '18px 18px 0 0',
           border: '1px solid var(--tg-border)',
+          borderBottom: 'none',
           background: 'var(--tg-card)',
           boxShadow: '0 10px 30px rgba(0,0,0,0.26)',
-          padding: 12,
+          padding: '12px 12px 10px',
           display: 'grid',
           gap: 10,
         }}
@@ -1147,81 +1287,325 @@ export default function WordTrainingPage() {
 
   return (
     <PageShell>
-      <div style={{ padding: 14, display: 'grid', gap: 12 }}>
+      <div
+        style={{
+          padding: 14,
+          display: 'grid',
+          gap: 12,
+          paddingBottom: 'calc(70px + var(--tg-safe-area-inset-bottom, 0px))',
+        }}
+      >
         {session?.status === 'active' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button
-              type="button"
-              onClick={() => void finishEarly()}
-              disabled={submitting}
-              aria-label="Завершить урок"
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 10,
-                border: '1px solid transparent',
-                background: 'transparent',
-                color: 'var(--tg-subtle)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: submitting ? 0.5 : 1,
-              }}
-            >
-              <X size={24} />
-            </button>
-            <div
-              style={{
-                height: 14,
-                flex: 1,
-                background: 'var(--tg-border)',
-                borderRadius: 999,
-                overflow: 'hidden',
-              }}
-            >
+          <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => void finishEarly()}
+                disabled={submitting}
+                aria-label="Завершить урок"
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  border: '1px solid transparent',
+                  background: 'transparent',
+                  color: 'var(--tg-subtle)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: submitting ? 0.5 : 1,
+                }}
+              >
+                <X size={24} />
+              </button>
               <div
                 style={{
-                  width: `${lessonProgressPercent}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #8fdc3f, #7ac734)',
-                  transition: 'width 220ms ease',
+                  height: 14,
+                  flex: 1,
+                  background: 'var(--tg-border)',
+                  borderRadius: 999,
+                  overflow: 'hidden',
                 }}
-              />
+              >
+                <div
+                  style={{
+                    width: `${lessonProgressPercent}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #8fdc3f, #7ac734)',
+                    transition: 'width 220ms ease',
+                  }}
+                />
+              </div>
             </div>
+            {!loading && state?.retryPhase && (
+              <div
+                className="section"
+                style={{
+                  borderRadius: 16,
+                  padding: 10,
+                  fontWeight: 700,
+                  background: 'rgba(255, 196, 64, 0.08)',
+                  border: '1px solid rgba(255, 196, 64, 0.45)',
+                }}
+              >
+                {state.retryPhaseTitle ?? 'Закрепляем ошибки'}
+              </div>
+            )}
           </div>
         )}
 
         {error && <div className="section" style={{ color: 'var(--tg-danger)' }}>{error}</div>}
         {loading && <div className="section">Загрузка...</div>}
 
+        {(() => {
+          if (!session || !task || task.mode !== 'recognition') return null;
+          if (!task.isNewWord) return null;
+          if (introducedWordKeys[task.wordKey]) return null;
+          if (practiceView || postPracticeTransitioning) return null;
+          return renderNewWordIntro(task);
+        })()}
+
         {!loading && !session && overview && (
           <>
-            <div className="section" style={{ display: 'grid', gap: 6 }}>
-              <div>Сегодня:</div>
-              <div style={{ color: 'var(--tg-subtle)' }}>Повторение: {overview.dueCount}</div>
-              <div style={{ color: 'var(--tg-subtle)' }}>Слова с ошибками: {overview.mistakeCount}</div>
-              <div style={{ color: 'var(--tg-subtle)' }}>Новые слова: {overview.newCount}</div>
-              <div style={{ color: 'var(--tg-subtle)' }}>Рекомендованный размер: {overview.suggestedTargetWords}</div>
+            <div
+              className="section"
+              style={{
+                display: 'grid',
+                gap: 12,
+                borderRadius: 24,
+                padding: 14,
+                background:
+                  'radial-gradient(120% 70% at 50% -5%, rgba(78,197,255,0.2) 0%, rgba(29,39,74,0.96) 58%, rgba(14,19,38,1) 100%)',
+                border: '1px solid rgba(78,197,255,0.24)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1.1 }}>Твоя тренировка</div>
+                <span
+                  style={{
+                    borderRadius: 999,
+                    border: '1px solid rgba(78,197,255,0.42)',
+                    color: '#9ddfff',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    padding: '5px 10px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Уровень {userLevel}
+                </span>
+              </div>
+              <div style={{ color: 'var(--tg-subtle)', fontSize: 14 }}>
+                Изучай шаг за шагом: открывай тренировки подряд и поднимайся по CEFR.
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    borderRadius: 14,
+                    border: '1px solid var(--tg-border)',
+                    background: 'rgba(255,255,255,0.02)',
+                    padding: '8px 8px 7px',
+                  }}
+                >
+                  <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1 }}>{overview.todayProgress.wordsDone}</div>
+                  <div style={{ color: 'var(--tg-subtle)', fontSize: 11, fontWeight: 700 }}>слов сегодня</div>
+                </div>
+                <div
+                  style={{
+                    borderRadius: 14,
+                    border: '1px solid var(--tg-border)',
+                    background: 'rgba(255,255,255,0.02)',
+                    padding: '8px 8px 7px',
+                  }}
+                >
+                  <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1 }}>{overview.todayProgress.xpGained}</div>
+                  <div style={{ color: 'var(--tg-subtle)', fontSize: 11, fontWeight: 700 }}>XP сегодня</div>
+                </div>
+                <div
+                  style={{
+                    borderRadius: 14,
+                    border: '1px solid var(--tg-border)',
+                    background: 'rgba(255,255,255,0.02)',
+                    padding: '8px 8px 7px',
+                  }}
+                >
+                  <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1 }}>{overview.trackedWords}</div>
+                  <div style={{ color: 'var(--tg-subtle)', fontSize: 11, fontWeight: 700 }}>слов в треке</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 800 }}>Путь по CEFR</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 6 }}>
+                  {CEFR_LEVELS.map((level, index) => {
+                    const isPassed = index < currentLevelIndex;
+                    const isCurrent = index === currentLevelIndex;
+                    const isLocked = index > currentLevelIndex;
+                    return (
+                      <div
+                        key={level}
+                        style={{
+                          borderRadius: 12,
+                          border: `1px solid ${
+                            isCurrent ? 'rgba(78,197,255,0.75)' : isPassed ? 'rgba(67, 201, 127, 0.65)' : 'var(--tg-border)'
+                          }`,
+                          background: isCurrent
+                            ? 'rgba(46,163,255,0.14)'
+                            : isPassed
+                            ? 'rgba(67,201,127,0.1)'
+                            : 'rgba(255,255,255,0.02)',
+                          color: isLocked ? 'var(--tg-subtle)' : 'var(--tg-text)',
+                          filter: isLocked ? 'grayscale(0.6)' : 'none',
+                          opacity: isLocked ? 0.58 : 1,
+                          textAlign: 'center',
+                          padding: '7px 0',
+                          fontSize: 12,
+                          fontWeight: 800,
+                        }}
+                      >
+                        {level}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 800 }}>План активности</div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                    gap: 8,
+                    color: 'var(--tg-subtle)',
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  <div style={{ borderRadius: 12, border: '1px solid var(--tg-border)', padding: '7px 8px' }}>
+                    День: {Math.min(trainingPlan.dayGoal, overview.todayProgress.sessionsDone)}/{trainingPlan.dayGoal}
+                  </div>
+                  <div style={{ borderRadius: 12, border: '1px solid var(--tg-border)', padding: '7px 8px' }}>
+                    Неделя: {Math.min(trainingPlan.weekGoal, overview.todayProgress.sessionsDone)}/{trainingPlan.weekGoal}
+                  </div>
+                  <div style={{ borderRadius: 12, border: '1px solid var(--tg-border)', padding: '7px 8px' }}>
+                    Месяц: {Math.min(trainingPlan.monthGoal, overview.todayProgress.sessionsDone)}/{trainingPlan.monthGoal}
+                  </div>
+                </div>
+              </div>
             </div>
-            <Button onClick={startOrResume} disabled={submitting}>
-              Начать тренировку
-            </Button>
+
+            <div className="section" style={{ display: 'grid', gap: 10, borderRadius: 20 }}>
+              <div style={{ fontSize: 16, fontWeight: 800 }}>Тренировки уровня {userLevel}</div>
+              <div style={{ color: 'var(--tg-subtle)', fontSize: 13 }}>
+                Проходи тренировки по порядку. Следующая открывается после завершения предыдущей.
+              </div>
+              <div
+                ref={trainingListRef}
+                style={{
+                  display: 'grid',
+                  gap: 8,
+                  maxHeight: 'min(56svh, 560px)',
+                  overflowY: 'auto',
+                  paddingRight: 4,
+                }}
+              >
+                {Array.from({ length: trainingPlan.totalSessions }).map((_, index) => {
+                  const number = index + 1;
+                  const isCompleted = number <= trainingPlan.completedSessions;
+                  const isNext = number === trainingPlan.nextSession && !isCompleted;
+                  const isCurrentLesson =
+                    number ===
+                    (trainingPlan.completedSessions >= trainingPlan.totalSessions
+                      ? trainingPlan.totalSessions
+                      : trainingPlan.nextSession);
+                  const isLocked = !isCompleted && !isNext;
+                  return (
+                    <div
+                      key={`session-${number}`}
+                      ref={isCurrentLesson ? currentTrainingRef : null}
+                      style={{
+                        borderRadius: 14,
+                        border: `1px solid ${
+                          isCompleted ? 'rgba(67,201,127,0.65)' : isNext ? 'rgba(78,197,255,0.55)' : 'var(--tg-border)'
+                        }`,
+                        background: isCompleted
+                          ? 'rgba(67,201,127,0.1)'
+                          : isNext
+                          ? 'rgba(46,163,255,0.1)'
+                          : 'rgba(255,255,255,0.02)',
+                        padding: '9px 10px',
+                        opacity: isLocked ? 0.55 : 1,
+                        filter: isLocked ? 'grayscale(0.5)' : 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800 }}>
+                          Тренировка {number}
+                        </div>
+                        <div style={{ color: 'var(--tg-subtle)', fontSize: 12 }}>
+                          ~{trainingPlan.targetWords} слов • {isCompleted ? 'Пройдена' : isNext ? 'Доступна сейчас' : 'Закрыта'}
+                        </div>
+                      </div>
+                      {isCompleted ? (
+                        <span style={{ color: '#79dca3', fontSize: 12, fontWeight: 800 }}>Готово</span>
+                      ) : isNext ? (
+                        <Button onClick={startOrResume} disabled={submitting} style={{ minHeight: 34, padding: '0 12px', fontSize: 14 }}>
+                          Начать
+                        </Button>
+                      ) : (
+                        <span style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>Заблок.</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </>
         )}
 
-        {!loading && session && task && task.mode === 'recognition' && !practiceView && renderRecognition(task)}
-        {!loading && session && task && task.mode === 'reinforcement' && !practiceView && renderReinforcement(task)}
+        {!loading &&
+          !postPracticeTransitioning &&
+          session &&
+          task &&
+          task.mode === 'recognition' &&
+          !practiceView &&
+          (!task.isNewWord || introducedWordKeys[task.wordKey]) &&
+          renderRecognition(task)}
+        {!loading && !postPracticeTransitioning && session && task && task.mode === 'reinforcement' && !practiceView && renderReinforcement(task)}
+        {!loading && postPracticeTransitioning && !practiceView && (
+          <div className="section" style={{ display: 'grid', placeItems: 'center', minHeight: 180, borderRadius: 22 }}>
+            <div style={{ color: 'var(--tg-subtle)', fontWeight: 600 }}>Загрузка следующего упражнения...</div>
+          </div>
+        )}
         {!loading && practiceView && (
           <div className="section" style={{ display: 'grid', gap: 12, borderRadius: 22 }}>
-            <strong style={{ fontSize: 25, lineHeight: 1.15, fontWeight: 600 }}>
-              Посмотри как используют это слово на практике
+            <strong style={{ fontSize: 21, lineHeight: 1.2, fontWeight: 600 }}>
+              Посмотри как слово{' '}
+              <span style={{ color: '#ffd54a', fontWeight: 700 }}>{practiceView.word}</span>{' '}
+              используется на практике
             </strong>
+            <div style={{ fontSize: 14, lineHeight: 1.35, color: 'var(--tg-subtle)' }}>
+              Нажимай на субтитры, чтобы смотреть перевод незнакомых слов.
+            </div>
             {practiceLoading ? (
               <div style={{ color: 'var(--tg-subtle)' }}>Загрузка примеров...</div>
             ) : practiceView.snippets.length ? (
               <SnippetCarousel
                 items={practiceView.snippets}
                 highlight={practiceView.word}
+                showFullVideoButton={false}
                 total={practiceView.snippets.length}
                 hasMore={false}
                 isLoadingMore={false}
@@ -1232,33 +1616,11 @@ export default function WordTrainingPage() {
             ) : (
               <div style={{ color: 'var(--tg-subtle)' }}>Примеры пока не найдены.</div>
             )}
-            <Button
-              onClick={() => void continueAfterPractice()}
-              disabled={submitting}
-              style={{ minHeight: 50, fontSize: 22, fontWeight: 700, borderRadius: 14, background: '#2ea3ff', boxShadow: 'none' }}
-            >
-              Продолжить
-            </Button>
           </div>
         )}
-        {!loading && state?.retryPhase && (
-          <div
-            className="section"
-            style={{
-              borderRadius: 16,
-              padding: 10,
-              fontWeight: 700,
-              background: 'rgba(255, 196, 64, 0.08)',
-              border: '1px solid rgba(255, 196, 64, 0.45)',
-            }}
-          >
-            {state.retryPhaseTitle ?? 'Закрепляем ошибки'}
-          </div>
-        )}
-
         {!loading && session && task && task.mode === 'recognition' &&
           renderBottomActionPanel({
-            visible: recognitionChecked && !practiceView,
+            visible: recognitionChecked && !practiceView && (!task.isNewWord || introducedWordKeys[task.wordKey]),
             isCorrect: recognitionResult === 'correct',
             title: recognitionResult === 'correct' ? 'Отлично!' : 'Неправильно',
             subtitle: `${task.word} - ${task.translation}`,
@@ -1282,18 +1644,155 @@ export default function WordTrainingPage() {
             },
           })}
 
+        {!loading && practiceView &&
+          renderBottomActionPanel({
+            visible: !practiceLoading,
+            isCorrect: true,
+            title: 'Продолжаем',
+            subtitle: null,
+            onNext: () => {
+              void continueAfterPractice();
+            },
+          })}
+
         {!loading && session && !task && (
-          <div className="section" style={{ display: 'grid', gap: 10 }}>
-            <div style={{ fontSize: 22, fontWeight: 800 }}>Сессия завершена</div>
-            <div style={{ color: 'var(--tg-subtle)' }}>
-              +{session.xpEarned} XP • Закрыто слов: {session.wordsCompleted}
-            </div>
-            {state?.summary && (
-              <div style={{ color: 'var(--tg-subtle)' }}>
-                За сегодня: {state.summary.totalWordsToday} слов и {state.summary.totalXpToday} XP
+          <div
+            className="section"
+            style={{
+              display: 'grid',
+              gap: 14,
+              minHeight: 'calc(100svh - 170px)',
+              alignContent: 'start',
+              borderRadius: 26,
+              padding: 16,
+              background:
+                'radial-gradient(120% 80% at 50% -5%, rgba(78,197,255,0.22) 0%, rgba(31,42,80,0.96) 58%, rgba(14,19,38,1) 100%)',
+              border: '1px solid rgba(78,197,255,0.24)',
+              boxShadow: '0 22px 45px rgba(0,0,0,0.35)',
+            }}
+          >
+            <div style={{ display: 'grid', gap: 4 }}>
+              <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.05 }}>
+                Отличная тренировка!
               </div>
-            )}
-            <Button onClick={load} disabled={submitting}>Обновить</Button>
+              <div style={{ color: 'var(--tg-subtle)', fontSize: 15, lineHeight: 1.35 }}>
+                Ты укрепил знания и продвинулся ещё дальше. Продолжаем в том же темпе.
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  borderRadius: 16,
+                  border: '1px solid rgba(78,197,255,0.28)',
+                  background: 'rgba(15, 24, 48, 0.72)',
+                  padding: '10px 10px 8px',
+                  display: 'grid',
+                  gap: 4,
+                }}
+              >
+                <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>XP</div>
+                <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1 }}>{`+${session.xpEarned}`}</div>
+              </div>
+              <div
+                style={{
+                  borderRadius: 16,
+                  border: '1px solid rgba(78,197,255,0.28)',
+                  background: 'rgba(15, 24, 48, 0.72)',
+                  padding: '10px 10px 8px',
+                  display: 'grid',
+                  gap: 4,
+                }}
+              >
+                <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>Слов</div>
+                <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1 }}>{session.wordsCompleted}</div>
+              </div>
+              <div
+                style={{
+                  borderRadius: 16,
+                  border: '1px solid rgba(78,197,255,0.28)',
+                  background: 'rgba(15, 24, 48, 0.72)',
+                  padding: '10px 10px 8px',
+                  display: 'grid',
+                  gap: 4,
+                }}
+              >
+                <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>Уровень</div>
+                <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1 }}>{auth.profile?.level ?? 'A1'}</div>
+              </div>
+            </div>
+
+            <div style={{ color: 'var(--tg-subtle)', fontSize: 14, fontWeight: 600 }}>
+              За сегодня: {state?.summary?.totalWordsToday ?? 0} слов и {state?.summary?.totalXpToday ?? 0} XP
+            </div>
+
+            <div
+              style={{
+                borderRadius: 18,
+                border: '1px solid rgba(78,197,255,0.2)',
+                background: 'rgba(9, 14, 30, 0.72)',
+                padding: 12,
+                display: 'grid',
+                gap: 10,
+              }}
+            >
+              <div style={{ fontSize: 15, fontWeight: 800 }}>Слова, которые ты закрепил</div>
+              {completedWords.length ? (
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {completedWords.map((item) => (
+                    <div
+                      key={item.wordKey}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                        borderRadius: 14,
+                        border: '1px solid var(--tg-border)',
+                        background: 'rgba(255,255,255,0.02)',
+                        padding: '8px 10px',
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.15 }}>{item.word}</div>
+                        <div style={{ color: 'var(--tg-subtle)', fontSize: 13, lineHeight: 1.25 }}>
+                          {item.translation}
+                        </div>
+                      </div>
+                      {item.cefrLevel ? (
+                        <span
+                          style={{
+                            borderRadius: 999,
+                            border: '1px solid rgba(78,197,255,0.42)',
+                            color: '#9ddfff',
+                            fontSize: 12,
+                            fontWeight: 800,
+                            padding: '4px 8px',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {item.cefrLevel}
+                        </span>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: 'var(--tg-subtle)', fontSize: 14 }}>
+                  Отличная работа. Продолжай тренировки, и здесь появятся закреплённые слова.
+                </div>
+              )}
+            </div>
+
+            <Button onClick={load} disabled={submitting} style={{ minHeight: 52, fontSize: 20, fontWeight: 800 }}>
+              К следующей тренировке
+            </Button>
           </div>
         )}
 
