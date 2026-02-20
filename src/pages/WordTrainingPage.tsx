@@ -3,7 +3,10 @@ import { createPortal } from 'react-dom';
 import { CheckCircle2, Volume2, X, XCircle } from 'lucide-react';
 
 import { useAppSelector } from '../app/hooks';
-import { selectAuth } from '../features/auth/slice';
+import { useAppDispatch } from '../app/hooks';
+import { selectAuth, setProfile } from '../features/auth/slice';
+import { usersApi } from '../features/users/api';
+import { dictionaryApi } from '../features/dictionary/api';
 import {
   type WordTrainingContext,
   type RecognitionTask,
@@ -29,8 +32,10 @@ const isWordToken = (value: string): boolean => /^[A-Za-z][A-Za-z'-]*$/.test(val
 const CEFR_LEVELS: Array<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'> = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 export default function WordTrainingPage() {
+  const dispatch = useAppDispatch();
   const auth = useAppSelector(selectAuth);
   const userId = auth.profile?.id ?? null;
+  const streakDays = auth.profile?.streakDays ?? 0;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +67,9 @@ export default function WordTrainingPage() {
   const [practiceLoading, setPracticeLoading] = useState(false);
   const [postPracticeTransitioning, setPostPracticeTransitioning] = useState(false);
   const [introducedWordKeys, setIntroducedWordKeys] = useState<Record<string, true>>({});
+  const [savedWordKeys, setSavedWordKeys] = useState<Record<string, true>>({});
+  const [savingWordKeys, setSavingWordKeys] = useState<Record<string, true>>({});
+  const [savingAllWords, setSavingAllWords] = useState(false);
   const snippetShownWordsRef = useRef<Set<string>>(new Set());
   const recognitionDoneWordsRef = useRef<Set<string>>(new Set());
   const lastStepHadSnippetRef = useRef(false);
@@ -106,6 +114,22 @@ export default function WordTrainingPage() {
       monthGoal,
     };
   }, [overview]);
+  const trainingPathNodes = useMemo(() => {
+    return Array.from({ length: trainingPlan.totalSessions }).map((_, index) => {
+      const number = index + 1;
+      const isCompleted = number <= trainingPlan.completedSessions;
+      const isCurrent = number === trainingPlan.nextSession;
+      const isLocked = !isCompleted && !isCurrent;
+      const lane = index % 3 === 0 ? -1 : index % 3 === 1 ? 1 : 0;
+      return {
+        number,
+        isCompleted,
+        isCurrent,
+        isLocked,
+        lane,
+      };
+    });
+  }, [trainingPlan.completedSessions, trainingPlan.nextSession, trainingPlan.totalSessions]);
   const lessonProgressPercent = useMemo(() => {
     if (!session) return 0;
     if (task && task.queueTotal > 0) {
@@ -116,6 +140,16 @@ export default function WordTrainingPage() {
     }
     return 0;
   }, [session, task]);
+  const lessonProgressLabel = useMemo(() => {
+    if (!session) return '';
+    if (task && task.queueTotal > 0) {
+      return `Упражнение ${task.queuePosition}/${task.queueTotal} • ${lessonProgressPercent}%`;
+    }
+    if (session.targetWords > 0) {
+      return `Слов: ${session.wordsCompleted}/${session.targetWords} • ${lessonProgressPercent}%`;
+    }
+    return `${lessonProgressPercent}%`;
+  }, [lessonProgressPercent, session, task]);
   const isNewWordIntroVisible = Boolean(
     session &&
       task &&
@@ -348,6 +382,10 @@ export default function WordTrainingPage() {
     setError(null);
 
     try {
+      const streakResult = await usersApi.refreshStreak(userId);
+      if (auth.profile) {
+        dispatch(setProfile({ ...auth.profile, streakDays: streakResult.streakDays }));
+      }
       const data = await wordTrainingApi.getOverview(userId);
       setOverview(data);
 
@@ -406,6 +444,16 @@ export default function WordTrainingPage() {
     setIntroducedWordKeys({});
   }, [session?.id]);
 
+  useEffect(() => {
+    if (session?.status !== 'completed') {
+      setSavedWordKeys({});
+      setSavingWordKeys({});
+      setSavingAllWords(false);
+      return;
+    }
+    setSavedWordKeys((prev) => prev);
+  }, [session?.status]);
+
   useEffect(
     () => () => {
       if (!feedbackAudioRef.current) return;
@@ -419,6 +467,18 @@ export default function WordTrainingPage() {
     },
     [],
   );
+
+  useEffect(() => {
+    if (!session || session.status !== 'completed' || !userId || !auth.profile) return;
+    void usersApi
+      .refreshStreak(userId)
+      .then((result) => {
+        dispatch(setProfile({ ...auth.profile!, streakDays: result.streakDays }));
+      })
+      .catch(() => {
+        // ignore non-blocking streak update errors
+      });
+  }, [auth.profile, dispatch, session, userId]);
 
   const startOrResume = async () => {
     if (!userId) return;
@@ -451,7 +511,7 @@ export default function WordTrainingPage() {
               higherLevelWeight: 0.15,
             },
             reinforcementMode: {
-              phraseExercisesPerWord: 2,
+              phraseExercisesPerWord: 3,
               retryMistakesAtEnd: true,
             },
           },
@@ -484,6 +544,53 @@ export default function WordTrainingPage() {
       setSubmitting(false);
     }
   };
+
+  const addCompletedWordToDictionary = useCallback(
+    async (item: { wordKey: string; word: string; translation: string }) => {
+      if (!userId) return;
+      if (savedWordKeys[item.wordKey] || savingWordKeys[item.wordKey]) return;
+      setSavingWordKeys((prev) => ({ ...prev, [item.wordKey]: true }));
+      try {
+        await dictionaryApi.addUserDictionaryEntry(userId, {
+          query: item.word,
+          lang: 'en',
+          word: item.word,
+          translation: item.translation,
+        });
+        setSavedWordKeys((prev) => ({ ...prev, [item.wordKey]: true }));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Не удалось добавить слово в словарь');
+      } finally {
+        setSavingWordKeys((prev) => {
+          const next = { ...prev };
+          delete next[item.wordKey];
+          return next;
+        });
+      }
+    },
+    [savedWordKeys, savingWordKeys, userId],
+  );
+
+  const addAllCompletedWordsToDictionary = useCallback(async () => {
+    if (!userId || savingAllWords || !completedWords.length) return;
+    setSavingAllWords(true);
+    try {
+      for (const item of completedWords) {
+        if (savedWordKeys[item.wordKey]) continue;
+        await dictionaryApi.addUserDictionaryEntry(userId, {
+          query: item.word,
+          lang: 'en',
+          word: item.word,
+          translation: item.translation,
+        });
+        setSavedWordKeys((prev) => ({ ...prev, [item.wordKey]: true }));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось добавить слова в словарь');
+    } finally {
+      setSavingAllWords(false);
+    }
+  }, [completedWords, savedWordKeys, savingAllWords, userId]);
 
   const submitRecognitionResult = async (recognition: RecognitionTask): Promise<boolean> => {
     if (!userId || !session) return false;
@@ -642,13 +749,16 @@ export default function WordTrainingPage() {
         !lastStepHadSnippetRef.current;
 
       if (canShowPractice) {
-        snippetShownWordsRef.current.add(wordKey!);
-        lastStepHadSnippetRef.current = true;
-        await openPracticeBetweenSteps({
-          word: reinforcementTask.word,
-          nextMode: 'reinforcement',
-        });
-        return;
+        // Randomize snippet placement so flow is not always word -> phrase -> snippet.
+        if (Math.random() < 0.55) {
+          snippetShownWordsRef.current.add(wordKey!);
+          lastStepHadSnippetRef.current = true;
+          await openPracticeBetweenSteps({
+            word: reinforcementTask.word,
+            nextMode: 'reinforcement',
+          });
+          return;
+        }
       }
 
       lastStepHadSnippetRef.current = false;
@@ -779,6 +889,23 @@ export default function WordTrainingPage() {
           </button>
         </div>
 
+        {recognition.cefrLevel ? (
+          <div
+            style={{
+              width: 'fit-content',
+              borderRadius: 999,
+              border: '1px solid var(--tg-border)',
+              background: 'var(--tg-card)',
+              padding: '4px 10px',
+              fontSize: 12,
+              fontWeight: 800,
+              color: 'var(--tg-subtle)',
+            }}
+          >
+            CEFR: {recognition.cefrLevel}
+          </div>
+        ) : null}
+
         {otherTranslations.length ? (
           <div style={{ display: 'grid', gap: 6 }}>
             <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>
@@ -831,6 +958,7 @@ export default function WordTrainingPage() {
                   }}
                   style={{
                     ...slotBaseStyle,
+                    margin: '0 3px',
                     border: reinforcementChecked
                       ? isSlotCorrect
                         ? '3px solid rgba(67, 201, 127, 0.85)'
@@ -892,7 +1020,18 @@ export default function WordTrainingPage() {
     const maxSlots = targetTokens.length;
 
     const answerUsage = getTokenUsage(assembleAnswer);
-    const bankUsageLimit = getTokenUsage(assembleTokens);
+    const usageLeft = new Map(answerUsage);
+    const availableBankTokens: Array<{ token: string; sourceIndex: number }> = [];
+    for (let sourceIndex = 0; sourceIndex < assembleTokens.length; sourceIndex += 1) {
+      const token = assembleTokens[sourceIndex];
+      const key = normalizeLoose(token);
+      const usedCount = usageLeft.get(key) ?? 0;
+      if (usedCount > 0) {
+        usageLeft.set(key, usedCount - 1);
+        continue;
+      }
+      availableBankTokens.push({ token, sourceIndex });
+    }
 
     return (
       <>
@@ -957,15 +1096,12 @@ export default function WordTrainingPage() {
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {assembleTokens.map((token, index) => {
-            const key = normalizeLoose(token);
-            const used = answerUsage.get(key) ?? 0;
-            const max = bankUsageLimit.get(key) ?? 0;
-            const disabled = reinforcementChecked || used >= max || assembleAnswer.length >= maxSlots;
+          {availableBankTokens.map(({ token, sourceIndex }) => {
+            const disabled = reinforcementChecked || assembleAnswer.length >= maxSlots;
 
             return (
               <button
-                key={`${token}-${index}`}
+                key={`${sourceIndex}-${token}`}
                 type="button"
                 onClick={() => {
                   if (disabled) return;
@@ -975,9 +1111,9 @@ export default function WordTrainingPage() {
                 style={{
                   ...optionButtonBaseStyle,
                   border: '1px solid var(--tg-border)',
-                  background: disabled ? 'rgba(255,255,255,0.02)' : 'var(--tg-card)',
+                  background: 'var(--tg-card)',
                   color: 'var(--tg-text)',
-                  opacity: disabled ? 0.55 : 1,
+                  opacity: disabled ? 0.75 : 1,
                 }}
               >
                 {token}
@@ -1134,6 +1270,7 @@ export default function WordTrainingPage() {
     subtitle?: string | null;
     onNext: () => void;
     buttonLabel?: string;
+    hideMessageBox?: boolean;
   }) => {
     if (!params.visible) return null;
     if (typeof document === 'undefined') return null;
@@ -1158,24 +1295,26 @@ export default function WordTrainingPage() {
           gap: 10,
         }}
       >
-        <div
-          style={{
-            borderRadius: 12,
-            padding: '10px 12px',
-            border: `1px solid ${params.isCorrect ? 'rgba(67, 201, 127, 0.65)' : 'rgba(255, 95, 109, 0.65)'}`,
-            background: params.isCorrect ? 'rgba(67, 201, 127, 0.12)' : 'rgba(255, 95, 109, 0.12)',
-            display: 'grid',
-            gap: 4,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
-            {params.isCorrect ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-            {params.title}
+        {!params.hideMessageBox ? (
+          <div
+            style={{
+              borderRadius: 12,
+              padding: '10px 12px',
+              border: `1px solid ${params.isCorrect ? 'rgba(67, 201, 127, 0.65)' : 'rgba(255, 95, 109, 0.65)'}`,
+              background: params.isCorrect ? 'rgba(67, 201, 127, 0.12)' : 'rgba(255, 95, 109, 0.12)',
+              display: 'grid',
+              gap: 4,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
+              {params.isCorrect ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+              {params.title}
+            </div>
+            {params.subtitle ? (
+              <div style={{ color: 'var(--tg-subtle)', fontWeight: 600 }}>{params.subtitle}</div>
+            ) : null}
           </div>
-          {params.subtitle ? (
-            <div style={{ color: 'var(--tg-subtle)', fontWeight: 600 }}>{params.subtitle}</div>
-          ) : null}
-        </div>
+        ) : null}
 
         <Button
           onClick={params.onNext}
@@ -1193,13 +1332,14 @@ export default function WordTrainingPage() {
     <div className="section" style={{ display: 'grid', gap: 12, borderRadius: 22 }}>
       {(() => {
         const isMatchPairs = reinforcement.reinforcement.type === 'match_pairs';
+        const isMissing = reinforcement.reinforcement.type === 'missing';
         return (
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
         <strong
           style={
             isMatchPairs
               ? { fontSize: 25, lineHeight: 1.15, fontWeight: 600, marginBottom: 24, display: 'inline-block' }
-              : reinforcement.reinforcement.type === 'missing'
+              : isMissing
               ? { fontSize: 25, lineHeight: 1.15, fontWeight: 600, marginBottom: 20, display: 'inline-block' }
               : undefined
           }
@@ -1212,26 +1352,11 @@ export default function WordTrainingPage() {
             ? 'Собери фразу из слов'
             : 'Закрепление'}
         </strong>
-      </div>
-        );
-      })()}
-
-      {(reinforcement.reinforcement.type === 'audio_assemble' || reinforcement.reinforcement.type === 'missing') && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+        {isMissing && (
           <button
             type="button"
-            onClick={() =>
-              void playAudioUrl(
-                reinforcement.reinforcement.type === 'missing'
-                  ? reinforcement.reinforcement.phraseAudioUrl ?? null
-                  : reinforcement.pronunciationAudioUrl ?? null,
-              )
-            }
-            disabled={
-              reinforcement.reinforcement.type === 'missing'
-                ? !reinforcement.reinforcement.phraseAudioUrl
-                : !reinforcement.pronunciationAudioUrl
-            }
+            onClick={() => void playAudioUrl(reinforcement.reinforcement.phraseAudioUrl ?? null)}
+            disabled={!reinforcement.reinforcement.phraseAudioUrl}
             aria-label="Проиграть аудио"
             style={{
               width: 40,
@@ -1243,14 +1368,39 @@ export default function WordTrainingPage() {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              opacity:
-                reinforcement.reinforcement.type === 'missing'
-                  ? reinforcement.reinforcement.phraseAudioUrl
-                    ? 1
-                    : 0.45
-                  : reinforcement.pronunciationAudioUrl
-                  ? 1
-                  : 0.45,
+              opacity: reinforcement.reinforcement.phraseAudioUrl ? 1 : 0.45,
+              flexShrink: 0,
+            }}
+          >
+            <Volume2 size={18} />
+          </button>
+        )}
+      </div>
+        );
+      })()}
+
+      {reinforcement.reinforcement.type === 'audio_assemble' && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+          <button
+            type="button"
+            onClick={() =>
+              void playAudioUrl(
+                reinforcement.pronunciationAudioUrl ?? null,
+              )
+            }
+            disabled={!reinforcement.pronunciationAudioUrl}
+            aria-label="Проиграть аудио"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 16,
+              border: '1px solid var(--tg-border)',
+              background: 'var(--tg-card)',
+              color: 'var(--tg-text)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: reinforcement.pronunciationAudioUrl ? 1 : 0.45,
             }}
           >
             <Volume2 size={18} />
@@ -1266,11 +1416,14 @@ export default function WordTrainingPage() {
         <Button
           onClick={submitReinforcement}
           disabled={submitting || (!reinforcementChecked && !canCheckReinforcement)}
-          style={
-            !reinforcementChecked
-              ? { background: '#2ea3ff', boxShadow: 'none' }
-              : undefined
-          }
+          style={{
+            minHeight: 50,
+            fontSize: 20,
+            fontWeight: 700,
+            borderRadius: 14,
+            background: 'var(--tg-accent)',
+            boxShadow: 'none',
+          }}
         >
           {reinforcementChecked ? 'Далее' : 'Проверить'}
         </Button>
@@ -1321,7 +1474,7 @@ export default function WordTrainingPage() {
               </button>
               <div
                 style={{
-                  height: 14,
+                  height: 9,
                   flex: 1,
                   background: 'var(--tg-border)',
                   borderRadius: 999,
@@ -1337,6 +1490,9 @@ export default function WordTrainingPage() {
                   }}
                 />
               </div>
+            </div>
+            <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700, lineHeight: 1 }}>
+              {lessonProgressLabel}
             </div>
             {!loading && state?.retryPhase && (
               <div
@@ -1391,6 +1547,23 @@ export default function WordTrainingPage() {
               </div>
               <div style={{ color: 'var(--tg-subtle)', fontSize: 14 }}>
                 Изучай шаг за шагом: открывай тренировки подряд и поднимайся по CEFR.
+              </div>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  width: 'fit-content',
+                  borderRadius: 999,
+                  border: '1px solid var(--tg-border)',
+                  background: 'var(--tg-card)',
+                  padding: '5px 10px',
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                <span style={{ fontSize: 15, lineHeight: 1 }}>🔥</span>
+                Серия: {streakDays} дн.
               </div>
 
               <div
@@ -1495,77 +1668,134 @@ export default function WordTrainingPage() {
             <div className="section" style={{ display: 'grid', gap: 10, borderRadius: 20 }}>
               <div style={{ fontSize: 16, fontWeight: 800 }}>Тренировки уровня {userLevel}</div>
               <div style={{ color: 'var(--tg-subtle)', fontSize: 13 }}>
-                Проходи тренировки по порядку. Следующая открывается после завершения предыдущей.
+                Двигайся по пути. Открой текущую тренировку и продвигайся дальше по маршруту.
               </div>
               <div
                 ref={trainingListRef}
                 style={{
-                  display: 'grid',
-                  gap: 8,
-                  maxHeight: 'min(56svh, 560px)',
+                  maxHeight: 'min(62svh, 640px)',
                   overflowY: 'auto',
-                  paddingRight: 4,
+                  paddingRight: 6,
+                  paddingBottom: 10,
                 }}
               >
-                {Array.from({ length: trainingPlan.totalSessions }).map((_, index) => {
-                  const number = index + 1;
-                  const isCompleted = number <= trainingPlan.completedSessions;
-                  const isNext = number === trainingPlan.nextSession && !isCompleted;
-                  const isCurrentLesson =
-                    number ===
-                    (trainingPlan.completedSessions >= trainingPlan.totalSessions
-                      ? trainingPlan.totalSessions
-                      : trainingPlan.nextSession);
-                  const isLocked = !isCompleted && !isNext;
-                  return (
+                <div style={{ position: 'relative', display: 'grid', gap: 18, padding: '8px 0 22px' }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      bottom: 0,
+                      left: '50%',
+                      width: 4,
+                      transform: 'translateX(-50%)',
+                      borderRadius: 999,
+                      background: 'rgba(255,255,255,0.08)',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                  {trainingPathNodes.map((node) => {
+                    const isCurrentLesson = node.isCurrent;
+                    const offsetX = node.lane === -1 ? -62 : node.lane === 1 ? 62 : 0;
+                    return (
                     <div
-                      key={`session-${number}`}
+                      key={`session-${node.number}`}
                       ref={isCurrentLesson ? currentTrainingRef : null}
                       style={{
-                        borderRadius: 14,
-                        border: `1px solid ${
-                          isCompleted ? 'rgba(34, 197, 94, 0.65)' : isNext ? 'rgba(96, 165, 250, 0.7)' : 'var(--tg-border)'
-                        }`,
-                        background: 'var(--tg-card)',
-                        padding: '9px 10px',
-                        opacity: isLocked ? 0.55 : 1,
-                        filter: isLocked ? 'grayscale(0.5)' : 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 10,
+                        justifySelf: 'center',
+                        transform: `translateX(${offsetX}px)`,
+                        width: 'min(220px, calc(100% - 28px))',
+                        zIndex: 1,
+                        display: 'grid',
+                        gap: 8,
+                        opacity: node.isLocked ? 0.58 : 1,
+                        filter: node.isLocked ? 'grayscale(0.45)' : 'none',
                       }}
                     >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 800 }}>
-                          Тренировка {number}
-                        </div>
-                        <div style={{ color: 'var(--tg-subtle)', fontSize: 12 }}>
-                          ~{trainingPlan.targetWords} слов • {isCompleted ? 'Пройдена' : isNext ? 'Доступна сейчас' : 'Закрыта'}
-                        </div>
-                      </div>
-                      {isCompleted ? (
-                        <span style={{ color: 'rgba(34, 197, 94, 0.95)', fontSize: 12, fontWeight: 800 }}>Готово</span>
-                      ) : isNext ? (
-                        <Button
-                          onClick={startOrResume}
-                          disabled={submitting}
+                      <div
+                        style={{
+                          display: 'grid',
+                          justifyItems: 'center',
+                          gap: 8,
+                          borderRadius: 20,
+                          padding: '10px 10px 9px',
+                          border: `1px solid ${
+                            node.isCompleted
+                              ? 'rgba(34, 197, 94, 0.7)'
+                              : node.isCurrent
+                              ? 'rgba(96, 165, 250, 0.8)'
+                              : 'var(--tg-border)'
+                          }`,
+                          background: 'var(--tg-card)',
+                        }}
+                      >
+                        <button
+                          type="button"
+                          disabled={node.isLocked || submitting}
+                          onClick={() => {
+                            if (node.isCurrent) void startOrResume();
+                          }}
                           style={{
-                            minHeight: 34,
-                            padding: '0 12px',
-                            fontSize: 14,
-                            background: 'var(--tg-accent)',
-                            boxShadow: 'none',
+                            width: 78,
+                            height: 78,
+                            borderRadius: 999,
+                            border: `3px solid ${
+                              node.isCompleted
+                                ? 'rgba(34, 197, 94, 0.88)'
+                                : node.isCurrent
+                                ? 'rgba(96, 165, 250, 0.88)'
+                                : 'var(--tg-border)'
+                            }`,
+                            background: node.isCompleted
+                              ? 'rgba(34, 197, 94, 0.12)'
+                              : node.isCurrent
+                              ? 'rgba(96, 165, 250, 0.14)'
+                              : 'rgba(255,255,255,0.02)',
+                            color: 'var(--tg-text)',
+                            fontSize: 26,
+                            fontWeight: 900,
+                            lineHeight: 1,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: node.isLocked ? 'default' : 'pointer',
                           }}
                         >
-                          Начать
-                        </Button>
-                      ) : (
-                        <span style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>Заблок.</span>
-                      )}
+                          {node.number}
+                        </button>
+                        <div style={{ textAlign: 'center', display: 'grid', gap: 2 }}>
+                          <div style={{ fontSize: 14, fontWeight: 800 }}>Тренировка {node.number}</div>
+                          <div style={{ color: 'var(--tg-subtle)', fontSize: 12 }}>
+                            ~{trainingPlan.targetWords} слов
+                          </div>
+                        </div>
+                        {node.isCompleted ? (
+                          <span style={{ color: 'rgba(34, 197, 94, 0.95)', fontSize: 12, fontWeight: 800 }}>
+                            Пройдена
+                          </span>
+                        ) : node.isCurrent ? (
+                          <Button
+                            onClick={startOrResume}
+                            disabled={submitting}
+                            style={{
+                              minHeight: 34,
+                              padding: '0 14px',
+                              fontSize: 14,
+                              background: 'var(--tg-accent)',
+                              boxShadow: 'none',
+                            }}
+                          >
+                            Начать
+                          </Button>
+                        ) : (
+                          <span style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>
+                            Закрыта
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
+              </div>
               </div>
             </div>
           </>
@@ -1588,9 +1818,9 @@ export default function WordTrainingPage() {
         {!loading && practiceView && (
           <div className="section" style={{ display: 'grid', gap: 12, borderRadius: 22 }}>
             <strong style={{ fontSize: 21, lineHeight: 1.2, fontWeight: 600 }}>
-              Посмотри как слово{' '}
+              Послушай слово{' '}
               <span style={{ color: '#ffd54a', fontWeight: 700 }}>{practiceView.word}</span>{' '}
-              используется на практике
+              в живой речи
             </strong>
             <div style={{ fontSize: 14, lineHeight: 1.35, color: 'var(--tg-subtle)' }}>
               Нажимай на субтитры, чтобы смотреть перевод незнакомых слов.
@@ -1657,6 +1887,7 @@ export default function WordTrainingPage() {
             isCorrect: true,
             title: 'Продолжаем',
             subtitle: null,
+            hideMessageBox: true,
             onNext: () => {
               void continueAfterPractice();
             },
@@ -1673,12 +1904,29 @@ export default function WordTrainingPage() {
               borderRadius: 26,
               padding: 16,
               background: 'var(--tg-card)',
-              border: '1px solid var(--tg-border)',
+              border: '1px solid rgba(96, 165, 250, 0.45)',
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
+            <div
+              style={{
+                position: 'absolute',
+                top: 10,
+                right: 18,
+                fontSize: 30,
+                animation: 'reward-float 2.6s ease-in-out infinite',
+                pointerEvents: 'none',
+              }}
+            >
+              ✨
+            </div>
             <div style={{ display: 'grid', gap: 4 }}>
-              <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.05 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 28, lineHeight: 1, animation: 'reward-bounce 1.8s ease-in-out infinite' }}>🏆</span>
+                <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.05 }}>
                 Отличная тренировка!
+                </div>
               </div>
               <div style={{ color: 'var(--tg-subtle)', fontSize: 15, lineHeight: 1.35 }}>
                 Ты укрепил знания и продвинулся ещё дальше. Продолжаем в том же темпе.
@@ -1700,6 +1948,7 @@ export default function WordTrainingPage() {
                   padding: '10px 10px 8px',
                   display: 'grid',
                   gap: 4,
+                  animation: 'reward-pop 360ms ease both',
                 }}
               >
                 <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>XP</div>
@@ -1713,6 +1962,7 @@ export default function WordTrainingPage() {
                   padding: '10px 10px 8px',
                   display: 'grid',
                   gap: 4,
+                  animation: 'reward-pop 420ms ease both',
                 }}
               >
                 <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>Слов</div>
@@ -1726,6 +1976,7 @@ export default function WordTrainingPage() {
                   padding: '10px 10px 8px',
                   display: 'grid',
                   gap: 4,
+                  animation: 'reward-pop 480ms ease both',
                 }}
               >
                 <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>Уровень</div>
@@ -1735,6 +1986,23 @@ export default function WordTrainingPage() {
 
             <div style={{ color: 'var(--tg-subtle)', fontSize: 14, fontWeight: 600 }}>
               За сегодня: {state?.summary?.totalWordsToday ?? 0} слов и {state?.summary?.totalXpToday ?? 0} XP
+            </div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                width: 'fit-content',
+                borderRadius: 999,
+                border: '1px solid var(--tg-border)',
+                background: 'var(--tg-card)',
+                padding: '6px 12px',
+                fontSize: 14,
+                fontWeight: 800,
+              }}
+            >
+              <span style={{ fontSize: 16, lineHeight: 1 }}>🔥</span>
+              Серия: {streakDays} дней
             </div>
 
             <div
@@ -1749,8 +2017,28 @@ export default function WordTrainingPage() {
             >
               <div style={{ fontSize: 15, fontWeight: 800 }}>Слова, которые ты закрепил</div>
               {completedWords.length ? (
+                <Button
+                  onClick={() => void addAllCompletedWordsToDictionary()}
+                  disabled={savingAllWords || completedWords.every((item) => Boolean(savedWordKeys[item.wordKey]))}
+                  style={{
+                    minHeight: 40,
+                    borderRadius: 12,
+                    fontSize: 15,
+                    fontWeight: 700,
+                    background: 'var(--tg-accent)',
+                    boxShadow: 'none',
+                  }}
+                >
+                  {completedWords.every((item) => Boolean(savedWordKeys[item.wordKey]))
+                    ? 'Все слова сохранены'
+                    : savingAllWords
+                    ? 'Сохраняем...'
+                    : 'Добавить все в словарь'}
+                </Button>
+              ) : null}
+              {completedWords.length ? (
                 <div style={{ display: 'grid', gap: 8 }}>
-                  {completedWords.map((item) => (
+                  {completedWords.map((item, index) => (
                     <div
                       key={item.wordKey}
                       style={{
@@ -1762,6 +2050,8 @@ export default function WordTrainingPage() {
                         border: '1px solid var(--tg-border)',
                         background: 'rgba(255,255,255,0.02)',
                         padding: '8px 10px',
+                        animation: `reward-pop 320ms ease both`,
+                        animationDelay: `${index * 70}ms`,
                       }}
                     >
                       <div style={{ minWidth: 0 }}>
@@ -1785,6 +2075,27 @@ export default function WordTrainingPage() {
                           {item.cefrLevel}
                         </span>
                       ) : null}
+                      <Button
+                        onClick={() => void addCompletedWordToDictionary(item)}
+                        disabled={Boolean(savedWordKeys[item.wordKey] || savingWordKeys[item.wordKey])}
+                        style={{
+                          minHeight: 32,
+                          padding: '0 10px',
+                          borderRadius: 10,
+                          fontSize: 13,
+                          fontWeight: 700,
+                          background: savedWordKeys[item.wordKey] ? 'rgba(67, 201, 127, 0.2)' : 'var(--tg-accent)',
+                          color: savedWordKeys[item.wordKey] ? 'var(--tg-success)' : '#0b1220',
+                          boxShadow: 'none',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {savedWordKeys[item.wordKey]
+                          ? 'Сохранено'
+                          : savingWordKeys[item.wordKey]
+                          ? '...'
+                          : 'В словарь'}
+                      </Button>
                     </div>
                   ))}
                 </div>

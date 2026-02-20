@@ -64,6 +64,7 @@ export interface RecognitionTask {
   queuePosition: number;
   queueTotal: number;
   context: WordTrainingContext | null;
+  cefrLevel?: CefrLevel | null;
   isNewWord?: boolean;
   otherTranslations?: string[];
   recognitionOptions: string[];
@@ -82,6 +83,7 @@ export interface ReinforcementTask {
   queuePosition: number;
   queueTotal: number;
   context: WordTrainingContext | null;
+  cefrLevel?: CefrLevel | null;
   reinforcement: {
     type: ExerciseType;
     sentence?: string;
