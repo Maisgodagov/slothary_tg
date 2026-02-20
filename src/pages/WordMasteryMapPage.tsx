@@ -98,7 +98,7 @@ export default function WordMasteryMapPage() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(20, minmax(0, 1fr))",
+                      gridTemplateColumns: "repeat(23, minmax(0, 1fr))",
                       gap: 4,
                     }}
                   >
