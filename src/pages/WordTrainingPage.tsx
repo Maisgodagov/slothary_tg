@@ -6,9 +6,9 @@ import { useAppSelector } from '../app/hooks';
 import { useAppDispatch } from '../app/hooks';
 import { selectAuth, setProfile } from '../features/auth/slice';
 import { usersApi } from '../features/users/api';
-import { dictionaryApi } from '../features/dictionary/api';
 import {
   type WordTrainingContext,
+  type WordTrainingMasteryMap,
   type RecognitionTask,
   type ReinforcementTask,
   type WordTrainingOverview,
@@ -30,6 +30,13 @@ const normalize = (value: string): string =>
 const normalizeLoose = (value: string): string => normalize(value.replace(/[.,!?;:]/g, ' '));
 const isWordToken = (value: string): boolean => /^[A-Za-z][A-Za-z'-]*$/.test(value);
 const CEFR_LEVELS: Array<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'> = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+const MASTERY_BG = {
+  known: '#2ac46f',
+  learning: '#f2c94c',
+  new: 'rgba(255,255,255,0.16)',
+} as const;
+const MASTERY_CELL_ANIMATION_MS = 2400;
+const MASTERY_CELL_ANIMATION_GAP_MS = 220;
 
 export default function WordTrainingPage() {
   const dispatch = useAppDispatch();
@@ -41,6 +48,12 @@ export default function WordTrainingPage() {
   const [error, setError] = useState<string | null>(null);
   const [overview, setOverview] = useState<WordTrainingOverview | null>(null);
   const [state, setState] = useState<WordTrainingState | null>(null);
+  const [masteryMap, setMasteryMap] = useState<WordTrainingMasteryMap | null>(null);
+  const [masteryLoading, setMasteryLoading] = useState(false);
+  const [completionStage, setCompletionStage] = useState<'praise' | 'map'>('praise');
+  const [animatedFilledCellIds, setAnimatedFilledCellIds] = useState<Record<number, true>>({});
+  const [animatingCellId, setAnimatingCellId] = useState<number | null>(null);
+  const [debugAnimationCellIds, setDebugAnimationCellIds] = useState<number[] | null>(null);
 
   const [assembleAnswer, setAssembleAnswer] = useState<string[]>([]);
   const [recognitionSelected, setRecognitionSelected] = useState<string | null>(null);
@@ -67,69 +80,17 @@ export default function WordTrainingPage() {
   const [practiceLoading, setPracticeLoading] = useState(false);
   const [postPracticeTransitioning, setPostPracticeTransitioning] = useState(false);
   const [introducedWordKeys, setIntroducedWordKeys] = useState<Record<string, true>>({});
-  const [savedWordKeys, setSavedWordKeys] = useState<Record<string, true>>({});
-  const [savingWordKeys, setSavingWordKeys] = useState<Record<string, true>>({});
-  const [savingAllWords, setSavingAllWords] = useState(false);
   const snippetShownWordsRef = useRef<Set<string>>(new Set());
   const recognitionDoneWordsRef = useRef<Set<string>>(new Set());
   const lastStepHadSnippetRef = useRef(false);
-  const trainingListRef = useRef<HTMLDivElement | null>(null);
-  const currentTrainingRef = useRef<HTMLDivElement | null>(null);
+  const completionTimerRef = useRef<number | null>(null);
+  const refreshedStreakSessionRef = useRef<string | null>(null);
 
   const session = state?.session ?? null;
   const task = state?.task ?? null;
   const taskId = task?.itemId ?? null;
   const completedWords = state?.summary?.completedWords ?? [];
   const userLevel = (auth.profile?.level || 'A1').toUpperCase();
-  const currentLevelIndex = Math.max(0, CEFR_LEVELS.indexOf(userLevel as (typeof CEFR_LEVELS)[number]));
-  const trainingPlan = useMemo(() => {
-    if (!overview) {
-      return {
-        targetWords: 5,
-        totalSessions: 1,
-        completedSessions: 0,
-        nextSession: 1,
-        dayGoal: 3,
-        weekGoal: 21,
-        monthGoal: 90,
-      };
-    }
-    const targetWords = Math.max(1, overview.suggestedTargetWords || 5);
-    const dayWordPool = Math.max(0, overview.dueCount + overview.mistakeCount + Math.min(overview.newCount, 24));
-    const baseTotalSessions = Math.max(1, Math.min(12, Math.ceil(dayWordPool / targetWords)));
-    const completedSessions = Math.max(0, overview.todayProgress.sessionsDone || 0);
-    // Always keep one more session open so user can continue training without a hard stop.
-    const totalSessions = Math.max(baseTotalSessions, completedSessions + 1);
-    const nextSession = completedSessions + 1;
-    const dayGoal = Math.max(3, Math.min(8, totalSessions));
-    const weekGoal = dayGoal * 7;
-    const monthGoal = dayGoal * 30;
-    return {
-      targetWords,
-      totalSessions,
-      completedSessions,
-      nextSession,
-      dayGoal,
-      weekGoal,
-      monthGoal,
-    };
-  }, [overview]);
-  const trainingPathNodes = useMemo(() => {
-    return Array.from({ length: trainingPlan.totalSessions }).map((_, index) => {
-      const number = index + 1;
-      const isCompleted = number <= trainingPlan.completedSessions;
-      const isCurrent = number === trainingPlan.nextSession;
-      const isLocked = !isCompleted && !isCurrent;
-      const lane = index % 3 === 0 ? -1 : index % 3 === 1 ? 1 : 0;
-      return {
-        number,
-        isCompleted,
-        isCurrent,
-        isLocked,
-        lane,
-      };
-    });
-  }, [trainingPlan.completedSessions, trainingPlan.nextSession, trainingPlan.totalSessions]);
   const lessonProgressPercent = useMemo(() => {
     if (!session) return 0;
     if (task && task.queueTotal > 0) {
@@ -159,27 +120,6 @@ export default function WordTrainingPage() {
       !practiceView &&
       !postPracticeTransitioning,
   );
-
-  useEffect(() => {
-    if (loading || session || !overview) return;
-    if (!trainingListRef.current || !currentTrainingRef.current) return;
-    const raf = window.requestAnimationFrame(() => {
-      currentTrainingRef.current?.scrollIntoView({
-        block: 'center',
-        inline: 'nearest',
-        behavior: 'auto',
-      });
-    });
-    return () => window.cancelAnimationFrame(raf);
-  }, [
-    loading,
-    session,
-    overview,
-    userLevel,
-    trainingPlan.totalSessions,
-    trainingPlan.completedSessions,
-    trainingPlan.nextSession,
-  ]);
 
   const optionButtonBaseStyle = {
     minHeight: 48,
@@ -380,14 +320,19 @@ export default function WordTrainingPage() {
     if (!userId) return;
     setLoading(true);
     setError(null);
+    setMasteryLoading(true);
 
     try {
       const streakResult = await usersApi.refreshStreak(userId);
       if (auth.profile) {
         dispatch(setProfile({ ...auth.profile, streakDays: streakResult.streakDays }));
       }
-      const data = await wordTrainingApi.getOverview(userId);
+      const [data, mastery] = await Promise.all([
+        wordTrainingApi.getOverview(userId),
+        wordTrainingApi.getMasteryMap(userId, auth.profile?.role ?? null).catch(() => null),
+      ]);
       setOverview(data);
+      setMasteryMap(mastery);
 
       if (data.activeSession?.id) {
         const sessionState = await wordTrainingApi.getSession(data.activeSession.id, userId);
@@ -398,6 +343,7 @@ export default function WordTrainingPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {
+      setMasteryLoading(false);
       setLoading(false);
     }
   };
@@ -446,13 +392,66 @@ export default function WordTrainingPage() {
 
   useEffect(() => {
     if (session?.status !== 'completed') {
-      setSavedWordKeys({});
-      setSavingWordKeys({});
-      setSavingAllWords(false);
-      return;
+      setCompletionStage('praise');
+      setAnimatedFilledCellIds({});
+      setAnimatingCellId(null);
+      setDebugAnimationCellIds(null);
     }
-    setSavedWordKeys((prev) => prev);
   }, [session?.status]);
+
+  useEffect(() => {
+    if (session?.status !== 'completed' || task) return;
+    if (completionTimerRef.current) {
+      window.clearTimeout(completionTimerRef.current);
+    }
+    completionTimerRef.current = window.setTimeout(() => {
+      setCompletionStage('map');
+    }, 1400);
+    return () => {
+      if (completionTimerRef.current) {
+        window.clearTimeout(completionTimerRef.current);
+        completionTimerRef.current = null;
+      }
+    };
+  }, [session?.status, task]);
+
+  useEffect(() => {
+    if (!userId || session?.status !== 'completed' || task) return;
+    void wordTrainingApi
+      .getMasteryMap(userId, auth.profile?.role ?? null)
+      .then((data) => setMasteryMap(data))
+      .catch(() => undefined);
+  }, [auth.profile?.role, session?.status, task, userId]);
+
+  useEffect(() => {
+    if (completionStage !== 'map' || session?.status !== 'completed' || !masteryMap) return;
+    const completedKeys = new Set((completedWords ?? []).map((word) => normalize(word.word)));
+    const toAnimate = (debugAnimationCellIds?.length
+      ? masteryMap.items.filter((item) => debugAnimationCellIds.includes(item.id))
+      : masteryMap.items.filter((item) => completedKeys.has(normalize(item.word))));
+    if (!toAnimate.length) return;
+    let idx = 0;
+    let stepTimer: number | null = null;
+    const runStep = () => {
+      const cell = toAnimate[idx];
+      if (!cell) {
+        setAnimatingCellId(null);
+        return;
+      }
+      setAnimatingCellId(cell.id);
+      stepTimer = window.setTimeout(() => {
+        setAnimatedFilledCellIds((prev) => ({ ...prev, [cell.id]: true }));
+        setAnimatingCellId(null);
+        idx += 1;
+        stepTimer = window.setTimeout(runStep, MASTERY_CELL_ANIMATION_GAP_MS);
+      }, MASTERY_CELL_ANIMATION_MS);
+    };
+    runStep();
+    return () => {
+      if (stepTimer) window.clearTimeout(stepTimer);
+      setAnimatingCellId(null);
+    };
+  }, [completionStage, completedWords, debugAnimationCellIds, masteryMap, session?.status]);
 
   useEffect(
     () => () => {
@@ -470,10 +469,14 @@ export default function WordTrainingPage() {
 
   useEffect(() => {
     if (!session || session.status !== 'completed' || !userId || !auth.profile) return;
+    if (refreshedStreakSessionRef.current === session.id) return;
+    refreshedStreakSessionRef.current = session.id;
     void usersApi
       .refreshStreak(userId)
       .then((result) => {
-        dispatch(setProfile({ ...auth.profile!, streakDays: result.streakDays }));
+        if (!auth.profile) return;
+        if (auth.profile.streakDays === result.streakDays) return;
+        dispatch(setProfile({ ...auth.profile, streakDays: result.streakDays }));
       })
       .catch(() => {
         // ignore non-blocking streak update errors
@@ -545,52 +548,33 @@ export default function WordTrainingPage() {
     }
   };
 
-  const addCompletedWordToDictionary = useCallback(
-    async (item: { wordKey: string; word: string; translation: string }) => {
-      if (!userId) return;
-      if (savedWordKeys[item.wordKey] || savingWordKeys[item.wordKey]) return;
-      setSavingWordKeys((prev) => ({ ...prev, [item.wordKey]: true }));
-      try {
-        await dictionaryApi.addUserDictionaryEntry(userId, {
-          query: item.word,
-          lang: 'en',
-          word: item.word,
-          translation: item.translation,
-        });
-        setSavedWordKeys((prev) => ({ ...prev, [item.wordKey]: true }));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Не удалось добавить слово в словарь');
-      } finally {
-        setSavingWordKeys((prev) => {
-          const next = { ...prev };
-          delete next[item.wordKey];
-          return next;
-        });
-      }
-    },
-    [savedWordKeys, savingWordKeys, userId],
-  );
-
-  const addAllCompletedWordsToDictionary = useCallback(async () => {
-    if (!userId || savingAllWords || !completedWords.length) return;
-    setSavingAllWords(true);
+  const skipToFinalDebug = async () => {
+    if (!userId || !session) return;
+    setSubmitting(true);
+    setError(null);
     try {
-      for (const item of completedWords) {
-        if (savedWordKeys[item.wordKey]) continue;
-        await dictionaryApi.addUserDictionaryEntry(userId, {
-          query: item.word,
-          lang: 'en',
-          word: item.word,
-          translation: item.translation,
-        });
-        setSavedWordKeys((prev) => ({ ...prev, [item.wordKey]: true }));
+      const [result, map] = await Promise.all([
+        wordTrainingApi.finishSession(session.id, { force: true }, userId),
+        wordTrainingApi.getMasteryMap(userId, auth.profile?.role ?? null).catch(() => null),
+      ]);
+      setState(result);
+      if (map) {
+        setMasteryMap(map);
+        const demoIds = map.items
+          .filter((item) => item.mastery !== 'known')
+          .slice(0, 16)
+          .map((item) => item.id);
+        setDebugAnimationCellIds(demoIds);
       }
+      setCompletionStage('map');
+      const freshOverview = await wordTrainingApi.getOverview(userId);
+      setOverview(freshOverview);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось добавить слова в словарь');
+      setError(err instanceof Error ? err.message : 'Не удалось перейти к финальному экрану');
     } finally {
-      setSavingAllWords(false);
+      setSubmitting(false);
     }
-  }, [completedWords, savedWordKeys, savingAllWords, userId]);
+  };
 
   const submitRecognitionResult = async (recognition: RecognitionTask): Promise<boolean> => {
     if (!userId || !session) return false;
@@ -1431,6 +1415,67 @@ export default function WordTrainingPage() {
     </div>
   );
 
+  const renderMasteryGrid = (animated = false) => {
+    if (!masteryMap) return null;
+    const grouped: Record<string, typeof masteryMap.items> = {};
+    for (const level of CEFR_LEVELS) grouped[level] = [];
+    for (const item of masteryMap.items) {
+      const level = (item.cefrLevel ?? '').toUpperCase();
+      if (!grouped[level]) grouped[level] = [];
+      grouped[level].push(item);
+    }
+
+    return (
+      <div
+        className="section"
+        style={{
+          borderRadius: 20,
+          display: 'grid',
+          gap: 12,
+          padding: 12,
+          border: '1px solid var(--tg-border)',
+          background: 'var(--tg-card)',
+        }}
+      >
+        {CEFR_LEVELS.map((level) => {
+          const levelItems = grouped[level] ?? [];
+          const levelStats = masteryMap.byLevel[level];
+          if (!levelItems.length || !levelStats) return null;
+          return (
+            <div key={level} style={{ display: 'grid', gap: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                <div style={{ fontSize: 17, fontWeight: 800 }}>Уровень {level}</div>
+                <div style={{ fontSize: 12, color: 'var(--tg-subtle)', fontWeight: 700 }}>
+                  {levelStats.known}/{levelStats.total}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(23, minmax(0, 1fr))', gap: 4 }}>
+                {levelItems.map((item) => {
+                  const filledAnimated = animated && Boolean(animatedFilledCellIds[item.id]);
+                  const bg = filledAnimated ? MASTERY_BG.known : MASTERY_BG[item.mastery];
+                  return (
+                    <div
+                      key={item.id}
+                      title={`${item.word} (${item.cefrLevel})`}
+                      style={{
+                        width: '100%',
+                        aspectRatio: '1 / 1',
+                        borderRadius: 4,
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        background: bg,
+                        transition: 'background-color 220ms ease',
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   if (!userId) {
     return (
       <PageShell>
@@ -1494,6 +1539,25 @@ export default function WordTrainingPage() {
             <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700, lineHeight: 1 }}>
               {lessonProgressLabel}
             </div>
+            {auth.profile?.role === 'admin' && (
+              <button
+                type="button"
+                onClick={() => void skipToFinalDebug()}
+                disabled={submitting}
+                style={{
+                  width: 'fit-content',
+                  borderRadius: 10,
+                  border: '1px dashed var(--tg-border)',
+                  background: 'transparent',
+                  color: 'var(--tg-subtle)',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  padding: '5px 9px',
+                }}
+              >
+                Скип к финалу (debug)
+              </button>
+            )}
             {!loading && state?.retryPhase && (
               <div
                 className="section"
@@ -1523,281 +1587,32 @@ export default function WordTrainingPage() {
               style={{
                 display: 'grid',
                 gap: 12,
-                borderRadius: 24,
+                borderRadius: 20,
                 padding: 14,
                 background: 'var(--tg-card)',
                 border: '1px solid var(--tg-border)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1.1 }}>Твоя тренировка</div>
-                <span
-                  style={{
-                    borderRadius: 999,
-                    border: '1px solid var(--tg-border)',
-                    color: 'var(--tg-text)',
-                    fontSize: 12,
-                    fontWeight: 800,
-                    padding: '5px 10px',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  Уровень {userLevel}
-                </span>
+                <div style={{ fontSize: 21, fontWeight: 900 }}>Прогресс</div>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--tg-subtle)' }}>Уровень {userLevel}</span>
+              </div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700 }}>
+                <span style={{ fontSize: 16 }}>🔥</span> Серия: {streakDays} дн.
               </div>
               <div style={{ color: 'var(--tg-subtle)', fontSize: 14 }}>
-                Изучай шаг за шагом: открывай тренировки подряд и поднимайся по CEFR.
+                Сегодня: {overview.todayProgress.wordsDone} слов · {overview.todayProgress.xpGained} XP
               </div>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  width: 'fit-content',
-                  borderRadius: 999,
-                  border: '1px solid var(--tg-border)',
-                  background: 'var(--tg-card)',
-                  padding: '5px 10px',
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}
+              <Button
+                onClick={startOrResume}
+                disabled={submitting || masteryLoading}
+                style={{ minHeight: 50, fontSize: 20, fontWeight: 800, borderRadius: 14, boxShadow: 'none' }}
               >
-                <span style={{ fontSize: 15, lineHeight: 1 }}>🔥</span>
-                Серия: {streakDays} дн.
-              </div>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 8,
-                }}
-              >
-                <div
-                  style={{
-                    borderRadius: 14,
-                    border: '1px solid var(--tg-border)',
-                    background: 'var(--tg-card)',
-                    padding: '8px 8px 7px',
-                  }}
-                >
-                  <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1 }}>{overview.todayProgress.wordsDone}</div>
-                  <div style={{ color: 'var(--tg-subtle)', fontSize: 11, fontWeight: 700 }}>слов сегодня</div>
-                </div>
-                <div
-                  style={{
-                    borderRadius: 14,
-                    border: '1px solid var(--tg-border)',
-                    background: 'var(--tg-card)',
-                    padding: '8px 8px 7px',
-                  }}
-                >
-                  <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1 }}>{overview.todayProgress.xpGained}</div>
-                  <div style={{ color: 'var(--tg-subtle)', fontSize: 11, fontWeight: 700 }}>XP сегодня</div>
-                </div>
-                <div
-                  style={{
-                    borderRadius: 14,
-                    border: '1px solid var(--tg-border)',
-                    background: 'var(--tg-card)',
-                    padding: '8px 8px 7px',
-                  }}
-                >
-                  <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1 }}>{overview.trackedWords}</div>
-                  <div style={{ color: 'var(--tg-subtle)', fontSize: 11, fontWeight: 700 }}>слов в треке</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gap: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 800 }}>Путь по CEFR</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 6 }}>
-                  {CEFR_LEVELS.map((level, index) => {
-                    const isPassed = index < currentLevelIndex;
-                    const isCurrent = index === currentLevelIndex;
-                    const isLocked = index > currentLevelIndex;
-                    return (
-                      <div
-                        key={level}
-                        style={{
-                          borderRadius: 12,
-                          border: `1px solid ${
-                            isCurrent ? 'rgba(96, 165, 250, 0.75)' : isPassed ? 'rgba(34, 197, 94, 0.65)' : 'var(--tg-border)'
-                          }`,
-                          background: 'var(--tg-card)',
-                          color: isLocked ? 'var(--tg-subtle)' : 'var(--tg-text)',
-                          filter: isLocked ? 'grayscale(0.6)' : 'none',
-                          opacity: isLocked ? 0.58 : 1,
-                          textAlign: 'center',
-                          padding: '7px 0',
-                          fontSize: 12,
-                          fontWeight: 800,
-                        }}
-                      >
-                        {level}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gap: 6 }}>
-                <div style={{ fontSize: 13, fontWeight: 800 }}>План активности</div>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                    gap: 8,
-                    color: 'var(--tg-subtle)',
-                    fontSize: 12,
-                    fontWeight: 700,
-                  }}
-                >
-                  <div style={{ borderRadius: 12, border: '1px solid var(--tg-border)', padding: '7px 8px' }}>
-                    День: {Math.min(trainingPlan.dayGoal, overview.todayProgress.sessionsDone)}/{trainingPlan.dayGoal}
-                  </div>
-                  <div style={{ borderRadius: 12, border: '1px solid var(--tg-border)', padding: '7px 8px' }}>
-                    Неделя: {Math.min(trainingPlan.weekGoal, overview.todayProgress.sessionsDone)}/{trainingPlan.weekGoal}
-                  </div>
-                  <div style={{ borderRadius: 12, border: '1px solid var(--tg-border)', padding: '7px 8px' }}>
-                    Месяц: {Math.min(trainingPlan.monthGoal, overview.todayProgress.sessionsDone)}/{trainingPlan.monthGoal}
-                  </div>
-                </div>
-              </div>
+                Учить слова
+              </Button>
             </div>
 
-            <div className="section" style={{ display: 'grid', gap: 10, borderRadius: 20 }}>
-              <div style={{ fontSize: 16, fontWeight: 800 }}>Тренировки уровня {userLevel}</div>
-              <div style={{ color: 'var(--tg-subtle)', fontSize: 13 }}>
-                Двигайся по пути. Открой текущую тренировку и продвигайся дальше по маршруту.
-              </div>
-              <div
-                ref={trainingListRef}
-                style={{
-                  maxHeight: 'min(62svh, 640px)',
-                  overflowY: 'auto',
-                  paddingRight: 6,
-                  paddingBottom: 10,
-                }}
-              >
-                <div style={{ position: 'relative', display: 'grid', gap: 18, padding: '8px 0 22px' }}>
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      bottom: 0,
-                      left: '50%',
-                      width: 4,
-                      transform: 'translateX(-50%)',
-                      borderRadius: 999,
-                      background: 'rgba(255,255,255,0.08)',
-                      pointerEvents: 'none',
-                    }}
-                  />
-                  {trainingPathNodes.map((node) => {
-                    const isCurrentLesson = node.isCurrent;
-                    const offsetX = node.lane === -1 ? -62 : node.lane === 1 ? 62 : 0;
-                    return (
-                    <div
-                      key={`session-${node.number}`}
-                      ref={isCurrentLesson ? currentTrainingRef : null}
-                      style={{
-                        justifySelf: 'center',
-                        transform: `translateX(${offsetX}px)`,
-                        width: 'min(220px, calc(100% - 28px))',
-                        zIndex: 1,
-                        display: 'grid',
-                        gap: 8,
-                        opacity: node.isLocked ? 0.58 : 1,
-                        filter: node.isLocked ? 'grayscale(0.45)' : 'none',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'grid',
-                          justifyItems: 'center',
-                          gap: 8,
-                          borderRadius: 20,
-                          padding: '10px 10px 9px',
-                          border: `1px solid ${
-                            node.isCompleted
-                              ? 'rgba(34, 197, 94, 0.7)'
-                              : node.isCurrent
-                              ? 'rgba(96, 165, 250, 0.8)'
-                              : 'var(--tg-border)'
-                          }`,
-                          background: 'var(--tg-card)',
-                        }}
-                      >
-                        <button
-                          type="button"
-                          disabled={node.isLocked || submitting}
-                          onClick={() => {
-                            if (node.isCurrent) void startOrResume();
-                          }}
-                          style={{
-                            width: 78,
-                            height: 78,
-                            borderRadius: 999,
-                            border: `3px solid ${
-                              node.isCompleted
-                                ? 'rgba(34, 197, 94, 0.88)'
-                                : node.isCurrent
-                                ? 'rgba(96, 165, 250, 0.88)'
-                                : 'var(--tg-border)'
-                            }`,
-                            background: node.isCompleted
-                              ? 'rgba(34, 197, 94, 0.12)'
-                              : node.isCurrent
-                              ? 'rgba(96, 165, 250, 0.14)'
-                              : 'rgba(255,255,255,0.02)',
-                            color: 'var(--tg-text)',
-                            fontSize: 26,
-                            fontWeight: 900,
-                            lineHeight: 1,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: node.isLocked ? 'default' : 'pointer',
-                          }}
-                        >
-                          {node.number}
-                        </button>
-                        <div style={{ textAlign: 'center', display: 'grid', gap: 2 }}>
-                          <div style={{ fontSize: 14, fontWeight: 800 }}>Тренировка {node.number}</div>
-                          <div style={{ color: 'var(--tg-subtle)', fontSize: 12 }}>
-                            ~{trainingPlan.targetWords} слов
-                          </div>
-                        </div>
-                        {node.isCompleted ? (
-                          <span style={{ color: 'rgba(34, 197, 94, 0.95)', fontSize: 12, fontWeight: 800 }}>
-                            Пройдена
-                          </span>
-                        ) : node.isCurrent ? (
-                          <Button
-                            onClick={startOrResume}
-                            disabled={submitting}
-                            style={{
-                              minHeight: 34,
-                              padding: '0 14px',
-                              fontSize: 14,
-                              background: 'var(--tg-accent)',
-                              boxShadow: 'none',
-                            }}
-                          >
-                            Начать
-                          </Button>
-                        ) : (
-                          <span style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>
-                            Закрыта
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              </div>
-            </div>
+            {renderMasteryGrid(false)}
           </>
         )}
 
@@ -1893,7 +1708,26 @@ export default function WordTrainingPage() {
             },
           })}
 
-        {!loading && session && !task && (
+        {animatingCellId && typeof document !== 'undefined'
+          ? createPortal(
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  zIndex: 90,
+                  pointerEvents: 'none',
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
+                <div className="mastery-cell-modal-overlay" />
+                <div className="mastery-cell-modal" />
+              </div>,
+              document.body,
+            )
+          : null}
+
+        {!loading && session && !task && completionStage === 'praise' && (
           <div
             className="section"
             style={{
@@ -1901,225 +1735,36 @@ export default function WordTrainingPage() {
               gap: 14,
               minHeight: 'calc(100svh - 170px)',
               alignContent: 'start',
-              borderRadius: 26,
+              borderRadius: 24,
               padding: 16,
               background: 'var(--tg-card)',
-              border: '1px solid rgba(96, 165, 250, 0.45)',
-              position: 'relative',
-              overflow: 'hidden',
+              border: '1px solid var(--tg-border)',
             }}
           >
-            <div
-              style={{
-                position: 'absolute',
-                top: 10,
-                right: 18,
-                fontSize: 30,
-                animation: 'reward-float 2.6s ease-in-out infinite',
-                pointerEvents: 'none',
-              }}
-            >
-              ✨
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 28, lineHeight: 1 }}>🏆</span>
+              <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.05 }}>Отличная тренировка!</div>
             </div>
-            <div style={{ display: 'grid', gap: 4 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 28, lineHeight: 1, animation: 'reward-bounce 1.8s ease-in-out infinite' }}>🏆</span>
-                <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.05 }}>
-                Отличная тренировка!
-                </div>
-              </div>
-              <div style={{ color: 'var(--tg-subtle)', fontSize: 15, lineHeight: 1.35 }}>
-                Ты укрепил знания и продвинулся ещё дальше. Продолжаем в том же темпе.
-              </div>
+            <div style={{ color: 'var(--tg-subtle)', fontSize: 15, lineHeight: 1.35 }}>
+              Ты закрыл {session.wordsCompleted} слов и получил +{session.xpEarned} XP.
             </div>
+            <div style={{ color: 'var(--tg-subtle)', fontSize: 14, fontWeight: 700 }}>
+              За сегодня: {state?.summary?.totalWordsToday ?? 0} слов · {state?.summary?.totalXpToday ?? 0} XP
+            </div>
+          </div>
+        )}
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                gap: 10,
-              }}
-            >
-              <div
-                style={{
-                  borderRadius: 16,
-                  border: '1px solid var(--tg-border)',
-                  background: 'var(--tg-card)',
-                  padding: '10px 10px 8px',
-                  display: 'grid',
-                  gap: 4,
-                  animation: 'reward-pop 360ms ease both',
-                }}
-              >
-                <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>XP</div>
-                <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1 }}>{`+${session.xpEarned}`}</div>
-              </div>
-              <div
-                style={{
-                  borderRadius: 16,
-                  border: '1px solid var(--tg-border)',
-                  background: 'var(--tg-card)',
-                  padding: '10px 10px 8px',
-                  display: 'grid',
-                  gap: 4,
-                  animation: 'reward-pop 420ms ease both',
-                }}
-              >
-                <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>Слов</div>
-                <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1 }}>{session.wordsCompleted}</div>
-              </div>
-              <div
-                style={{
-                  borderRadius: 16,
-                  border: '1px solid var(--tg-border)',
-                  background: 'var(--tg-card)',
-                  padding: '10px 10px 8px',
-                  display: 'grid',
-                  gap: 4,
-                  animation: 'reward-pop 480ms ease both',
-                }}
-              >
-                <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700 }}>Уровень</div>
-                <div style={{ fontSize: 24, fontWeight: 900, lineHeight: 1 }}>{auth.profile?.level ?? 'A1'}</div>
-              </div>
-            </div>
-
-            <div style={{ color: 'var(--tg-subtle)', fontSize: 14, fontWeight: 600 }}>
-              За сегодня: {state?.summary?.totalWordsToday ?? 0} слов и {state?.summary?.totalXpToday ?? 0} XP
-            </div>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                width: 'fit-content',
-                borderRadius: 999,
-                border: '1px solid var(--tg-border)',
-                background: 'var(--tg-card)',
-                padding: '6px 12px',
-                fontSize: 14,
-                fontWeight: 800,
-              }}
-            >
-              <span style={{ fontSize: 16, lineHeight: 1 }}>🔥</span>
-              Серия: {streakDays} дней
-            </div>
-
-            <div
-              style={{
-                borderRadius: 18,
-                border: '1px solid var(--tg-border)',
-                background: 'var(--tg-card)',
-                padding: 12,
-                display: 'grid',
-                gap: 10,
-              }}
-            >
-              <div style={{ fontSize: 15, fontWeight: 800 }}>Слова, которые ты закрепил</div>
-              {completedWords.length ? (
-                <Button
-                  onClick={() => void addAllCompletedWordsToDictionary()}
-                  disabled={savingAllWords || completedWords.every((item) => Boolean(savedWordKeys[item.wordKey]))}
-                  style={{
-                    minHeight: 40,
-                    borderRadius: 12,
-                    fontSize: 15,
-                    fontWeight: 700,
-                    background: 'var(--tg-accent)',
-                    boxShadow: 'none',
-                  }}
-                >
-                  {completedWords.every((item) => Boolean(savedWordKeys[item.wordKey]))
-                    ? 'Все слова сохранены'
-                    : savingAllWords
-                    ? 'Сохраняем...'
-                    : 'Добавить все в словарь'}
-                </Button>
-              ) : null}
-              {completedWords.length ? (
-                <div style={{ display: 'grid', gap: 8 }}>
-                  {completedWords.map((item, index) => (
-                    <div
-                      key={item.wordKey}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 10,
-                        borderRadius: 14,
-                        border: '1px solid var(--tg-border)',
-                        background: 'rgba(255,255,255,0.02)',
-                        padding: '8px 10px',
-                        animation: `reward-pop 320ms ease both`,
-                        animationDelay: `${index * 70}ms`,
-                      }}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.15 }}>{item.word}</div>
-                        <div style={{ color: 'var(--tg-subtle)', fontSize: 13, lineHeight: 1.25 }}>
-                          {item.translation}
-                        </div>
-                      </div>
-                      {item.cefrLevel ? (
-                          <span
-                          style={{
-                            borderRadius: 999,
-                            border: '1px solid var(--tg-border)',
-                            color: 'var(--tg-text)',
-                            fontSize: 12,
-                            fontWeight: 800,
-                            padding: '4px 8px',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {item.cefrLevel}
-                        </span>
-                      ) : null}
-                      <Button
-                        onClick={() => void addCompletedWordToDictionary(item)}
-                        disabled={Boolean(savedWordKeys[item.wordKey] || savingWordKeys[item.wordKey])}
-                        style={{
-                          minHeight: 32,
-                          padding: '0 10px',
-                          borderRadius: 10,
-                          fontSize: 13,
-                          fontWeight: 700,
-                          background: savedWordKeys[item.wordKey] ? 'rgba(67, 201, 127, 0.2)' : 'var(--tg-accent)',
-                          color: savedWordKeys[item.wordKey] ? 'var(--tg-success)' : '#0b1220',
-                          boxShadow: 'none',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {savedWordKeys[item.wordKey]
-                          ? 'Сохранено'
-                          : savingWordKeys[item.wordKey]
-                          ? '...'
-                          : 'В словарь'}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ color: 'var(--tg-subtle)', fontSize: 14 }}>
-                  Отличная работа. Продолжай тренировки, и здесь появятся закреплённые слова.
-                </div>
-              )}
-            </div>
-
+        {!loading && session && !task && completionStage === 'map' && (
+          <>
+            {renderMasteryGrid(true)}
             <Button
               onClick={load}
               disabled={submitting}
-              style={{
-                minHeight: 52,
-                fontSize: 20,
-                fontWeight: 800,
-                background: 'var(--tg-accent)',
-                boxShadow: 'none',
-              }}
+              style={{ minHeight: 52, fontSize: 20, fontWeight: 800, boxShadow: 'none' }}
             >
-              К следующей тренировке
+              Учить слова
             </Button>
-          </div>
+          </>
         )}
 
       </div>

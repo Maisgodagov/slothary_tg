@@ -106,6 +106,22 @@ export interface ReinforcementTask {
 
 export type WordTrainingTask = RecognitionTask | ReinforcementTask;
 
+export interface WordTrainingMasteryMap {
+  total: number;
+  byStatus: {
+    known: number;
+    learning: number;
+    new: number;
+  };
+  byLevel: Record<string, { total: number; known: number; learning: number; new: number }>;
+  items: Array<{
+    id: number;
+    word: string;
+    cefrLevel: string;
+    mastery: 'known' | 'learning' | 'new';
+  }>;
+}
+
 export interface WordTrainingState {
   session: WordTrainingSession;
   task: WordTrainingTask | null;
@@ -214,6 +230,15 @@ export const wordTrainingApi = {
     }
     return apiFetch<{ items: WordTrainingContext[] }>(`word-training/examples?${query.toString()}`, {
       headers: headersWithUser(userId),
+    });
+  },
+  getMasteryMap(userId?: string | null, role?: string | null) {
+    const headers: Record<string, string> = {
+      ...(headersWithUser(userId) ?? {}),
+    };
+    if (role) headers['x-user-role'] = role;
+    return apiFetch<WordTrainingMasteryMap>('admin/word-training-snippets/mastery-map', {
+      headers,
     });
   },
 };
