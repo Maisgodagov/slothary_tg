@@ -23,6 +23,7 @@ import {
   HomeSkeletonLine,
   HomeSkeletonStreak,
   HomeWrapper,
+  HomeSecondaryButton,
   NextTrainingButton,
   NextTrainingCard,
   NextTrainingHeader,
@@ -275,51 +276,57 @@ export function HomeContainer() {
           />
 
           {isAdmin && (
-            <NextTrainingCard>
-              <NextTrainingHeader>
-                <NextTrainingTitle>Следующая тренировка</NextTrainingTitle>
-                <NextTrainingMeta>
-                  {trainingOverview?.activeSession ? "Продолжить" : "Новая"}
-                </NextTrainingMeta>
-              </NextTrainingHeader>
+            <>
+              <NextTrainingCard>
+                <NextTrainingHeader>
+                  <NextTrainingTitle>Следующая тренировка</NextTrainingTitle>
+                  <NextTrainingMeta>
+                    {trainingOverview?.activeSession ? "Продолжить" : "Новая"}
+                  </NextTrainingMeta>
+                </NextTrainingHeader>
 
-              <NextTrainingText>
-                {trainingOverview?.activeSession
-                  ? `Осталось слов: ${Math.max(
-                      0,
-                      (trainingOverview.activeSession.targetWords ?? 0) -
-                        (trainingOverview.activeSession.wordsCompleted ?? 0),
-                    )}`
-                  : `Подборка на ${Math.min(5, Math.max(1, trainingOverview?.suggestedTargetWords ?? 5))} слов с фразами и закреплением.`}
-              </NextTrainingText>
+                <NextTrainingText>
+                  {trainingOverview?.activeSession
+                    ? `Осталось слов: ${Math.max(
+                        0,
+                        (trainingOverview.activeSession.targetWords ?? 0) -
+                          (trainingOverview.activeSession.wordsCompleted ?? 0),
+                      )}`
+                    : `Подборка на ${Math.min(5, Math.max(1, trainingOverview?.suggestedTargetWords ?? 5))} слов с фразами и закреплением.`}
+                </NextTrainingText>
 
-              <NextTrainingStats>
-                <NextTrainingStat>
-                  <NextTrainingStatValue>{trainingOverview?.dueCount ?? 0}</NextTrainingStatValue>
-                  <NextTrainingStatLabel>Повторить</NextTrainingStatLabel>
-                </NextTrainingStat>
-                <NextTrainingStat>
-                  <NextTrainingStatValue>{trainingOverview?.mistakeCount ?? 0}</NextTrainingStatValue>
-                  <NextTrainingStatLabel>Ошибки</NextTrainingStatLabel>
-                </NextTrainingStat>
-                <NextTrainingStat>
-                  <NextTrainingStatValue>{trainingOverview?.newCount ?? 0}</NextTrainingStatValue>
-                  <NextTrainingStatLabel>Новые</NextTrainingStatLabel>
-                </NextTrainingStat>
-              </NextTrainingStats>
+                <NextTrainingStats>
+                  <NextTrainingStat>
+                    <NextTrainingStatValue>{trainingOverview?.dueCount ?? 0}</NextTrainingStatValue>
+                    <NextTrainingStatLabel>Повторить</NextTrainingStatLabel>
+                  </NextTrainingStat>
+                  <NextTrainingStat>
+                    <NextTrainingStatValue>{trainingOverview?.mistakeCount ?? 0}</NextTrainingStatValue>
+                    <NextTrainingStatLabel>Ошибки</NextTrainingStatLabel>
+                  </NextTrainingStat>
+                  <NextTrainingStat>
+                    <NextTrainingStatValue>{trainingOverview?.newCount ?? 0}</NextTrainingStatValue>
+                    <NextTrainingStatLabel>Новые</NextTrainingStatLabel>
+                  </NextTrainingStat>
+                </NextTrainingStats>
 
-              <NextTrainingButton
-                type="button"
-                onClick={handleStartNextTraining}
-                disabled={startingTraining || trainingLoading}
-              >
-                {startingTraining
-                  ? "Запуск..."
-                  : trainingOverview?.activeSession
-                    ? "Продолжить тренировку"
-                    : "Начать тренировку"}
-              </NextTrainingButton>
-            </NextTrainingCard>
+                <NextTrainingButton
+                  type="button"
+                  onClick={handleStartNextTraining}
+                  disabled={startingTraining || trainingLoading}
+                >
+                  {startingTraining
+                    ? "Запуск..."
+                    : trainingOverview?.activeSession
+                      ? "Продолжить тренировку"
+                      : "Начать тренировку"}
+                </NextTrainingButton>
+              </NextTrainingCard>
+
+              <HomeSecondaryButton type="button" onClick={() => navigate("/admin/word-mastery-map")}>
+                Открыть карту слов
+              </HomeSecondaryButton>
+            </>
           )}
 
           {showAddToHome && (

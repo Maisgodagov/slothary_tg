@@ -25,6 +25,7 @@ import LessonStepCardAssembleDemoPage from "../pages/LessonStepCardAssembleDemoP
 import WordTrainingPage from "../pages/WordTrainingPage";
 import WordTrainingSnippetsAdminPage from "../pages/WordTrainingSnippetsAdminPage";
 import WordTrainingGeneratedPhrasesAdminPage from "../pages/WordTrainingGeneratedPhrasesAdminPage";
+import WordMasteryMapPage from "../pages/WordMasteryMapPage";
 import { HomeContainer } from "../modules/home";
 import { VideoContainer } from "../modules/video";
 import { DictionaryContainer } from "../modules/dictionary";
@@ -203,6 +204,10 @@ function AppRoutes() {
             element={<WordTrainingGeneratedPhrasesAdminPage />}
           />
           <Route path="/admin/word-progress" element={<WordProgressPage />} />
+          <Route
+            path="/admin/word-mastery-map"
+            element={isAdmin ? <WordMasteryMapPage /> : <Navigate to="/" replace />}
+          />
           <Route path="/streak" element={<StreakPage />} />
           <Route
             path="/admin/game-snippets"

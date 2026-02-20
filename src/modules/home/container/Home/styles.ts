@@ -105,6 +105,22 @@ export const NextTrainingButton = styled.button`
   }
 `;
 
+export const HomeSecondaryButton = styled.button`
+  width: 100%;
+  border: 1px solid var(--tg-border);
+  border-radius: 14px;
+  height: 42px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tg-text);
+  background: var(--tg-card);
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.9;
+  }
+`;
+
 export const HomeSkeletonLayout = styled.div`
   display: grid;
   gap: 14px;
