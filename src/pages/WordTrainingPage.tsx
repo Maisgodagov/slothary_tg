@@ -15,6 +15,8 @@ import {
   type WordTrainingState,
   wordTrainingApi,
 } from '../features/word-training/api';
+import { TrainingStageStepper } from '../features/word-training/components/TrainingStageStepper';
+import { useWordTrainingAudio } from '../features/word-training/useWordTrainingAudio';
 import type { PhraseSnippet } from '../features/video-dictionary/api';
 import { SnippetCarousel } from '../modules/dictionary/components/SnippetCarousel';
 import { Button } from '../shared/ui/Button';
@@ -82,22 +84,18 @@ export default function WordTrainingPage() {
   const [reinforcementChecked, setReinforcementChecked] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const feedbackAudioRef = useRef<HTMLAudioElement | null>(null);
   const [practiceView, setPracticeView] = useState<{
     word: string;
     snippets: PhraseSnippet[];
-    nextMode: 'recognition' | 'reinforcement';
+    nextMode: 'recognition' | 'reinforcement' | 'intro';
     recognitionTask?: RecognitionTask | null;
   } | null>(null);
   const [practiceLoading, setPracticeLoading] = useState(false);
   const [postPracticeTransitioning, setPostPracticeTransitioning] = useState(false);
   const [introducedWordKeys, setIntroducedWordKeys] = useState<Record<string, true>>({});
-  const snippetShownWordsRef = useRef<Set<string>>(new Set());
-  const recognitionDoneWordsRef = useRef<Set<string>>(new Set());
-  const lastStepHadSnippetRef = useRef(false);
   const completionTimerRef = useRef<number | null>(null);
   const refreshedStreakSessionRef = useRef<string | null>(null);
+  const { playAudioUrl, playFeedbackSound, stopAudio } = useWordTrainingAudio();
 
   const session = state?.session ?? null;
   const task = state?.task ?? null;
@@ -126,15 +124,37 @@ export default function WordTrainingPage() {
     }
     return `${lessonProgressPercent}%`;
   }, [lessonProgressPercent, session, task]);
-  const isNewWordIntroVisible = Boolean(
-    session &&
-      task &&
-      task.mode === 'recognition' &&
-      task.isNewWord &&
-      !introducedWordKeys[task.wordKey] &&
-      !practiceView &&
-      !postPracticeTransitioning,
-  );
+  const currentStageLabel = useMemo(() => {
+    const flow = state?.sessionFlow;
+    if (!flow) return null;
+    const stage = flow.stages.find((item) => item.key === flow.currentStage);
+    return stage?.label ?? null;
+  }, [state?.sessionFlow]);
+  const stageProgress = useMemo(() => {
+    const flow = state?.sessionFlow;
+    if (!flow) return [];
+    return flow.stages.map((stage) => {
+      const total = Math.max(0, Number(stage.total ?? 0));
+      const completed = Math.max(0, Number(stage.completed ?? 0));
+      const percent = total > 0 ? Math.max(0, Math.min(100, Math.round((completed / total) * 100))) : 0;
+      const isCurrent = flow.currentStage === stage.key;
+      const isDone = total > 0 ? completed >= total : flow.currentStage === 'result' && stage.key === 'result';
+      return {
+        ...stage,
+        total,
+        completed,
+        percent,
+        isCurrent,
+        isDone,
+      };
+    });
+  }, [state?.sessionFlow]);
+  const introPendingWord = useMemo(() => {
+    const queue = state?.introQueue ?? [];
+    return queue.find((item) => !introducedWordKeys[item.wordKey]) ?? null;
+  }, [introducedWordKeys, state?.introQueue]);
+
+  const isNewWordIntroVisible = Boolean(session && introPendingWord && !practiceView && !postPracticeTransitioning);
 
   const optionButtonBaseStyle = {
     minHeight: 48,
@@ -204,17 +224,6 @@ export default function WordTrainingPage() {
     return { rawTokens, blankIndexes, expectedWords, options };
   }, [task]);
 
-  const stopAudio = useCallback(() => {
-    if (!audioRef.current) return;
-    try {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    } catch {
-      // ignore
-    }
-    audioRef.current = null;
-  }, []);
-
   const mapContextToSnippet = useCallback(
     (item: WordTrainingContext, index: number, word: string): PhraseSnippet | null => {
       if (!item.videoUrl?.trim()) return null;
@@ -239,13 +248,14 @@ export default function WordTrainingPage() {
   );
 
   const loadPracticeSnippets = useCallback(
-    async (word: string): Promise<PhraseSnippet[]> => {
+    async (word: string, limit = 30): Promise<PhraseSnippet[]> => {
       try {
-        const response = await wordTrainingApi.getExamples(word, userId, 30, 2, 2, 4);
+        const safeLimit = Math.max(1, Math.min(30, limit));
+        const response = await wordTrainingApi.getExamples(word, userId, safeLimit, 2, 2, 4);
         return (response.items ?? [])
           .map((item, index) => mapContextToSnippet(item, index, word))
           .filter((item): item is PhraseSnippet => Boolean(item))
-          .slice(0, 30);
+          .slice(0, safeLimit);
       } catch {
         return [];
       }
@@ -254,9 +264,20 @@ export default function WordTrainingPage() {
   );
 
   const openPracticeBetweenSteps = useCallback(
-    async (params: { word: string; nextMode: 'recognition' | 'reinforcement'; recognitionTask?: RecognitionTask | null }) => {
+    async (params: {
+      word: string;
+      nextMode: 'recognition' | 'reinforcement' | 'intro';
+      recognitionTask?: RecognitionTask | null;
+      snippetLimit?: number;
+    }) => {
+      setPracticeView({
+        word: params.word,
+        snippets: [],
+        nextMode: params.nextMode,
+        recognitionTask: params.recognitionTask ?? null,
+      });
       setPracticeLoading(true);
-      const snippets = await loadPracticeSnippets(params.word);
+      const snippets = await loadPracticeSnippets(params.word, params.snippetLimit ?? 30);
       setPracticeView({
         word: params.word,
         snippets,
@@ -274,6 +295,9 @@ export default function WordTrainingPage() {
     setPostPracticeTransitioning(true);
     setPracticeView(null);
     try {
+      if (payload.nextMode === 'intro') {
+        return;
+      }
       if (payload.nextMode === 'recognition' && payload.recognitionTask) {
         await submitRecognitionResult(payload.recognitionTask);
         return;
@@ -283,46 +307,6 @@ export default function WordTrainingPage() {
       setPostPracticeTransitioning(false);
     }
   }, [practiceView]);
-
-  const playAudioUrl = useCallback(async (audioUrl?: string | null) => {
-    const trimmed = audioUrl?.trim();
-    if (!trimmed) return;
-
-    stopAudio();
-
-    const audio = new Audio(trimmed);
-    audio.preload = 'auto';
-    audioRef.current = audio;
-
-    try {
-      await audio.play();
-    } catch {
-      // autoplay can be blocked
-    }
-  }, [stopAudio]);
-
-  const playFeedbackSound = useCallback(async (isCorrect: boolean) => {
-    const baseUrl = import.meta.env.BASE_URL ?? '/';
-    const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-    const soundUrl = `${normalizedBase}sounds/${isCorrect ? 'right.wav' : 'wrong.wav'}`;
-    if (feedbackAudioRef.current) {
-      try {
-        feedbackAudioRef.current.pause();
-        feedbackAudioRef.current.currentTime = 0;
-      } catch {
-        // ignore
-      }
-    }
-
-    const sound = new Audio(soundUrl);
-    sound.preload = 'auto';
-    feedbackAudioRef.current = sound;
-    try {
-      await sound.play();
-    } catch {
-      // ignore
-    }
-  }, []);
 
   const playPronunciation = useCallback(
     async (taskLike: RecognitionTask | ReinforcementTask | null) => {
@@ -393,12 +377,7 @@ export default function WordTrainingPage() {
     }
   }, [taskId, playPronunciation, stopAudio, task]);
 
-  useEffect(() => () => stopAudio(), [stopAudio]);
-
   useEffect(() => {
-    snippetShownWordsRef.current = new Set();
-    recognitionDoneWordsRef.current = new Set();
-    lastStepHadSnippetRef.current = false;
     setPracticeView(null);
     setPracticeLoading(false);
     setPostPracticeTransitioning(false);
@@ -467,20 +446,6 @@ export default function WordTrainingPage() {
       setAnimatingCellId(null);
     };
   }, [completionStage, completedWords, debugAnimationCellIds, masteryMap, session?.status]);
-
-  useEffect(
-    () => () => {
-      if (!feedbackAudioRef.current) return;
-      try {
-        feedbackAudioRef.current.pause();
-        feedbackAudioRef.current.currentTime = 0;
-      } catch {
-        // ignore
-      }
-      feedbackAudioRef.current = null;
-    },
-    [],
-  );
 
   useEffect(() => {
     if (!session || session.status !== 'completed' || !userId || !auth.profile) return;
@@ -619,11 +584,8 @@ export default function WordTrainingPage() {
 
   const proceedAfterRecognition = useCallback(
     async (recognition: RecognitionTask) => {
-      lastStepHadSnippetRef.current = false;
       const success = await submitRecognitionResult(recognition);
       if (!success) return;
-      const wordKey = normalize(recognition.word);
-      if (wordKey) recognitionDoneWordsRef.current.add(wordKey);
     },
     [submitRecognitionResult],
   );
@@ -734,37 +696,9 @@ export default function WordTrainingPage() {
     }
   };
 
-  const proceedAfterReinforcement = useCallback(
-    async (reinforcementTask: ReinforcementTask) => {
-      const wordKey = normalize(reinforcementTask.word);
-      const isPhraseExercise =
-        reinforcementTask.reinforcement.type === 'missing' ||
-        reinforcementTask.reinforcement.type === 'audio_assemble';
-      const canShowPractice =
-        Boolean(wordKey) &&
-        isPhraseExercise &&
-        recognitionDoneWordsRef.current.has(wordKey) &&
-        !snippetShownWordsRef.current.has(wordKey) &&
-        !lastStepHadSnippetRef.current;
-
-      if (canShowPractice) {
-        // Randomize snippet placement so flow is not always word -> phrase -> snippet.
-        if (Math.random() < 0.55) {
-          snippetShownWordsRef.current.add(wordKey!);
-          lastStepHadSnippetRef.current = true;
-          await openPracticeBetweenSteps({
-            word: reinforcementTask.word,
-            nextMode: 'reinforcement',
-          });
-          return;
-        }
-      }
-
-      lastStepHadSnippetRef.current = false;
-      await submitReinforcement();
-    },
-    [openPracticeBetweenSteps, submitReinforcement],
-  );
+  const proceedAfterReinforcement = useCallback(async () => {
+    await submitReinforcement();
+  }, [submitReinforcement]);
 
   const renderRecognition = (recognition: RecognitionTask) => {
     const options: string[] =
@@ -848,8 +782,15 @@ export default function WordTrainingPage() {
     );
   };
 
-  const renderNewWordIntro = (recognition: RecognitionTask) => {
-    const otherTranslations = (recognition.otherTranslations ?? [])
+  const renderNewWordIntro = (introWord: {
+    wordKey: string;
+    word: string;
+    translation: string;
+    pronunciationAudioUrl?: string | null;
+    cefrLevel?: string | null;
+    otherTranslations?: string[];
+  }) => {
+    const otherTranslations = (introWord.otherTranslations ?? [])
       .map((item) => item.trim())
       .filter(Boolean)
       .slice(0, 5);
@@ -862,13 +803,13 @@ export default function WordTrainingPage() {
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.1 }}>
-            {recognition.word} <span style={{ color: 'var(--tg-subtle)', fontWeight: 700 }}>-</span>{' '}
-            <span style={{ fontSize: 30 }}>{recognition.translation}</span>
+            {introWord.word} <span style={{ color: 'var(--tg-subtle)', fontWeight: 700 }}>-</span>{' '}
+            <span style={{ fontSize: 30 }}>{introWord.translation}</span>
           </div>
           <button
             type="button"
-            onClick={() => void playPronunciation(recognition)}
-            disabled={!recognition.pronunciationAudioUrl}
+            onClick={() => void playAudioUrl(introWord.pronunciationAudioUrl ?? null)}
+            disabled={!introWord.pronunciationAudioUrl}
             aria-label="Проиграть произношение"
             style={{
               width: 42,
@@ -880,7 +821,7 @@ export default function WordTrainingPage() {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              opacity: recognition.pronunciationAudioUrl ? 1 : 0.45,
+              opacity: introWord.pronunciationAudioUrl ? 1 : 0.45,
               flexShrink: 0,
             }}
           >
@@ -888,7 +829,7 @@ export default function WordTrainingPage() {
           </button>
         </div>
 
-        {recognition.cefrLevel ? (
+        {introWord.cefrLevel ? (
           <div
             style={{
               width: 'fit-content',
@@ -901,7 +842,7 @@ export default function WordTrainingPage() {
               color: 'var(--tg-subtle)',
             }}
           >
-            CEFR: {recognition.cefrLevel}
+            CEFR: {introWord.cefrLevel}
           </div>
         ) : null}
 
@@ -1596,6 +1537,12 @@ export default function WordTrainingPage() {
             <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700, lineHeight: 1 }}>
               {lessonProgressLabel}
             </div>
+            {currentStageLabel ? (
+              <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 600, lineHeight: 1 }}>
+                Этап: {currentStageLabel}
+              </div>
+            ) : null}
+            <TrainingStageStepper stages={stageProgress} />
             {auth.profile?.role === 'admin' && (
               <button
                 type="button"
@@ -1635,7 +1582,7 @@ export default function WordTrainingPage() {
         {error && <div className="section" style={{ color: 'var(--tg-danger)' }}>{error}</div>}
         {loading && <div className="section">Загрузка...</div>}
 
-        {isNewWordIntroVisible && task && task.mode === 'recognition' ? renderNewWordIntro(task) : null}
+        {isNewWordIntroVisible && introPendingWord ? renderNewWordIntro(introPendingWord) : null}
 
         {!loading && !session && overview && (
           <>
@@ -1714,6 +1661,7 @@ export default function WordTrainingPage() {
           task &&
           task.mode === 'recognition' &&
           !practiceView &&
+          !isNewWordIntroVisible &&
           (!task.isNewWord || introducedWordKeys[task.wordKey]) &&
           renderRecognition(task)}
         {!loading && !postPracticeTransitioning && session && task && task.mode === 'reinforcement' && !practiceView && renderReinforcement(task)}
@@ -1761,15 +1709,20 @@ export default function WordTrainingPage() {
               void proceedAfterRecognition(task);
             },
           })}
-        {!loading && task && task.mode === 'recognition' &&
+        {!loading && introPendingWord &&
           renderBottomActionPanel({
             visible: isNewWordIntroVisible,
             isCorrect: true,
             title: 'Новое слово',
-            subtitle: `${task.word} - ${task.translation}`,
+            subtitle: `${introPendingWord.word} - ${introPendingWord.translation}`,
             buttonLabel: 'Понятно',
             onNext: () => {
-              setIntroducedWordKeys((prev) => ({ ...prev, [task.wordKey]: true }));
+              setIntroducedWordKeys((prev) => ({ ...prev, [introPendingWord.wordKey]: true }));
+              void openPracticeBetweenSteps({
+                word: introPendingWord.word,
+                nextMode: 'intro',
+                snippetLimit: 4,
+              });
             },
           })}
 
@@ -1784,7 +1737,7 @@ export default function WordTrainingPage() {
                 ? `Перевод: ${task.reinforcement.sentenceTranslation}`
                 : null,
             onNext: () => {
-              void proceedAfterReinforcement(task);
+              void proceedAfterReinforcement();
             },
           })}
 

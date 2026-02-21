@@ -143,6 +143,23 @@ export interface WordTrainingMasteryMap {
 export interface WordTrainingState {
   session: WordTrainingSession;
   task: WordTrainingTask | null;
+  sessionFlow?: {
+    currentStage: 'intro' | 'recognition' | 'matching' | 'deep_work' | 'retry' | 'result';
+    stages: Array<{
+      key: 'intro' | 'recognition' | 'matching' | 'deep_work' | 'retry' | 'result';
+      label: string;
+      total: number;
+      completed: number;
+    }>;
+  };
+  introQueue?: Array<{
+    wordKey: string;
+    word: string;
+    translation: string;
+    pronunciationAudioUrl?: string | null;
+    cefrLevel?: CefrLevel | null;
+    otherTranslations?: string[];
+  }>;
   retryPhase?: boolean;
   retryPhaseTitle?: string | null;
   summary?: {
