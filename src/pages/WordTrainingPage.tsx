@@ -37,6 +37,19 @@ const MASTERY_BG = {
 } as const;
 const MASTERY_CELL_ANIMATION_MS = 2400;
 const MASTERY_CELL_ANIMATION_GAP_MS = 220;
+const normalizeSectionTitleKey = (title: string) =>
+  String(title ?? '')
+    .replace(/\s+/g, ' ')
+    .replace(/[–—]/g, '-')
+    .trim()
+    .toLowerCase();
+const getCefrBlockOrder = (block: string | null | undefined, level: string) => {
+  if (!block) return Number.MAX_SAFE_INTEGER;
+  const match = String(block).toUpperCase().match(new RegExp(`^${level.toUpperCase()}_(\\d+)$`));
+  if (!match) return Number.MAX_SAFE_INTEGER;
+  const n = Number(match[1]);
+  return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+};
 
 export default function WordTrainingPage() {
   const dispatch = useAppDispatch();
@@ -91,6 +104,8 @@ export default function WordTrainingPage() {
   const taskId = task?.itemId ?? null;
   const completedWords = state?.summary?.completedWords ?? [];
   const userLevel = (auth.profile?.level || 'A1').toUpperCase();
+  const currentDisplayLevel = String(overview?.currentLevel || userLevel || 'A1').toUpperCase();
+  const levelRingPercent = Math.max(0, Math.min(100, Number(overview?.levelRingProgress?.percent ?? 0)));
   const lessonProgressPercent = useMemo(() => {
     if (!session) return 0;
     if (task && task.queueTotal > 0) {
@@ -1441,6 +1456,25 @@ export default function WordTrainingPage() {
           const levelItems = grouped[level] ?? [];
           const levelStats = masteryMap.byLevel[level];
           if (!levelItems.length || !levelStats) return null;
+
+          const sectionsMap = new Map<string, { title: string; order: number; items: typeof levelItems }>();
+          for (const item of levelItems) {
+            const sectionKey = item.cefrBlock || `${level}_1`;
+            const title = masteryMap.blockTitles?.[sectionKey] ?? sectionKey;
+            const normalizedTitleKey = normalizeSectionTitleKey(title);
+            const order = getCefrBlockOrder(sectionKey, level);
+            if (!sectionsMap.has(normalizedTitleKey)) {
+              sectionsMap.set(normalizedTitleKey, { title: title.trim(), order, items: [] });
+            }
+            const section = sectionsMap.get(normalizedTitleKey)!;
+            section.order = Math.min(section.order, order);
+            section.items.push(item);
+          }
+          const sections = Array.from(sectionsMap.values()).sort((a, b) => {
+            if (a.order !== b.order) return a.order - b.order;
+            return a.title.localeCompare(b.title, 'en', { sensitivity: 'base' });
+          });
+
           return (
             <div key={level} style={{ display: 'grid', gap: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
@@ -1449,26 +1483,49 @@ export default function WordTrainingPage() {
                   {levelStats.known}/{levelStats.total}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(23, minmax(0, 1fr))', gap: 4 }}>
-                {levelItems.map((item) => {
-                  const filledAnimated = animated && Boolean(animatedFilledCellIds[item.id]);
-                  const bg = filledAnimated ? MASTERY_BG.known : MASTERY_BG[item.mastery];
-                  return (
-                    <div
-                      key={item.id}
-                      title={`${item.word} (${item.cefrLevel})`}
-                      style={{
-                        width: '100%',
-                        aspectRatio: '1 / 1',
-                        borderRadius: 4,
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        background: bg,
-                        transition: 'background-color 220ms ease',
-                      }}
-                    />
-                  );
-                })}
-              </div>
+              {sections.map((section, sectionIndex) => (
+                <div
+                  key={`${level}-${section.title}`}
+                  style={{
+                    display: 'grid',
+                    gap: 6,
+                    paddingTop: sectionIndex === 0 ? 0 : 8,
+                    marginTop: sectionIndex === 0 ? 0 : 2,
+                    borderTop: sectionIndex === 0 ? 'none' : '1px dashed rgba(255,255,255,0.14)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: 'var(--tg-subtle)',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {section.title}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(23, minmax(0, 1fr))', gap: 4 }}>
+                    {section.items.map((item) => {
+                      const filledAnimated = animated && Boolean(animatedFilledCellIds[item.id]);
+                      const bg = filledAnimated ? MASTERY_BG.known : MASTERY_BG[item.mastery];
+                      return (
+                        <div
+                          key={item.id}
+                          title={`${item.word} (${item.cefrLevel})`}
+                          style={{
+                            width: '100%',
+                            aspectRatio: '1 / 1',
+                            borderRadius: 4,
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            background: bg,
+                            transition: 'background-color 220ms ease',
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           );
         })}
@@ -1595,7 +1652,34 @@ export default function WordTrainingPage() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                 <div style={{ fontSize: 21, fontWeight: 900 }}>Прогресс</div>
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--tg-subtle)' }}>Уровень {userLevel}</span>
+                <div
+                  style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    background: `conic-gradient(var(--tg-accent) ${Math.round(levelRingPercent * 3.6)}deg, var(--tg-border) 0deg)`,
+                  }}
+                  title={`Уровень ${currentDisplayLevel}: ${levelRingPercent}%`}
+                >
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      display: 'grid',
+                      placeItems: 'center',
+                      background: 'var(--tg-card)',
+                      border: '1px solid var(--tg-border)',
+                      fontSize: 12,
+                      fontWeight: 900,
+                      color: 'var(--tg-text)',
+                    }}
+                  >
+                    {currentDisplayLevel}
+                  </div>
+                </div>
               </div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700 }}>
                 <span style={{ fontSize: 16 }}>🔥</span> Серия: {streakDays} дн.
@@ -1603,6 +1687,14 @@ export default function WordTrainingPage() {
               <div style={{ color: 'var(--tg-subtle)', fontSize: 14 }}>
                 Сегодня: {overview.todayProgress.wordsDone} слов · {overview.todayProgress.xpGained} XP
               </div>
+              {overview.currentBlockTitle ? (
+                <div style={{ color: 'var(--tg-subtle)', fontSize: 13, fontWeight: 700 }}>
+                  Текущий блок: {overview.currentBlockTitle}
+                  {overview.currentBlockProgress
+                    ? ` (${overview.currentBlockProgress.knownWords}/${overview.currentBlockProgress.totalWords})`
+                    : ''}
+                </div>
+              ) : null}
               <Button
                 onClick={startOrResume}
                 disabled={submitting || masteryLoading}

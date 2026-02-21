@@ -19,17 +19,32 @@ export interface WordTrainingOverview {
     xpGained: number;
     sessionsDone: number;
   };
+  currentBlock?: string | null;
+  currentLevel?: CefrLevel | string | null;
+  currentBlockTitle?: string | null;
+  levelRingProgress?: {
+    completedBlocks: number;
+    totalBlocks: number;
+    percent: number;
+  };
+  currentBlockProgress?: {
+    knownWords: number;
+    totalWords: number;
+    percent: number;
+  };
   activeSession: {
     id: string;
     energyLeft: number;
     wordsCompleted: number;
     targetWords: number;
+    currentBlock?: string | null;
   } | null;
 }
 
 export interface WordTrainingSession {
   id: string;
   status: SessionStatus;
+  currentBlock?: string | null;
   targetWords: number;
   energyStart: number;
   energyLeft: number;
@@ -114,10 +129,13 @@ export interface WordTrainingMasteryMap {
     new: number;
   };
   byLevel: Record<string, { total: number; known: number; learning: number; new: number }>;
+  byBlock?: Record<string, { total: number; known: number; learning: number; new: number }>;
+  blockTitles?: Record<string, string>;
   items: Array<{
     id: number;
     word: string;
     cefrLevel: string;
+    cefrBlock?: string | null;
     mastery: 'known' | 'learning' | 'new';
   }>;
 }
