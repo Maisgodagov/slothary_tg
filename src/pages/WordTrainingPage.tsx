@@ -156,6 +156,7 @@ export default function WordTrainingPage() {
     const queue = state?.introQueue ?? [];
     return queue.find((item) => !introducedWordKeys[item.wordKey]) ?? null;
   }, [introducedWordKeys, state?.introQueue]);
+  const isTrainingHomeVisible = !loading && !session && Boolean(overview);
 
   const isNewWordIntroVisible = Boolean(session && introPendingWord && !practiceView && !postPracticeTransitioning);
 
@@ -1374,7 +1375,7 @@ export default function WordTrainingPage() {
     </div>
   );
 
-  const renderMasteryGrid = (animated = false) => {
+  const renderMasteryGrid = (animated = false, fillHeight = false) => {
     if (!masteryMap) return null;
     const grouped: Record<string, typeof masteryMap.items> = {};
     for (const level of CEFR_LEVELS) grouped[level] = [];
@@ -1394,6 +1395,9 @@ export default function WordTrainingPage() {
           padding: 12,
           border: '1px solid var(--tg-border)',
           background: 'var(--tg-card)',
+          height: fillHeight ? '100%' : undefined,
+          minHeight: fillHeight ? 0 : undefined,
+          overflowY: fillHeight ? 'auto' : undefined,
         }}
       >
         {CEFR_LEVELS.map((level) => {
@@ -1421,9 +1425,9 @@ export default function WordTrainingPage() {
 
           return (
             <div key={level} style={{ display: 'grid', gap: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-                <div style={{ fontSize: 17, fontWeight: 800 }}>Уровень {level}</div>
-                <div style={{ fontSize: 12, color: 'var(--tg-subtle)', fontWeight: 700 }}>
+              <div style={{ position: 'relative', minHeight: 24 }}>
+                <div style={{ fontSize: 17, fontWeight: 800, textAlign: 'center' }}>Уровень {level}</div>
+                <div style={{ fontSize: 12, color: 'var(--tg-subtle)', fontWeight: 700, position: 'absolute', right: 0, top: 3 }}>
                   {levelStats.known}/{levelStats.total}
                 </div>
               </div>
@@ -1493,6 +1497,10 @@ export default function WordTrainingPage() {
           display: 'grid',
           gap: 12,
           paddingBottom: 'calc(70px + var(--tg-safe-area-inset-bottom, 0px))',
+          height: isTrainingHomeVisible
+            ? 'calc(100svh - 82px - var(--tg-safe-area-inset-bottom, 0px))'
+            : undefined,
+          overflow: isTrainingHomeVisible ? 'hidden' : undefined,
         }}
       >
         {session?.status === 'active' && (
@@ -1588,7 +1596,14 @@ export default function WordTrainingPage() {
         {isNewWordIntroVisible && introPendingWord ? renderNewWordIntro(introPendingWord) : null}
 
         {!loading && !session && overview && (
-          <>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: 'auto minmax(0, 1fr)',
+              gap: 12,
+              minHeight: 0,
+            }}
+          >
             <div
               className="section"
               style={{
@@ -1598,10 +1613,47 @@ export default function WordTrainingPage() {
                 padding: 14,
                 background: 'var(--tg-card)',
                 border: '1px solid var(--tg-border)',
+                alignContent: 'start',
               }}
             >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                <div style={{ fontSize: 24, fontWeight: 600, lineHeight: 1 }}>Твой прогресс</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <div style={{ flex: '0 1 75%', minWidth: 0, display: 'grid', gap: 6 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ color: 'var(--tg-text)', fontSize: 14, fontWeight: 600, minWidth: 0 }}>
+                      {(overview.currentBlockTitle || 'Текущий блок').trim()}
+                    </div>
+                    <div style={{ color: '#43c97f', fontSize: 16, fontWeight: 900, flexShrink: 0 }}>
+                      {overview.currentBlockProgress
+                        ? `${overview.currentBlockProgress.knownWords}/${overview.currentBlockProgress.totalWords}`
+                        : ''}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      height: 5,
+                      borderRadius: 999,
+                      background: 'var(--tg-border)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${Math.max(0, Math.min(100, Number(overview.currentBlockProgress?.percent ?? 0)))}%`,
+                        height: '100%',
+                        borderRadius: 999,
+                        background: 'var(--tg-accent)',
+                        transition: 'width 240ms ease',
+                      }}
+                    />
+                  </div>
+                </div>
                 <div
                   style={{
                     width: 44,
@@ -1632,63 +1684,12 @@ export default function WordTrainingPage() {
                   </div>
                 </div>
               </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0,
-                  minHeight: 1,
-                  borderTop: '1px solid rgba(255,255,255,0.03)',
-                  borderBottom: '1px solid rgba(255,255,255,0.03)',
-                }}
-              />
-
-              {overview.currentBlockTitle ? (
-                <div style={{ display: 'grid', gap: 6 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: 8,
-                    }}
-                  >
-                    <div style={{ color: 'var(--tg-subtle)', fontSize: 14, fontWeight: 800 }}>
-                      <span style={{ color: 'var(--tg-text)', fontWeight: 600 }}>{overview.currentBlockTitle}</span>
-                    </div>
-                    <div style={{ color: '#43c97f', fontSize: 16, fontWeight: 900 }}>
-                      {overview.currentBlockProgress
-                        ? `${overview.currentBlockProgress.knownWords}/${overview.currentBlockProgress.totalWords}`
-                        : ''}
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      height: 5,
-                      borderRadius: 999,
-                      background: 'var(--tg-border)',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${Math.max(0, Math.min(100, Number(overview.currentBlockProgress?.percent ?? 0)))}%`,
-                        height: '100%',
-                        borderRadius: 999,
-                        background: 'var(--tg-accent)',
-                        transition: 'width 240ms ease',
-                      }}
-                    />
-                  </div>
-                </div>
-              ) : null}
               <Button
                 onClick={startOrResume}
                 disabled={submitting || masteryLoading}
                 style={{
                   minHeight: 52,
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: 700,
                   borderRadius: 14,
                   boxShadow: 'none',
@@ -1700,13 +1701,13 @@ export default function WordTrainingPage() {
               >
                 <span style={{ display: 'grid', gap: 2, lineHeight: 1.05, textAlign: 'center' }}>
                   <span>Учить слова</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.9 }}>{suggestedWordsCount} новых слов</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.9 }}>+ {suggestedWordsCount} новых слов</span>
                 </span>
               </Button>
             </div>
 
-            {renderMasteryGrid(false)}
-          </>
+            {renderMasteryGrid(false, true)}
+          </div>
         )}
 
         {!loading &&
