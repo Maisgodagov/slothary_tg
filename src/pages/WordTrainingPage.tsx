@@ -1591,29 +1591,30 @@ export default function WordTrainingPage() {
               style={{
                 display: 'grid',
                 gap: 12,
-                borderRadius: 20,
+                borderRadius: 22,
                 padding: 14,
                 background: 'var(--tg-card)',
                 border: '1px solid var(--tg-border)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                <div style={{ fontSize: 21, fontWeight: 900 }}>Прогресс</div>
+                <div style={{ fontSize: 31, fontWeight: 700, lineHeight: 1 }}>Твой прогресс</div>
                 <div
                   style={{
-                    width: 46,
-                    height: 46,
+                    width: 44,
+                    height: 44,
                     borderRadius: '50%',
                     display: 'grid',
                     placeItems: 'center',
                     background: `conic-gradient(var(--tg-accent) ${Math.round(levelRingPercent * 3.6)}deg, var(--tg-border) 0deg)`,
+                    flexShrink: 0,
                   }}
                   title={`Уровень ${currentDisplayLevel}: ${levelRingPercent}%`}
                 >
                   <div
                     style={{
-                      width: 36,
-                      height: 36,
+                      width: 34,
+                      height: 34,
                       borderRadius: '50%',
                       display: 'grid',
                       placeItems: 'center',
@@ -1628,24 +1629,91 @@ export default function WordTrainingPage() {
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700 }}>
-                <span style={{ fontSize: 16 }}>🔥</span> Серия: {streakDays} дн.
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0,
+                  minHeight: 30,
+                  borderTop: '1px solid rgba(255,255,255,0.03)',
+                  borderBottom: '1px solid rgba(255,255,255,0.03)',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    padding: '0 8px 0 0',
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>🔥</span>
+                  <span>{streakDays} дн.</span>
+                </div>
+                <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.12)', margin: '0 10px' }} />
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    padding: '0 8px',
+                  }}
+                >
+                  <span style={{ fontSize: 14, color: '#43c97f' }}>●</span>
+                  <span>{overview.todayProgress.wordsDone} слов</span>
+                </div>
               </div>
-              <div style={{ color: 'var(--tg-subtle)', fontSize: 14 }}>
-                Сегодня: {overview.todayProgress.wordsDone} слов · {overview.todayProgress.xpGained} XP
-              </div>
+
               {overview.currentBlockTitle ? (
-                <div style={{ color: 'var(--tg-subtle)', fontSize: 13, fontWeight: 700 }}>
-                  Текущий блок: {overview.currentBlockTitle}
-                  {overview.currentBlockProgress
-                    ? ` (${overview.currentBlockProgress.knownWords}/${overview.currentBlockProgress.totalWords})`
-                    : ''}
+                <div style={{ display: 'grid', gap: 6 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ color: 'var(--tg-subtle)', fontSize: 14, fontWeight: 800 }}>
+                      <span style={{ color: 'var(--tg-text)' }}>{overview.currentBlockTitle}</span>
+                    </div>
+                    <div style={{ color: '#43c97f', fontSize: 16, fontWeight: 900 }}>
+                      {overview.currentBlockProgress
+                        ? `${overview.currentBlockProgress.knownWords}/${overview.currentBlockProgress.totalWords}`
+                        : ''}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      height: 5,
+                      borderRadius: 999,
+                      background: 'var(--tg-border)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${Math.max(0, Math.min(100, Number(overview.currentBlockProgress?.percent ?? 0)))}%`,
+                        height: '100%',
+                        borderRadius: 999,
+                        background: 'var(--tg-accent)',
+                        transition: 'width 240ms ease',
+                      }}
+                    />
+                  </div>
                 </div>
               ) : null}
               <Button
                 onClick={startOrResume}
                 disabled={submitting || masteryLoading}
-                style={{ minHeight: 50, fontSize: 20, fontWeight: 800, borderRadius: 14, boxShadow: 'none' }}
+                style={{ minHeight: 52, fontSize: 20, fontWeight: 800, borderRadius: 14, boxShadow: 'none', marginTop: 4 }}
               >
                 Учить слова
               </Button>
