@@ -18,14 +18,13 @@ import type {
 } from '../../api/types';
 import { useWordTrainingAudio } from '../../../../features/word-training/useWordTrainingAudio';
 import type { PhraseSnippet } from '../../../../features/video-dictionary/api';
-import { Button } from '../../../../shared/ui/Button';
 import { PageShell } from '../../../../shared/ui/PageShell';
 import BottomActionPanel from '../../components/BottomActionPanel/index';
-import MasteryGrid from '../../components/MasteryGrid';
 import NewWordIntroCard from '../../components/NewWordIntroCard/index';
 import PracticeSnippetCard from '../../components/PracticeSnippetCard';
 import { RecognitionCard } from '../../components/RecognitionCard';
 import ReinforcementCard from '../../components/ReinforcementCard';
+import TrainingCompletionView from '../../components/TrainingCompletionView';
 import TrainingSessionHeader from '../../components/TrainingSessionHeader';
 import TrainingHome from '../../components/TrainingHome';
 import {
@@ -935,56 +934,20 @@ export function WordTrainingContainer() {
             )
           : null}
 
-        {!loading && session && !task && completionStage === 'praise' && (
-          <div
-            className="section"
-            style={{
-              display: 'grid',
-              gap: 14,
-              minHeight: 'calc(100svh - 170px)',
-              alignContent: 'start',
-              borderRadius: 24,
-              padding: 16,
-              background: 'var(--tg-card)',
-              border: '1px solid var(--tg-border)',
+        {!loading && session && !task && (
+          <TrainingCompletionView
+            stage={completionStage}
+            wordsCompleted={session.wordsCompleted}
+            xpEarned={session.xpEarned}
+            totalWordsToday={state?.summary?.totalWordsToday ?? 0}
+            totalXpToday={state?.summary?.totalXpToday ?? 0}
+            masteryMap={masteryMap}
+            animatedFilledCellIds={animatedFilledCellIds}
+            submitting={submitting}
+            onRestart={() => {
+              void load();
             }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 28, lineHeight: 1 }}>??</span>
-              <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.05 }}>Отличная тренировка!</div>
-            </div>
-            <div style={{ color: 'var(--tg-subtle)', fontSize: 15, lineHeight: 1.35 }}>
-              Ты закрыл {session.wordsCompleted} слов и получил +{session.xpEarned} XP.
-            </div>
-            <div style={{ color: 'var(--tg-subtle)', fontSize: 14, fontWeight: 700 }}>
-              За сегодня: {state?.summary?.totalWordsToday ?? 0} слов · {state?.summary?.totalXpToday ?? 0} XP
-            </div>
-          </div>
-        )}
-
-        {!loading && session && !task && completionStage === 'map' && (
-          <>
-            <MasteryGrid
-              masteryMap={masteryMap}
-              animated
-              animatedFilledCellIds={animatedFilledCellIds}
-            />
-            <Button
-              onClick={load}
-              disabled={submitting}
-              style={{
-                minHeight: 52,
-                fontSize: 20,
-                fontWeight: 800,
-                boxShadow: 'none',
-                background: 'var(--tg-accent-strong)',
-                backgroundImage: 'none',
-                color: '#0b0b0b',
-              }}
-            >
-              Учить слова
-            </Button>
-          </>
+          />
         )}
 
       </TrainingPageRoot>
