@@ -9,10 +9,13 @@ import {
   IconButton,
   MissingOptionsGrid,
   MissingSentence,
+  OptionButton,
   PairsColumn,
   PairsGrid,
+  SlotChip,
   SlotsWrap,
   Title,
+  TokenButton,
   TranslationText,
 } from './styles';
 
@@ -21,8 +24,6 @@ export function ReinforcementCard({
   submitting,
   reinforcementChecked,
   canCheckReinforcement,
-  optionButtonBaseStyle,
-  slotBaseStyle,
   missingExerciseModel,
   missingSelected,
   setMissingSelected,
@@ -61,7 +62,7 @@ export function ReinforcementCard({
                 normalize(missingSelected[slotIndex] ?? '') === normalize(missingExerciseModel.expectedWords[slotIndex] ?? '');
               const isSlotWrong = reinforcementChecked && !isSlotCorrect;
               return (
-                <span
+                <SlotChip
                   key={`blank-${index}`}
                   className={isSlotWrong ? 'slot-shake' : undefined}
                   onClick={() => {
@@ -72,24 +73,13 @@ export function ReinforcementCard({
                       return next;
                     });
                   }}
-                  style={{
-                    ...slotBaseStyle,
-                    margin: '0 3px',
-                    border: reinforcementChecked
-                      ? isSlotCorrect
-                        ? '3px solid rgba(67, 201, 127, 0.85)'
-                        : '3px solid rgba(255, 95, 109, 0.9)'
-                      : slotBaseStyle.border,
-                    background: reinforcementChecked
-                      ? isSlotCorrect
-                        ? 'rgba(67, 201, 127, 0.12)'
-                        : 'rgba(255, 95, 109, 0.12)'
-                      : slotBaseStyle.background,
-                    cursor: !reinforcementChecked && missingSelected[slotIndex] ? 'pointer' : 'default',
-                  }}
+                  style={{ margin: '0 3px', cursor: !reinforcementChecked && missingSelected[slotIndex] ? 'pointer' : 'default' }}
+                  $correct={isSlotCorrect}
+                  $wrong={isSlotWrong}
+                  $filled={Boolean(missingSelected[slotIndex])}
                 >
                   {missingSelected[slotIndex] ?? ''}
-                </span>
+                </SlotChip>
               );
             }
             return <span key={`text-${index}`}>{token}</span>;
@@ -103,7 +93,7 @@ export function ReinforcementCard({
               missingExerciseModel.expectedWords.filter((word) => normalize(word) === normalize(option)).length > usedCount;
             const disabledByUse = usedCount > 0 && !canReuse;
             return (
-              <Button
+              <OptionButton
                 key={`${option}-${index}`}
                 variant="ghost"
                 onClick={() => {
@@ -118,10 +108,10 @@ export function ReinforcementCard({
                   });
                 }}
                 disabled={submitting || reinforcementChecked || disabledByUse}
-                style={{ ...optionButtonBaseStyle, opacity: disabledByUse ? 0.55 : 1 }}
+                style={{ opacity: disabledByUse ? 0.55 : 1 }}
               >
                 {option}
-              </Button>
+              </OptionButton>
             );
           })}
         </MissingOptionsGrid>
@@ -161,31 +151,20 @@ export function ReinforcementCard({
             const isSlotCorrect = reinforcementChecked && token && normalizeLoose(token) === normalizeLoose(target ?? '');
             const isSlotWrong = reinforcementChecked && token && !isSlotCorrect;
             return (
-              <span
+              <SlotChip
                 key={`slot-${idx}`}
                 className={isSlotWrong ? 'slot-shake' : undefined}
                 onClick={() => {
                   if (reinforcementChecked || !token) return;
                   setAssembleAnswer((prev) => prev.filter((_, itemIndex) => itemIndex !== idx));
                 }}
-                style={{
-                  ...slotBaseStyle,
-                  border: isSlotCorrect
-                    ? '3px solid rgba(67, 201, 127, 0.7)'
-                    : isSlotWrong
-                    ? '3px solid rgba(255, 95, 109, 0.7)'
-                    : slotBaseStyle.border,
-                  background: isSlotCorrect
-                    ? 'rgba(67, 201, 127, 0.12)'
-                    : isSlotWrong
-                    ? 'rgba(255, 95, 109, 0.12)'
-                    : slotBaseStyle.background,
-                  color: token ? 'var(--tg-text)' : 'var(--tg-subtle)',
-                  cursor: token && !reinforcementChecked ? 'pointer' : 'default',
-                }}
+                style={{ cursor: token && !reinforcementChecked ? 'pointer' : 'default' }}
+                $correct={Boolean(isSlotCorrect)}
+                $wrong={Boolean(isSlotWrong)}
+                $filled={Boolean(token)}
               >
                 {token || ''}
-              </span>
+              </SlotChip>
             );
           })}
         </SlotsWrap>
@@ -195,7 +174,7 @@ export function ReinforcementCard({
             const disabled = reinforcementChecked || assembleAnswer.length >= maxSlots;
 
             return (
-              <button
+              <TokenButton
                 key={`${sourceIndex}-${token}`}
                 type="button"
                 onClick={() => {
@@ -203,16 +182,10 @@ export function ReinforcementCard({
                   setAssembleAnswer((prev) => [...prev, token]);
                 }}
                 disabled={disabled}
-                style={{
-                  ...optionButtonBaseStyle,
-                  border: '1px solid var(--tg-border)',
-                  background: 'var(--tg-card)',
-                  color: 'var(--tg-text)',
-                  opacity: disabled ? 0.75 : 1,
-                }}
+                style={{ opacity: disabled ? 0.75 : 1 }}
               >
                 {token}
-              </button>
+              </TokenButton>
             );
           })}
         </BankWrap>
@@ -261,7 +234,7 @@ export function ReinforcementCard({
             const isTempWrong = pairWrongWord === pair.word;
 
             return (
-              <button
+              <TokenButton
                 key={pair.word}
                 type="button"
                 onClick={() => {
@@ -274,30 +247,24 @@ export function ReinforcementCard({
                   }
                   setPairLeftSelected((prev) => (prev === pair.word ? null : pair.word));
                 }}
+                className={isTempWrong ? 'slot-shake' : undefined}
                 style={{
-                  ...optionButtonBaseStyle,
                   minHeight: 56,
-                  border: `1px solid ${
-                    isLockedCorrect || isCorrect
-                      ? 'rgba(67, 201, 127, 0.7)'
-                      : isTempWrong
-                      ? 'rgba(255, 95, 109, 0.8)'
-                      : isWrong
-                      ? 'rgba(255, 95, 109, 0.7)'
-                      : selected
-                      ? 'rgba(46, 163, 255, 0.75)'
-                      : 'var(--tg-border)'
-                  }`,
-                  background: 'var(--tg-card)',
-                  color: 'var(--tg-text)',
                   textAlign: 'left',
                   padding: '12px 14px',
-                  animation: isTempWrong ? 'slot-shake 1s ease-in-out 1' : undefined,
-                  borderWidth: isLockedCorrect || isCorrect || isTempWrong || isWrong ? 3 : 1,
+                  borderColor: isLockedCorrect || isCorrect
+                    ? 'rgba(67, 201, 127, 0.7)'
+                    : isTempWrong
+                    ? 'rgba(255, 95, 109, 0.8)'
+                    : isWrong
+                    ? 'rgba(255, 95, 109, 0.7)'
+                    : selected
+                    ? 'rgba(46, 163, 255, 0.75)'
+                    : 'var(--tg-border)',
                 }}
               >
                 {pair.word}
-              </button>
+              </TokenButton>
             );
           })}
         </PairsColumn>
@@ -311,7 +278,7 @@ export function ReinforcementCard({
             const disabled = reinforcementChecked || isLockedCorrect;
 
             return (
-              <button
+              <TokenButton
                 key={`${translation}-${index}`}
                 type="button"
                 onClick={() => {
@@ -323,29 +290,23 @@ export function ReinforcementCard({
                   setPairRightSelected((prev) => (normalize(prev ?? '') === normalize(translation) ? null : translation));
                 }}
                 disabled={disabled}
+                className={isTempWrong ? 'slot-shake' : undefined}
                 style={{
-                  ...optionButtonBaseStyle,
                   minHeight: 56,
-                  border: `1px solid ${
-                    isLockedCorrect
-                      ? 'rgba(67, 201, 127, 0.7)'
-                      : isTempWrong
-                      ? 'rgba(255, 95, 109, 0.8)'
-                      : isSelected
-                      ? 'rgba(46, 163, 255, 0.75)'
-                      : 'var(--tg-border)'
-                  }`,
-                  background: 'var(--tg-card)',
-                  color: 'var(--tg-text)',
                   textAlign: 'left',
                   padding: '12px 14px',
                   opacity: reinforcementChecked ? 0.6 : 1,
-                  animation: isTempWrong ? 'slot-shake 1s ease-in-out 1' : undefined,
-                  borderWidth: isLockedCorrect || isTempWrong ? 3 : 1,
+                  borderColor: isLockedCorrect
+                    ? 'rgba(67, 201, 127, 0.7)'
+                    : isTempWrong
+                    ? 'rgba(255, 95, 109, 0.8)'
+                    : isSelected
+                    ? 'rgba(46, 163, 255, 0.75)'
+                    : 'var(--tg-border)',
                 }}
               >
                 {translation}
-              </button>
+              </TokenButton>
             );
           })}
         </PairsColumn>
@@ -421,4 +382,3 @@ export function ReinforcementCard({
 }
 
 export default ReinforcementCard;
-

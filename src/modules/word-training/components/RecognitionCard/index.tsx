@@ -1,10 +1,10 @@
 ﻿import { Volume2 } from 'lucide-react';
 
-import { Button } from '../../../../shared/ui/Button';
 import {
   Card,
   HeaderRow,
   HeaderTitle,
+  OptionButton,
   OptionsGrid,
   PronButton,
   WordRow,
@@ -17,7 +17,6 @@ export function RecognitionCard({
   submitting,
   recognitionChecked,
   recognitionWrongOption,
-  optionButtonBaseStyle,
   onPlayPronunciation,
   onPickOption,
   normalize,
@@ -52,29 +51,20 @@ export function RecognitionCard({
           const showCorrect = recognitionChecked && isCorrectOption;
           const showWrong = normalize(recognitionWrongOption ?? '') === normalize(option);
           return (
-            <Button
+            <OptionButton
               key={`${option}-${index}`}
               variant="ghost"
               onClick={() => onPickOption(option, isCorrectOption)}
               disabled={submitting || recognitionChecked}
               className={showWrong ? 'slot-shake' : undefined}
-              style={{
-                ...optionButtonBaseStyle,
-                borderColor: showCorrect
-                  ? 'rgba(67, 201, 127, 0.9)'
-                  : showWrong
-                  ? 'rgba(255, 95, 109, 0.9)'
-                  : 'var(--tg-border)',
-                borderWidth: 3,
-              }}
+              $correct={showCorrect}
+              $wrong={showWrong}
             >
               {option}
-            </Button>
+            </OptionButton>
           );
         })}
       </OptionsGrid>
     </Card>
   );
 }
-
-

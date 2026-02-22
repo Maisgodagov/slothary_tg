@@ -1,4 +1,4 @@
-﻿import type { CSSProperties, Dispatch, SetStateAction } from 'react';
+﻿import type { Dispatch, SetStateAction } from 'react';
 import type { ReinforcementTask } from '../../api/types';
 
 export type MissingExerciseModel = {
@@ -13,8 +13,6 @@ export type ReinforcementCardProps = {
   submitting: boolean;
   reinforcementChecked: boolean;
   canCheckReinforcement: boolean;
-  optionButtonBaseStyle: CSSProperties;
-  slotBaseStyle: CSSProperties;
   missingExerciseModel: MissingExerciseModel | null;
   missingSelected: [string | null, string | null];
   setMissingSelected: Dispatch<SetStateAction<[string | null, string | null]>>;
@@ -37,4 +35,3 @@ export type ReinforcementCardProps = {
   onPlayFeedbackSound: (isCorrect: boolean) => Promise<void>;
   onSubmitReinforcement: () => void;
 };
-

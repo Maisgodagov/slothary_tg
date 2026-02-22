@@ -150,35 +150,6 @@ export function WordTrainingContainer() {
 
   const isNewWordIntroVisible = Boolean(session && introPendingWord && !practiceView && !postPracticeTransitioning);
 
-  const optionButtonBaseStyle = {
-    minHeight: 48,
-    borderRadius: 18,
-    padding: '10px 12px',
-    fontSize: 22,
-    fontWeight: 700,
-    lineHeight: 1.1,
-    borderStyle: 'solid',
-    borderWidth: 3,
-    borderColor: 'var(--tg-border)',
-  } as const;
-
-  const slotBaseStyle = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 82,
-    minHeight: 40,
-    borderRadius: 18,
-    border: '3px dashed var(--tg-border)',
-    margin: '0 6px',
-    verticalAlign: 'middle',
-    color: 'var(--tg-text)',
-    fontSize: 22,
-    fontWeight: 700,
-    padding: '4px 12px',
-    background: 'rgba(255,255,255,0.03)',
-  } as const;
-
   const missingExerciseModel = useMemo(() => {
     if (!task || task.mode !== 'reinforcement' || task.reinforcement.type !== 'missing') return null;
 
@@ -701,7 +672,6 @@ export function WordTrainingContainer() {
         submitting={submitting}
         recognitionChecked={recognitionChecked}
         recognitionWrongOption={recognitionWrongOption}
-        optionButtonBaseStyle={optionButtonBaseStyle}
         onPlayPronunciation={(task) => void playPronunciation(task)}
         normalize={normalize}
         onPickOption={(option, isCorrectOption) => {
@@ -765,8 +735,6 @@ export function WordTrainingContainer() {
       submitting={submitting}
       reinforcementChecked={reinforcementChecked}
       canCheckReinforcement={canCheckReinforcement}
-      optionButtonBaseStyle={optionButtonBaseStyle}
-      slotBaseStyle={slotBaseStyle}
       missingExerciseModel={missingExerciseModel}
       missingSelected={missingSelected}
       setMissingSelected={setMissingSelected}

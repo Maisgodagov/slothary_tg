@@ -1,4 +1,5 @@
 ﻿import styled from 'styled-components';
+import { Button } from '../../../../shared/ui/Button';
 
 export const Card = styled.div`
   display: grid;
@@ -58,10 +59,70 @@ export const SlotsWrap = styled.div`
   align-items: center;
 `;
 
+export const SlotChip = styled.span<{ $correct?: boolean; $wrong?: boolean; $filled?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 82px;
+  min-height: 40px;
+  border-radius: 18px;
+  border: ${({ $correct, $wrong }) =>
+    $correct
+      ? '3px solid rgba(67, 201, 127, 0.85)'
+      : $wrong
+      ? '3px solid rgba(255, 95, 109, 0.9)'
+      : '3px dashed var(--tg-border)'};
+  margin: 0 6px;
+  vertical-align: middle;
+  color: ${({ $filled }) => ($filled ? 'var(--tg-text)' : 'var(--tg-subtle)')};
+  font-size: 22px;
+  font-weight: 700;
+  padding: 4px 12px;
+  background: ${({ $correct, $wrong }) =>
+    $correct
+      ? 'rgba(67, 201, 127, 0.12)'
+      : $wrong
+      ? 'rgba(255, 95, 109, 0.12)'
+      : 'rgba(255,255,255,0.03)'};
+`;
+
 export const BankWrap = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+`;
+
+export const OptionButton = styled(Button)<{ $correct?: boolean; $wrong?: boolean; $selected?: boolean }>`
+  min-height: 48px;
+  border-radius: 18px;
+  padding: 10px 12px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  border-style: solid;
+  border-width: 3px;
+  border-color: ${({ $correct, $wrong, $selected }) =>
+    $correct
+      ? 'rgba(67, 201, 127, 0.7)'
+      : $wrong
+      ? 'rgba(255, 95, 109, 0.8)'
+      : $selected
+      ? 'rgba(46, 163, 255, 0.75)'
+      : 'var(--tg-border)'};
+`;
+
+export const TokenButton = styled.button`
+  min-height: 48px;
+  border-radius: 18px;
+  padding: 10px 12px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  border-style: solid;
+  border-width: 3px;
+  border-color: var(--tg-border);
+  background: var(--tg-card);
+  color: var(--tg-text);
 `;
 
 export const PairsGrid = styled.div`
@@ -90,4 +151,3 @@ export const MissingSentence = styled.div`
   font-weight: 700;
   line-height: 1.28;
 `;
-

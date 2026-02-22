@@ -1,4 +1,5 @@
 ﻿import styled from 'styled-components';
+import { Button } from '../../../../shared/ui/Button';
 
 export const Card = styled.div`
   display: grid;
@@ -50,4 +51,17 @@ export const OptionsGrid = styled.div`
   grid-template-columns: 1fr;
   gap: 12px;
   margin-top: 18px;
+`;
+
+export const OptionButton = styled(Button)<{ $correct?: boolean; $wrong?: boolean }>`
+  min-height: 48px;
+  border-radius: 18px;
+  padding: 10px 12px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  border-style: solid;
+  border-width: 3px;
+  border-color: ${({ $correct, $wrong }) =>
+    $correct ? 'rgba(67, 201, 127, 0.9)' : $wrong ? 'rgba(255, 95, 109, 0.9)' : 'var(--tg-border)'};
 `;
