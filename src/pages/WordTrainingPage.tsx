@@ -57,7 +57,6 @@ export default function WordTrainingPage() {
   const dispatch = useAppDispatch();
   const auth = useAppSelector(selectAuth);
   const userId = auth.profile?.id ?? null;
-  const streakDays = auth.profile?.streakDays ?? 0;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,6 +123,10 @@ export default function WordTrainingPage() {
     }
     return `${lessonProgressPercent}%`;
   }, [lessonProgressPercent, session, task]);
+  const suggestedWordsCount = useMemo(() => {
+    const n = Number(overview?.suggestedTargetWords ?? 5);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : 5;
+  }, [overview?.suggestedTargetWords]);
   const currentStageLabel = useMemo(() => {
     const flow = state?.sessionFlow;
     if (!flow) return null;
@@ -1229,7 +1232,7 @@ export default function WordTrainingPage() {
           border: '1px solid var(--tg-border)',
           borderBottom: 'none',
           background: 'var(--tg-card)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.26)',
+          boxShadow: 'none',
           padding: '12px 12px 10px',
           display: 'grid',
           gap: 10,
@@ -1528,7 +1531,7 @@ export default function WordTrainingPage() {
                   style={{
                     width: `${lessonProgressPercent}%`,
                     height: '100%',
-                    background: 'linear-gradient(90deg, #8fdc3f, #7ac734)',
+                    background: 'var(--tg-success)',
                     transition: 'width 220ms ease',
                   }}
                 />
@@ -1597,8 +1600,8 @@ export default function WordTrainingPage() {
                 border: '1px solid var(--tg-border)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                <div style={{ fontSize: 31, fontWeight: 700, lineHeight: 1 }}>Твой прогресс</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                <div style={{ fontSize: 24, fontWeight: 600, lineHeight: 1 }}>Твой прогресс</div>
                 <div
                   style={{
                     width: 44,
@@ -1606,7 +1609,7 @@ export default function WordTrainingPage() {
                     borderRadius: '50%',
                     display: 'grid',
                     placeItems: 'center',
-                    background: `conic-gradient(var(--tg-accent) ${Math.round(levelRingPercent * 3.6)}deg, var(--tg-border) 0deg)`,
+                    background: 'var(--tg-border)',
                     flexShrink: 0,
                   }}
                   title={`Уровень ${currentDisplayLevel}: ${levelRingPercent}%`}
@@ -1635,41 +1638,11 @@ export default function WordTrainingPage() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 0,
-                  minHeight: 30,
+                  minHeight: 1,
                   borderTop: '1px solid rgba(255,255,255,0.03)',
                   borderBottom: '1px solid rgba(255,255,255,0.03)',
                 }}
-              >
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    fontSize: 16,
-                    fontWeight: 600,
-                    whiteSpace: 'nowrap',
-                    padding: '0 8px 0 0',
-                  }}
-                >
-                  <span style={{ fontSize: 14 }}>🔥</span>
-                  <span>{streakDays} дн.</span>
-                </div>
-                <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.12)', margin: '0 10px' }} />
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    fontSize: 16,
-                    fontWeight: 600,
-                    whiteSpace: 'nowrap',
-                    padding: '0 8px',
-                  }}
-                >
-                  <span style={{ fontSize: 14, color: '#43c97f' }}>●</span>
-                  <span>{overview.todayProgress.wordsDone} слов</span>
-                </div>
-              </div>
+              />
 
               {overview.currentBlockTitle ? (
                 <div style={{ display: 'grid', gap: 6 }}>
@@ -1682,7 +1655,7 @@ export default function WordTrainingPage() {
                     }}
                   >
                     <div style={{ color: 'var(--tg-subtle)', fontSize: 14, fontWeight: 800 }}>
-                      <span style={{ color: 'var(--tg-text)' }}>{overview.currentBlockTitle}</span>
+                      <span style={{ color: 'var(--tg-text)', fontWeight: 600 }}>{overview.currentBlockTitle}</span>
                     </div>
                     <div style={{ color: '#43c97f', fontSize: 16, fontWeight: 900 }}>
                       {overview.currentBlockProgress
@@ -1713,9 +1686,22 @@ export default function WordTrainingPage() {
               <Button
                 onClick={startOrResume}
                 disabled={submitting || masteryLoading}
-                style={{ minHeight: 52, fontSize: 20, fontWeight: 800, borderRadius: 14, boxShadow: 'none', marginTop: 4 }}
+                style={{
+                  minHeight: 52,
+                  fontSize: 18,
+                  fontWeight: 700,
+                  borderRadius: 14,
+                  boxShadow: 'none',
+                  marginTop: 4,
+                  background: 'var(--tg-accent-strong)',
+                  backgroundImage: 'none',
+                  color: '#0b0b0b',
+                }}
               >
-                Учить слова
+                <span style={{ display: 'grid', gap: 2, lineHeight: 1.05, textAlign: 'center' }}>
+                  <span>Учить слова</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.9 }}>{suggestedWordsCount} новых слов</span>
+                </span>
               </Button>
             </div>
 
@@ -1873,7 +1859,15 @@ export default function WordTrainingPage() {
             <Button
               onClick={load}
               disabled={submitting}
-              style={{ minHeight: 52, fontSize: 20, fontWeight: 800, boxShadow: 'none' }}
+              style={{
+                minHeight: 52,
+                fontSize: 20,
+                fontWeight: 800,
+                boxShadow: 'none',
+                background: 'var(--tg-accent-strong)',
+                backgroundImage: 'none',
+                color: '#0b0b0b',
+              }}
             >
               Учить слова
             </Button>
