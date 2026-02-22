@@ -1,6 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Volume2, X } from 'lucide-react';
 
 import { useAppSelector } from '../../../../app/hooks';
 import { useAppDispatch } from '../../../../app/hooks';
@@ -17,35 +16,19 @@ import type {
   WordTrainingOverview,
   WordTrainingState,
 } from '../../api/types';
-import { TrainingStageStepper } from '../../../../features/word-training/components/TrainingStageStepper';
 import { useWordTrainingAudio } from '../../../../features/word-training/useWordTrainingAudio';
 import type { PhraseSnippet } from '../../../../features/video-dictionary/api';
-import { SnippetCarousel } from '../../../../modules/dictionary/components/SnippetCarousel';
 import { Button } from '../../../../shared/ui/Button';
 import { PageShell } from '../../../../shared/ui/PageShell';
 import BottomActionPanel from '../../components/BottomActionPanel/index';
+import MasteryGrid from '../../components/MasteryGrid';
 import NewWordIntroCard from '../../components/NewWordIntroCard/index';
+import PracticeSnippetCard from '../../components/PracticeSnippetCard';
 import { RecognitionCard } from '../../components/RecognitionCard';
+import ReinforcementCard from '../../components/ReinforcementCard';
+import TrainingSessionHeader from '../../components/TrainingSessionHeader';
+import TrainingHome from '../../components/TrainingHome';
 import {
-  CurrentBlockCounter,
-  CurrentBlockTitle,
-  CurrentBlockTitleRow,
-  CurrentBlockWrap,
-  HomeLayout,
-  LearnButtonLabel,
-  LearnButtonSub,
-  LevelHeaderCounter,
-  LevelHeaderRow,
-  LevelHeaderTitle,
-  LevelRingInner,
-  LevelRingOuter,
-  MasteryArea,
-  MasteryGridCard,
-  ProgressCard,
-  ProgressFill,
-  ProgressTopRow,
-  ProgressTrack,
-  SessionHeaderWrap,
   TrainingPageRoot,
 } from './styles';
 
@@ -58,27 +41,8 @@ const normalize = (value: string): string =>
 
 const normalizeLoose = (value: string): string => normalize(value.replace(/[.,!?;:]/g, ' '));
 const isWordToken = (value: string): boolean => /^[A-Za-z][A-Za-z'-]*$/.test(value);
-const CEFR_LEVELS: Array<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'> = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-const MASTERY_BG = {
-  known: '#2ac46f',
-  learning: '#f2c94c',
-  new: 'rgba(255,255,255,0.16)',
-} as const;
 const MASTERY_CELL_ANIMATION_MS = 2400;
 const MASTERY_CELL_ANIMATION_GAP_MS = 220;
-const normalizeSectionTitleKey = (title: string) =>
-  String(title ?? '')
-    .replace(/\s+/g, ' ')
-    .replace(/[–—]/g, '-')
-    .trim()
-    .toLowerCase();
-const getCefrBlockOrder = (block: string | null | undefined, level: string) => {
-  if (!block) return Number.MAX_SAFE_INTEGER;
-  const match = String(block).toUpperCase().match(new RegExp(`^${level.toUpperCase()}_(\\d+)$`));
-  if (!match) return Number.MAX_SAFE_INTEGER;
-  const n = Number(match[1]);
-  return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
-};
 
 export function WordTrainingContainer() {
   const dispatch = useAppDispatch();
@@ -772,348 +736,6 @@ export function WordTrainingContainer() {
     return <NewWordIntroCard introWord={introWord} onPlayAudio={(url) => void playAudioUrl(url)} />;
   };
 
-  const renderMissingExercise = (_reinforcement: ReinforcementTask) => {
-    if (!missingExerciseModel) return null;
-    const options = missingExerciseModel.options;
-    const { rawTokens, blankIndexes } = missingExerciseModel;
-
-    return (
-      <>
-        <div
-          style={{
-            minHeight: 56,
-            padding: 4,
-            fontSize: 23,
-            fontWeight: 700,
-            lineHeight: 1.28,
-          }}
-        >
-          {rawTokens.map((token, index) => {
-            const slotIndex = blankIndexes.findIndex((blankIndex) => blankIndex === index);
-            if (slotIndex >= 0) {
-              const isSlotCorrect =
-                reinforcementChecked &&
-                normalize(missingSelected[slotIndex] ?? '') ===
-                  normalize(missingExerciseModel.expectedWords[slotIndex] ?? '');
-              const isSlotWrong = reinforcementChecked && !isSlotCorrect;
-              return (
-                <span
-                  key={`blank-${index}`}
-                  className={isSlotWrong ? 'slot-shake' : undefined}
-                  onClick={() => {
-                    if (reinforcementChecked || !missingSelected[slotIndex]) return;
-                    setMissingSelected((prev) => {
-                      const next: [string | null, string | null] = [...prev] as [string | null, string | null];
-                      next[slotIndex] = null;
-                      return next;
-                    });
-                  }}
-                  style={{
-                    ...slotBaseStyle,
-                    margin: '0 3px',
-                    border: reinforcementChecked
-                      ? isSlotCorrect
-                        ? '3px solid rgba(67, 201, 127, 0.85)'
-                        : '3px solid rgba(255, 95, 109, 0.9)'
-                      : slotBaseStyle.border,
-                    background: reinforcementChecked
-                      ? isSlotCorrect
-                        ? 'rgba(67, 201, 127, 0.12)'
-                        : 'rgba(255, 95, 109, 0.12)'
-                      : slotBaseStyle.background,
-                    cursor: !reinforcementChecked && missingSelected[slotIndex] ? 'pointer' : 'default',
-                  }}
-                >
-                  {missingSelected[slotIndex] ?? ''}
-                </span>
-              );
-            }
-            return <span key={`text-${index}`}>{token}</span>;
-          })}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 18 }}>
-          {options.map((option, index) => {
-            const usedCount = missingSelected.filter((value) => normalize(value ?? '') === normalize(option)).length;
-            const canReuse =
-              missingExerciseModel.expectedWords.filter((word) => normalize(word) === normalize(option)).length > usedCount;
-            const disabledByUse = usedCount > 0 && !canReuse;
-            return (
-              <Button
-                key={`${option}-${index}`}
-                variant="ghost"
-                onClick={() => {
-                  if (reinforcementChecked) return;
-                  setMissingSelected((prev) => {
-                    if (disabledByUse) return prev;
-                    const emptyIndex = prev.findIndex((value) => !value);
-                    if (emptyIndex < 0) return prev;
-                    const next: [string | null, string | null] = [...prev] as [string | null, string | null];
-                    next[emptyIndex] = option;
-                    return next;
-                  });
-                }}
-                disabled={submitting || reinforcementChecked || disabledByUse}
-                style={{ ...optionButtonBaseStyle, opacity: disabledByUse ? 0.55 : 1 }}
-              >
-                {option}
-              </Button>
-            );
-          })}
-        </div>
-
-      </>
-    );
-  };
-
-  const renderAudioAssembleExercise = (reinforcement: ReinforcementTask) => {
-    const targetTokens = reinforcement.reinforcement.targetTokens ?? [];
-    const assembleTokens = reinforcement.reinforcement.assembleTokens ?? [];
-    const maxSlots = targetTokens.length;
-
-    const answerUsage = getTokenUsage(assembleAnswer);
-    const usageLeft = new Map(answerUsage);
-    const availableBankTokens: Array<{ token: string; sourceIndex: number }> = [];
-    for (let sourceIndex = 0; sourceIndex < assembleTokens.length; sourceIndex += 1) {
-      const token = assembleTokens[sourceIndex];
-      const key = normalizeLoose(token);
-      const usedCount = usageLeft.get(key) ?? 0;
-      if (usedCount > 0) {
-        usageLeft.set(key, usedCount - 1);
-        continue;
-      }
-      availableBankTokens.push({ token, sourceIndex });
-    }
-
-    return (
-      <>
-        {reinforcement.reinforcement.sentenceTranslation ? (
-          <div
-            style={{
-              fontSize: 'clamp(30px, 7vw, 38px)',
-              fontWeight: 800,
-              lineHeight: 1.14,
-              letterSpacing: '-0.02em',
-              margin: '4px 0 10px',
-            }}
-          >
-            {reinforcement.reinforcement.sentenceTranslation}
-          </div>
-        ) : null}
-
-        <div
-          style={{
-            minHeight: 52,
-            padding: 2,
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 8,
-            alignItems: 'center',
-          }}
-        >
-          {Array.from({ length: maxSlots }).map((_, idx) => {
-            const token = assembleAnswer[idx];
-            const target = targetTokens[idx];
-            const isSlotCorrect = reinforcementChecked && token && normalizeLoose(token) === normalizeLoose(target ?? '');
-            const isSlotWrong = reinforcementChecked && token && !isSlotCorrect;
-            return (
-              <span
-                key={`slot-${idx}`}
-                className={isSlotWrong ? 'slot-shake' : undefined}
-                onClick={() => {
-                  if (reinforcementChecked || !token) return;
-                  setAssembleAnswer((prev) => prev.filter((_, itemIndex) => itemIndex !== idx));
-                }}
-                style={{
-                  ...slotBaseStyle,
-                  border: isSlotCorrect
-                    ? '3px solid rgba(67, 201, 127, 0.7)'
-                    : isSlotWrong
-                    ? '3px solid rgba(255, 95, 109, 0.7)'
-                    : slotBaseStyle.border,
-                  background:
-                    isSlotCorrect
-                      ? 'rgba(67, 201, 127, 0.12)'
-                      : isSlotWrong
-                      ? 'rgba(255, 95, 109, 0.12)'
-                      : slotBaseStyle.background,
-                  color: token ? 'var(--tg-text)' : 'var(--tg-subtle)',
-                  cursor: token && !reinforcementChecked ? 'pointer' : 'default',
-                }}
-              >
-                {token || ''}
-              </span>
-            );
-          })}
-        </div>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {availableBankTokens.map(({ token, sourceIndex }) => {
-            const disabled = reinforcementChecked || assembleAnswer.length >= maxSlots;
-
-            return (
-              <button
-                key={`${sourceIndex}-${token}`}
-                type="button"
-                onClick={() => {
-                  if (disabled) return;
-                  setAssembleAnswer((prev) => [...prev, token]);
-                }}
-                disabled={disabled}
-                style={{
-                  ...optionButtonBaseStyle,
-                  border: '1px solid var(--tg-border)',
-                  background: 'var(--tg-card)',
-                  color: 'var(--tg-text)',
-                  opacity: disabled ? 0.75 : 1,
-                }}
-              >
-                {token}
-              </button>
-            );
-          })}
-        </div>
-
-      </>
-    );
-  };
-
-  const renderMatchPairsExercise = (reinforcement: ReinforcementTask) => {
-    const pairs = reinforcement.reinforcement.pairs ?? [];
-    const shuffledTranslations = reinforcement.reinforcement.shuffledTranslations ?? [];
-    const checkAndAssignPair = (word: string, translation: string) => {
-      const target = pairs.find((pair) => pair.word === word);
-      if (!target) return;
-
-      if (normalize(target.translation) === normalize(translation)) {
-        void playFeedbackSound(true);
-        setPairMatches((prev) => ({ ...prev, [word]: translation }));
-        setPairWrongWord(null);
-        setPairWrongTranslation(null);
-        setPairLeftSelected(null);
-        setPairRightSelected(null);
-        return;
-      }
-
-      void playFeedbackSound(false);
-      setPairWrongWord(word);
-      setPairWrongTranslation(translation);
-      setPairLeftSelected(null);
-      setPairRightSelected(null);
-      window.setTimeout(() => {
-        setPairWrongWord((prev) => (prev === word ? null : prev));
-        setPairWrongTranslation((prev) => (normalize(prev ?? '') === normalize(translation) ? null : prev));
-      }, 1000);
-    };
-
-    return (
-      <>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 8 }}>
-          <div style={{ display: 'grid', gap: 12 }}>
-            {pairs.map((pair) => {
-              const selected = pairLeftSelected === pair.word;
-              const matchedTranslation = pairMatches[pair.word];
-              const isCorrect = reinforcementChecked && normalize(matchedTranslation ?? '') === normalize(pair.translation);
-              const isWrong = reinforcementChecked && matchedTranslation && !isCorrect;
-              const isLockedCorrect = normalize(matchedTranslation ?? '') === normalize(pair.translation);
-              const isTempWrong = pairWrongWord === pair.word;
-
-              return (
-                <button
-                  key={pair.word}
-                  type="button"
-                  onClick={() => {
-                    if (reinforcementChecked) return;
-                    void playAudioUrl(pair.pronunciationAudioUrl ?? null);
-                    if (isLockedCorrect) return;
-                    if (pairRightSelected) {
-                      checkAndAssignPair(pair.word, pairRightSelected);
-                      return;
-                    }
-                    setPairLeftSelected((prev) => (prev === pair.word ? null : pair.word));
-                  }}
-                  style={{
-                    ...optionButtonBaseStyle,
-                    minHeight: 56,
-                    border: `1px solid ${
-                      isLockedCorrect || isCorrect
-                        ? 'rgba(67, 201, 127, 0.7)'
-                        : isTempWrong
-                        ? 'rgba(255, 95, 109, 0.8)'
-                        : isWrong
-                        ? 'rgba(255, 95, 109, 0.7)'
-                        : selected
-                        ? 'rgba(46, 163, 255, 0.75)'
-                        : 'var(--tg-border)'
-                    }`,
-                    background: 'var(--tg-card)',
-                    color: 'var(--tg-text)',
-                    textAlign: 'left',
-                    padding: '12px 14px',
-                    animation: isTempWrong ? 'slot-shake 1s ease-in-out 1' : undefined,
-                    borderWidth: isLockedCorrect || isCorrect || isTempWrong || isWrong ? 3 : 1,
-                  }}
-                >
-                  {pair.word}
-                </button>
-              );
-            })}
-          </div>
-
-          <div style={{ display: 'grid', gap: 12 }}>
-            {shuffledTranslations.map((translation, index) => {
-              const takenBy = Object.entries(pairMatches).find(([, tr]) => normalize(tr) === normalize(translation))?.[0] ?? null;
-              const isTempWrong = normalize(pairWrongTranslation ?? '') === normalize(translation);
-              const isLockedCorrect = Boolean(takenBy);
-              const isSelected = normalize(pairRightSelected ?? '') === normalize(translation);
-              const disabled = reinforcementChecked || isLockedCorrect;
-
-              return (
-                <button
-                  key={`${translation}-${index}`}
-                  type="button"
-                  onClick={() => {
-                    if (reinforcementChecked || isLockedCorrect) return;
-                    if (pairLeftSelected) {
-                      checkAndAssignPair(pairLeftSelected, translation);
-                      return;
-                    }
-                    setPairRightSelected((prev) =>
-                      normalize(prev ?? '') === normalize(translation) ? null : translation,
-                    );
-                  }}
-                  disabled={disabled}
-                  style={{
-                    ...optionButtonBaseStyle,
-                    minHeight: 56,
-                    border: `1px solid ${
-                      isLockedCorrect
-                        ? 'rgba(67, 201, 127, 0.7)'
-                        : isTempWrong
-                        ? 'rgba(255, 95, 109, 0.8)'
-                        : isSelected
-                        ? 'rgba(46, 163, 255, 0.75)'
-                        : 'var(--tg-border)'
-                    }`,
-                    background: 'var(--tg-card)',
-                    color: 'var(--tg-text)',
-                    textAlign: 'left',
-                    padding: '12px 14px',
-                    opacity: reinforcementChecked ? 0.6 : 1,
-                    animation: isTempWrong ? 'slot-shake 1s ease-in-out 1' : undefined,
-                    borderWidth: isLockedCorrect || isTempWrong ? 3 : 1,
-                  }}
-                >
-                  {translation}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-      </>
-    );
-  };
 
   const renderBottomActionPanel = (params: {
     visible: boolean;
@@ -1139,200 +761,38 @@ export function WordTrainingContainer() {
   };
 
   const renderReinforcement = (reinforcement: ReinforcementTask) => (
-    <div className="section" style={{ display: 'grid', gap: 12, borderRadius: 22 }}>
-      {(() => {
-        const isMatchPairs = reinforcement.reinforcement.type === 'match_pairs';
-        const isMissing = reinforcement.reinforcement.type === 'missing';
-        return (
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-        <strong
-          style={
-            isMatchPairs
-              ? { fontSize: 25, lineHeight: 1.15, fontWeight: 600, marginBottom: 24, display: 'inline-block' }
-              : isMissing
-              ? { fontSize: 25, lineHeight: 1.15, fontWeight: 600, marginBottom: 20, display: 'inline-block' }
-              : undefined
-          }
-        >
-          {reinforcement.reinforcement.type === 'match_pairs'
-            ? 'Соедини слова и их перевод'
-            : reinforcement.reinforcement.type === 'missing'
-            ? 'Вставь пропущенное слово'
-            : reinforcement.reinforcement.type === 'audio_assemble'
-            ? 'Собери фразу из слов'
-            : 'Закрепление'}
-        </strong>
-        {isMissing && (
-          <button
-            type="button"
-            onClick={() => void playAudioUrl(reinforcement.reinforcement.phraseAudioUrl ?? null)}
-            disabled={!reinforcement.reinforcement.phraseAudioUrl}
-            aria-label="Проиграть аудио"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 16,
-              border: '1px solid var(--tg-border)',
-              background: 'var(--tg-card)',
-              color: 'var(--tg-text)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: reinforcement.reinforcement.phraseAudioUrl ? 1 : 0.45,
-              flexShrink: 0,
-            }}
-          >
-            <Volume2 size={18} />
-          </button>
-        )}
-      </div>
-        );
-      })()}
-
-      {reinforcement.reinforcement.type === 'audio_assemble' && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
-          <button
-            type="button"
-            onClick={() =>
-              void playAudioUrl(
-                reinforcement.pronunciationAudioUrl ?? null,
-              )
-            }
-            disabled={!reinforcement.pronunciationAudioUrl}
-            aria-label="Проиграть аудио"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 16,
-              border: '1px solid var(--tg-border)',
-              background: 'var(--tg-card)',
-              color: 'var(--tg-text)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: reinforcement.pronunciationAudioUrl ? 1 : 0.45,
-            }}
-          >
-            <Volume2 size={18} />
-          </button>
-        </div>
-      )}
-
-      {reinforcement.reinforcement.type === 'missing' && renderMissingExercise(reinforcement)}
-      {reinforcement.reinforcement.type === 'audio_assemble' && renderAudioAssembleExercise(reinforcement)}
-      {reinforcement.reinforcement.type === 'match_pairs' && renderMatchPairsExercise(reinforcement)}
-
-      {reinforcement.reinforcement.type !== 'match_pairs' && !reinforcementChecked ? (
-        <Button
-          onClick={submitReinforcement}
-          disabled={submitting || (!reinforcementChecked && !canCheckReinforcement)}
-          style={{
-            minHeight: 50,
-            fontSize: 20,
-            fontWeight: 700,
-            borderRadius: 14,
-            background: 'var(--tg-accent)',
-            boxShadow: 'none',
-          }}
-        >
-          {reinforcementChecked ? 'Далее' : 'Проверить'}
-        </Button>
-      ) : null}
-    </div>
+    <ReinforcementCard
+      reinforcement={reinforcement}
+      submitting={submitting}
+      reinforcementChecked={reinforcementChecked}
+      canCheckReinforcement={canCheckReinforcement}
+      optionButtonBaseStyle={optionButtonBaseStyle}
+      slotBaseStyle={slotBaseStyle}
+      missingExerciseModel={missingExerciseModel}
+      missingSelected={missingSelected}
+      setMissingSelected={setMissingSelected}
+      assembleAnswer={assembleAnswer}
+      setAssembleAnswer={setAssembleAnswer}
+      pairMatches={pairMatches}
+      setPairMatches={setPairMatches}
+      pairLeftSelected={pairLeftSelected}
+      setPairLeftSelected={setPairLeftSelected}
+      pairRightSelected={pairRightSelected}
+      setPairRightSelected={setPairRightSelected}
+      pairWrongWord={pairWrongWord}
+      setPairWrongWord={setPairWrongWord}
+      pairWrongTranslation={pairWrongTranslation}
+      setPairWrongTranslation={setPairWrongTranslation}
+      normalize={normalize}
+      normalizeLoose={normalizeLoose}
+      getTokenUsage={getTokenUsage}
+      onPlayAudioUrl={playAudioUrl}
+      onPlayFeedbackSound={playFeedbackSound}
+      onSubmitReinforcement={() => {
+        void submitReinforcement();
+      }}
+    />
   );
-
-  const renderMasteryGrid = (animated = false, fillHeight = false) => {
-    if (!masteryMap) return null;
-    const grouped: Record<string, typeof masteryMap.items> = {};
-    for (const level of CEFR_LEVELS) grouped[level] = [];
-    for (const item of masteryMap.items) {
-      const level = (item.cefrLevel ?? '').toUpperCase();
-      if (!grouped[level]) grouped[level] = [];
-      grouped[level].push(item);
-    }
-
-    return (
-      <MasteryGridCard $fillHeight={fillHeight}>
-        {CEFR_LEVELS.map((level) => {
-          const levelItems = grouped[level] ?? [];
-          const levelStats = masteryMap.byLevel[level];
-          if (!levelItems.length || !levelStats) return null;
-
-          const sectionsMap = new Map<string, { title: string; order: number; items: typeof levelItems }>();
-          for (const item of levelItems) {
-            const sectionKey = item.cefrBlock || `${level}_1`;
-            const title = masteryMap.blockTitles?.[sectionKey] ?? sectionKey;
-            const normalizedTitleKey = normalizeSectionTitleKey(title);
-            const order = getCefrBlockOrder(sectionKey, level);
-            if (!sectionsMap.has(normalizedTitleKey)) {
-              sectionsMap.set(normalizedTitleKey, { title: title.trim(), order, items: [] });
-            }
-            const section = sectionsMap.get(normalizedTitleKey)!;
-            section.order = Math.min(section.order, order);
-            section.items.push(item);
-          }
-          const sections = Array.from(sectionsMap.values()).sort((a, b) => {
-            if (a.order !== b.order) return a.order - b.order;
-            return a.title.localeCompare(b.title, 'en', { sensitivity: 'base' });
-          });
-
-          return (
-            <div key={level} style={{ display: 'grid', gap: 8 }}>
-              <LevelHeaderRow>
-                <LevelHeaderTitle>Уровень {level}</LevelHeaderTitle>
-                <LevelHeaderCounter>
-                  {levelStats.known}/{levelStats.total}
-                </LevelHeaderCounter>
-              </LevelHeaderRow>
-              {sections.map((section, sectionIndex) => (
-                <div
-                  key={`${level}-${section.title}`}
-                  style={{
-                    display: 'grid',
-                    gap: 6,
-                    paddingTop: sectionIndex === 0 ? 0 : 8,
-                    marginTop: sectionIndex === 0 ? 0 : 2,
-                    borderTop: sectionIndex === 0 ? 'none' : '1px dashed rgba(255,255,255,0.14)',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: 'var(--tg-subtle)',
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {section.title}
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(23, minmax(0, 1fr))', gap: 4 }}>
-                    {section.items.map((item) => {
-                      const filledAnimated = animated && Boolean(animatedFilledCellIds[item.id]);
-                      const bg = filledAnimated ? MASTERY_BG.known : MASTERY_BG[item.mastery];
-                      return (
-                        <div
-                          key={item.id}
-                          title={`${item.word} (${item.cefrLevel})`}
-                          style={{
-                            width: '100%',
-                            aspectRatio: '1 / 1',
-                            borderRadius: 4,
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            background: bg,
-                            transition: 'background-color 220ms ease',
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })}
-      </MasteryGridCard>
-    );
-  };
 
   if (!userId) {
     return (
@@ -1346,90 +806,22 @@ export function WordTrainingContainer() {
     <PageShell scroll={!isTrainingHomeVisible}>
       <TrainingPageRoot $homeVisible={isTrainingHomeVisible}>
         {session?.status === 'active' && (
-          <SessionHeaderWrap>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <button
-                type="button"
-                onClick={() => void finishEarly()}
-                disabled={submitting}
-                aria-label="Завершить урок"
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 10,
-                  border: '1px solid transparent',
-                  background: 'transparent',
-                  color: 'var(--tg-subtle)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: submitting ? 0.5 : 1,
-                }}
-              >
-                <X size={24} />
-              </button>
-              <div
-                style={{
-                  height: 9,
-                  flex: 1,
-                  background: 'var(--tg-border)',
-                  borderRadius: 999,
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    width: `${lessonProgressPercent}%`,
-                    height: '100%',
-                    background: 'var(--tg-success)',
-                    transition: 'width 220ms ease',
-                  }}
-                />
-              </div>
-            </div>
-            <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 700, lineHeight: 1 }}>
-              {lessonProgressLabel}
-            </div>
-            {currentStageLabel ? (
-              <div style={{ color: 'var(--tg-subtle)', fontSize: 12, fontWeight: 600, lineHeight: 1 }}>
-                Этап: {currentStageLabel}
-              </div>
-            ) : null}
-            <TrainingStageStepper stages={stageProgress} />
-            {auth.profile?.role === 'admin' && (
-              <button
-                type="button"
-                onClick={() => void skipToFinalDebug()}
-                disabled={submitting}
-                style={{
-                  width: 'fit-content',
-                  borderRadius: 10,
-                  border: '1px dashed var(--tg-border)',
-                  background: 'transparent',
-                  color: 'var(--tg-subtle)',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  padding: '5px 9px',
-                }}
-              >
-                Скип к финалу (debug)
-              </button>
-            )}
-            {!loading && state?.retryPhase && (
-              <div
-                className="section"
-                style={{
-                  borderRadius: 16,
-                  padding: 10,
-                  fontWeight: 700,
-                  background: 'rgba(255, 196, 64, 0.08)',
-                  border: '1px solid rgba(255, 196, 64, 0.45)',
-                }}
-              >
-                {state.retryPhaseTitle ?? 'Закрепляем ошибки'}
-              </div>
-            )}
-          </SessionHeaderWrap>
+          <TrainingSessionHeader
+            submitting={submitting}
+            lessonProgressPercent={lessonProgressPercent}
+            lessonProgressLabel={lessonProgressLabel}
+            currentStageLabel={currentStageLabel}
+            stageProgress={stageProgress}
+            isAdmin={auth.profile?.role === 'admin'}
+            showRetryPhase={!loading && Boolean(state?.retryPhase)}
+            retryPhaseTitle={state?.retryPhaseTitle}
+            onFinishEarly={() => {
+              void finishEarly();
+            }}
+            onSkipDebug={() => {
+              void skipToFinalDebug();
+            }}
+          />
         )}
 
         {error && <div className="section" style={{ color: 'var(--tg-danger)' }}>{error}</div>}
@@ -1438,54 +830,18 @@ export function WordTrainingContainer() {
         {isNewWordIntroVisible && introPendingWord ? renderNewWordIntro(introPendingWord) : null}
 
         {!loading && !session && overview && (
-          <HomeLayout>
-            <ProgressCard>
-              <ProgressTopRow>
-                <CurrentBlockWrap>
-                  <CurrentBlockTitleRow>
-                    <CurrentBlockTitle>{(overview.currentBlockTitle || 'Текущий блок').trim()}</CurrentBlockTitle>
-                    <CurrentBlockCounter>
-                      {overview.currentBlockProgress
-                        ? `${overview.currentBlockProgress.knownWords}/${overview.currentBlockProgress.totalWords}`
-                        : ''}
-                    </CurrentBlockCounter>
-                  </CurrentBlockTitleRow>
-                  <ProgressTrack>
-                    <ProgressFill
-                      $width={Math.max(0, Math.min(100, Number(overview.currentBlockProgress?.percent ?? 0)))}
-                    />
-                  </ProgressTrack>
-                </CurrentBlockWrap>
-                <LevelRingOuter title={`Уровень ${currentDisplayLevel}: ${levelRingPercent}%`}>
-                  <LevelRingInner>{currentDisplayLevel}</LevelRingInner>
-                </LevelRingOuter>
-              </ProgressTopRow>
-              <Button
-                onClick={startOrResume}
-                disabled={submitting || masteryLoading}
-                style={{
-                  minHeight: 52,
-                  fontSize: 20,
-                  fontWeight: 700,
-                  borderRadius: 14,
-                  boxShadow: 'none',
-                  marginTop: 4,
-                  background: 'var(--tg-accent-strong)',
-                  backgroundImage: 'none',
-                  color: '#0b0b0b',
-                }}
-              >
-                <LearnButtonLabel>
-                  <span>Учить слова</span>
-                  <LearnButtonSub>+ {suggestedWordsCount} новых слов</LearnButtonSub>
-                </LearnButtonLabel>
-              </Button>
-            </ProgressCard>
-
-            <MasteryArea>
-              {renderMasteryGrid(false, true)}
-            </MasteryArea>
-          </HomeLayout>
+          <TrainingHome
+            overview={overview}
+            currentDisplayLevel={currentDisplayLevel}
+            levelRingPercent={levelRingPercent}
+            submitting={submitting}
+            masteryLoading={masteryLoading}
+            suggestedWordsCount={suggestedWordsCount}
+            masteryMap={masteryMap}
+            onStartOrResume={() => {
+              void startOrResume();
+            }}
+          />
         )}
 
         {!loading &&
@@ -1504,33 +860,7 @@ export function WordTrainingContainer() {
           </div>
         )}
         {!loading && practiceView && (
-          <div className="section" style={{ display: 'grid', gap: 12, borderRadius: 22 }}>
-            <strong style={{ fontSize: 21, lineHeight: 1.2, fontWeight: 600 }}>
-              Послушай слово{' '}
-              <span style={{ color: '#ffd54a', fontWeight: 700 }}>{practiceView.word}</span>{' '}
-              в живой речи
-            </strong>
-            <div style={{ fontSize: 14, lineHeight: 1.35, color: 'var(--tg-subtle)' }}>
-              Нажимай на субтитры, чтобы смотреть перевод незнакомых слов.
-            </div>
-            {practiceLoading ? (
-              <div style={{ color: 'var(--tg-subtle)' }}>Загрузка примеров...</div>
-            ) : practiceView.snippets.length ? (
-              <SnippetCarousel
-                items={practiceView.snippets}
-                highlight={practiceView.word}
-                showFullVideoButton={false}
-                total={practiceView.snippets.length}
-                hasMore={false}
-                isLoadingMore={false}
-                onOpenFullVideo={(snippet) => {
-                  window.location.href = `/video?contentId=${encodeURIComponent(snippet.contentId)}&focus=${Date.now()}`;
-                }}
-              />
-            ) : (
-              <div style={{ color: 'var(--tg-subtle)' }}>Примеры пока не найдены.</div>
-            )}
-          </div>
+          <PracticeSnippetCard word={practiceView.word} snippets={practiceView.snippets} loading={practiceLoading} />
         )}
         {!loading && session && task && task.mode === 'recognition' &&
           renderBottomActionPanel({
@@ -1634,7 +964,11 @@ export function WordTrainingContainer() {
 
         {!loading && session && !task && completionStage === 'map' && (
           <>
-            {renderMasteryGrid(true)}
+            <MasteryGrid
+              masteryMap={masteryMap}
+              animated
+              animatedFilledCellIds={animatedFilledCellIds}
+            />
             <Button
               onClick={load}
               disabled={submitting}
