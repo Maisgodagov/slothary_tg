@@ -59,6 +59,41 @@ export const SlotsWrap = styled.div`
   align-items: center;
 `;
 
+export const AssembleLine = styled.div`
+  min-height: 52px;
+  padding: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+`;
+
+export const AssembleWordChip = styled.span<{ $correct?: boolean; $wrong?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border-radius: 18px;
+  border: ${({ $correct, $wrong }) =>
+    $correct
+      ? '3px solid rgba(67, 201, 127, 0.85)'
+      : $wrong
+      ? '3px solid rgba(255, 95, 109, 0.9)'
+      : '3px solid var(--tg-border)'};
+  color: var(--tg-text);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  padding: 4px 12px;
+  background: ${({ $correct, $wrong }) =>
+    $correct
+      ? 'rgba(67, 201, 127, 0.12)'
+      : $wrong
+      ? 'rgba(255, 95, 109, 0.12)'
+      : 'rgba(255,255,255,0.03)'};
+  cursor: pointer;
+`;
+
 export const SlotChip = styled.span<{ $correct?: boolean; $wrong?: boolean; $filled?: boolean }>`
   display: inline-flex;
   align-items: center;

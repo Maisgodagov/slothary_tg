@@ -2,6 +2,8 @@
 import { Button } from '../../../../shared/ui/Button';
 import type { ReinforcementCardProps } from './types';
 import {
+  AssembleLine,
+  AssembleWordChip,
   AudioTopRow,
   BankWrap,
   Card,
@@ -13,7 +15,6 @@ import {
   PairsColumn,
   PairsGrid,
   SlotChip,
-  SlotsWrap,
   Title,
   TokenButton,
   TranslationText,
@@ -144,30 +145,28 @@ export function ReinforcementCard({
           <TranslationText>{reinforcement.reinforcement.sentenceTranslation}</TranslationText>
         ) : null}
 
-        <SlotsWrap>
-          {Array.from({ length: maxSlots }).map((_, idx) => {
-            const token = assembleAnswer[idx];
+        <AssembleLine>
+          {assembleAnswer.map((token, idx) => {
             const target = targetTokens[idx];
-            const isSlotCorrect = reinforcementChecked && token && normalizeLoose(token) === normalizeLoose(target ?? '');
-            const isSlotWrong = reinforcementChecked && token && !isSlotCorrect;
+            const isTokenCorrect = reinforcementChecked && normalizeLoose(token) === normalizeLoose(target ?? '');
+            const isTokenWrong = reinforcementChecked && !isTokenCorrect;
             return (
-              <SlotChip
-                key={`slot-${idx}`}
-                className={isSlotWrong ? 'slot-shake' : undefined}
+              <AssembleWordChip
+                key={`assembled-${idx}-${token}`}
+                className={isTokenWrong ? 'slot-shake' : undefined}
                 onClick={() => {
-                  if (reinforcementChecked || !token) return;
+                  if (reinforcementChecked) return;
                   setAssembleAnswer((prev) => prev.filter((_, itemIndex) => itemIndex !== idx));
                 }}
-                style={{ cursor: token && !reinforcementChecked ? 'pointer' : 'default' }}
-                $correct={Boolean(isSlotCorrect)}
-                $wrong={Boolean(isSlotWrong)}
-                $filled={Boolean(token)}
+                $correct={Boolean(isTokenCorrect)}
+                $wrong={Boolean(isTokenWrong)}
+                style={{ cursor: reinforcementChecked ? 'default' : 'pointer' }}
               >
-                {token || ''}
-              </SlotChip>
+                {token}
+              </AssembleWordChip>
             );
           })}
-        </SlotsWrap>
+        </AssembleLine>
 
         <BankWrap>
           {availableBankTokens.map(({ token, sourceIndex }) => {

@@ -1,8 +1,9 @@
-﻿import styled from 'styled-components';
+import styled from 'styled-components';
+import { Button } from '../../../../shared/ui/Button';
 
 export const Card = styled.div`
   display: grid;
-  gap: 14px;
+  gap: 10px;
   border-radius: 22px;
 `;
 
@@ -10,11 +11,10 @@ export const HeaderRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
 `;
 
 export const HeaderTitle = styled.strong`
-  font-size: 25px;
+  font-size: 20px;
   line-height: 1.15;
   font-weight: 600;
 `;
@@ -27,7 +27,7 @@ export const WordRow = styled.div`
 `;
 
 export const WordText = styled.div`
-  font-size: 34px;
+  font-size: 28px;
   font-weight: 800;
   line-height: 1.1;
 `;
@@ -38,12 +38,12 @@ export const Dash = styled.span`
 `;
 
 export const TranslationText = styled.span`
-  font-size: 30px;
+  font-size: 24px;
 `;
 
 export const PronButton = styled.button<{ $enabled: boolean }>`
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 16px;
   border: 1px solid var(--tg-border);
   background: var(--tg-card);
@@ -55,30 +55,78 @@ export const PronButton = styled.button<{ $enabled: boolean }>`
   flex-shrink: 0;
 `;
 
-export const CefrBadge = styled.div`
-  width: fit-content;
-  border-radius: 999px;
-  border: 1px solid var(--tg-border);
-  background: var(--tg-card);
-  padding: 4px 10px;
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--tg-subtle);
-`;
-
 export const OtherWrap = styled.div`
   display: grid;
-  gap: 6px;
-`;
-
-export const OtherLabel = styled.div`
-  color: var(--tg-subtle);
-  font-size: 12px;
-  font-weight: 700;
+  gap: 0;
 `;
 
 export const OtherText = styled.div`
   color: var(--tg-subtle);
+  font-size: 13px;
+  line-height: 1.4;
+`;
+
+export const HintText = styled.div`
+  color: var(--tg-subtle);
+  font-size: 11px;
+  line-height: 1.4;
+`;
+
+export const Subtle = styled.div`
+  color: var(--tg-subtle);
   font-size: 14px;
-  line-height: 1.45;
+`;
+
+export const KnowButton = styled(Button).attrs({ variant: 'ghost' })`
+  min-height: 40px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  background: transparent !important;
+  background-image: none !important;
+  border: 1px solid var(--tg-border);
+  color: var(--tg-subtle);
+  width: 100%;
+  box-shadow: none !important;
+  filter: none !important;
+`;
+
+export const KnowRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+`;
+
+export const InfoWrap = styled.div`
+  position: relative;
+`;
+
+export const InfoButton = styled.button`
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--tg-border);
+  background: var(--tg-card);
+  color: var(--tg-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+`;
+
+export const InfoPopover = styled.div`
+  position: absolute;
+  right: 0;
+  top: 40px;
+  width: 220px;
+  z-index: 20;
+  border-radius: 12px;
+  border: 1px solid var(--tg-border);
+  background: var(--tg-card);
+  color: var(--tg-subtle);
+  font-size: 12px;
+  line-height: 1.35;
+  padding: 8px 10px;
 `;

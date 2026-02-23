@@ -1,4 +1,6 @@
-﻿export type NewWordIntro = {
+import type { PhraseSnippet } from '../../../../features/video-dictionary/api';
+
+export type NewWordIntro = {
   wordKey: string;
   word: string;
   translation: string;
@@ -9,5 +11,9 @@
 
 export type NewWordIntroCardProps = {
   introWord: NewWordIntro;
+  snippets: PhraseSnippet[];
+  snippetsLoading: boolean;
   onPlayAudio: (url: string | null) => void;
+  onMarkKnown: (wordKey: string) => void;
+  disabled?: boolean;
 };

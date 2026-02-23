@@ -26,8 +26,13 @@ export function TrainingHome({
   masteryLoading,
   suggestedWordsCount,
   masteryMap,
+  actionTitle,
+  actionSubtitle,
   onStartOrResume,
 }: TrainingHomeProps) {
+  const buttonTitle = actionTitle ?? 'Учить слова';
+  const buttonSubtitle = actionSubtitle ?? `+ ${suggestedWordsCount} новых слов`;
+
   return (
     <HomeLayout>
       <ProgressCard>
@@ -67,8 +72,8 @@ export function TrainingHome({
           }}
         >
           <LearnButtonLabel>
-            <span>Учить слова</span>
-            <LearnButtonSub>+ {suggestedWordsCount} новых слов</LearnButtonSub>
+            <span>{buttonTitle}</span>
+            <LearnButtonSub>{buttonSubtitle}</LearnButtonSub>
           </LearnButtonLabel>
         </Button>
       </ProgressCard>

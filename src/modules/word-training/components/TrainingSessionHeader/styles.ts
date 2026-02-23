@@ -2,19 +2,19 @@
 
 export const Wrap = styled.div`
   display: grid;
-  gap: 10px;
+  gap: 6px;
 `;
 
 export const ProgressRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 `;
 
 export const CloseButton = styled.button`
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--tg-subtle);
@@ -24,7 +24,7 @@ export const CloseButton = styled.button`
 `;
 
 export const ProgressTrack = styled.div`
-  height: 9px;
+  height: 7px;
   flex: 1;
   background: var(--tg-border);
   border-radius: 999px;

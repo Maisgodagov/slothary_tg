@@ -57,11 +57,16 @@ export const OptionButton = styled(Button)<{ $correct?: boolean; $wrong?: boolea
   min-height: 48px;
   border-radius: 18px;
   padding: 10px 12px;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
   line-height: 1.1;
   border-style: solid;
   border-width: 3px;
   border-color: ${({ $correct, $wrong }) =>
-    $correct ? 'rgba(67, 201, 127, 0.9)' : $wrong ? 'rgba(255, 95, 109, 0.9)' : 'var(--tg-border)'};
+    $correct ? 'rgba(67, 201, 127, 0.98)' : $wrong ? 'rgba(255, 95, 109, 0.98)' : 'var(--tg-border)'};
+  background: ${({ $correct, $wrong }) =>
+    $correct ? 'rgba(67, 201, 127, 0.16)' : $wrong ? 'rgba(255, 95, 109, 0.16)' : 'var(--tg-card)'} !important;
+  color: ${({ $correct, $wrong }) =>
+    $correct ? 'rgba(143, 247, 183, 1)' : $wrong ? 'rgba(255, 145, 157, 1)' : 'var(--tg-text)'} !important;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
 `;

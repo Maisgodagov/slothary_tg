@@ -20,7 +20,7 @@ import { useWordTrainingAudio } from '../../../../features/word-training/useWord
 import type { PhraseSnippet } from '../../../../features/video-dictionary/api';
 import { PageShell } from '../../../../shared/ui/PageShell';
 import BottomActionPanel from '../../components/BottomActionPanel/index';
-import NewWordIntroCard from '../../components/NewWordIntroCard/index';
+import NewWordIntroCard from '../../components/NewWordIntroCard/entry';
 import PracticeSnippetCard from '../../components/PracticeSnippetCard';
 import { RecognitionCard } from '../../components/RecognitionCard';
 import ReinforcementCard from '../../components/ReinforcementCard';
@@ -81,7 +81,10 @@ export function WordTrainingContainer() {
   } | null>(null);
   const [practiceLoading, setPracticeLoading] = useState(false);
   const [postPracticeTransitioning, setPostPracticeTransitioning] = useState(false);
+  const [introSnippets, setIntroSnippets] = useState<PhraseSnippet[]>([]);
+  const [introSnippetsLoading, setIntroSnippetsLoading] = useState(false);
   const [introducedWordKeys, setIntroducedWordKeys] = useState<Record<string, true>>({});
+  const [enteredSessionId, setEnteredSessionId] = useState<string | null>(null);
   const completionTimerRef = useRef<number | null>(null);
   const refreshedStreakSessionRef = useRef<string | null>(null);
   const { playAudioUrl, playFeedbackSound, stopAudio } = useWordTrainingAudio();
@@ -89,6 +92,9 @@ export function WordTrainingContainer() {
   const session = state?.session ?? null;
   const task = state?.task ?? null;
   const taskId = task?.itemId ?? null;
+  const isActiveSession = session?.status === 'active';
+  const isSessionEntered = Boolean(isActiveSession && session?.id && enteredSessionId === session.id);
+  const isPausedActiveSession = Boolean(isActiveSession && !isSessionEntered);
   const completedWords = state?.summary?.completedWords ?? [];
   const userLevel = (auth.profile?.level || 'A1').toUpperCase();
   const currentDisplayLevel = String(overview?.currentLevel || userLevel || 'A1').toUpperCase();
@@ -103,50 +109,15 @@ export function WordTrainingContainer() {
     }
     return 0;
   }, [session, task]);
-  const lessonProgressLabel = useMemo(() => {
-    if (!session) return '';
-    if (task && task.queueTotal > 0) {
-      return `Упражнение ${task.queuePosition}/${task.queueTotal} • ${lessonProgressPercent}%`;
-    }
-    if (session.targetWords > 0) {
-      return `Слов: ${session.wordsCompleted}/${session.targetWords} • ${lessonProgressPercent}%`;
-    }
-    return `${lessonProgressPercent}%`;
-  }, [lessonProgressPercent, session, task]);
   const suggestedWordsCount = useMemo(() => {
     const n = Number(overview?.suggestedTargetWords ?? 5);
     return Number.isFinite(n) && n > 0 ? Math.round(n) : 5;
   }, [overview?.suggestedTargetWords]);
-  const currentStageLabel = useMemo(() => {
-    const flow = state?.sessionFlow;
-    if (!flow) return null;
-    const stage = flow.stages.find((item) => item.key === flow.currentStage);
-    return stage?.label ?? null;
-  }, [state?.sessionFlow]);
-  const stageProgress = useMemo(() => {
-    const flow = state?.sessionFlow;
-    if (!flow) return [];
-    return flow.stages.map((stage) => {
-      const total = Math.max(0, Number(stage.total ?? 0));
-      const completed = Math.max(0, Number(stage.completed ?? 0));
-      const percent = total > 0 ? Math.max(0, Math.min(100, Math.round((completed / total) * 100))) : 0;
-      const isCurrent = flow.currentStage === stage.key;
-      const isDone = total > 0 ? completed >= total : flow.currentStage === 'result' && stage.key === 'result';
-      return {
-        ...stage,
-        total,
-        completed,
-        percent,
-        isCurrent,
-        isDone,
-      };
-    });
-  }, [state?.sessionFlow]);
   const introPendingWord = useMemo(() => {
     const queue = state?.introQueue ?? [];
     return queue.find((item) => !introducedWordKeys[item.wordKey]) ?? null;
   }, [introducedWordKeys, state?.introQueue]);
-  const isTrainingHomeVisible = !loading && !session && Boolean(overview);
+  const isTrainingHomeVisible = !loading && Boolean(overview) && (!session || isPausedActiveSession);
 
   const isNewWordIntroVisible = Boolean(session && introPendingWord && !practiceView && !postPracticeTransitioning);
 
@@ -228,32 +199,6 @@ export function WordTrainingContainer() {
     [mapContextToSnippet, userId],
   );
 
-  const openPracticeBetweenSteps = useCallback(
-    async (params: {
-      word: string;
-      nextMode: 'recognition' | 'reinforcement' | 'intro';
-      recognitionTask?: RecognitionTask | null;
-      snippetLimit?: number;
-    }) => {
-      setPracticeView({
-        word: params.word,
-        snippets: [],
-        nextMode: params.nextMode,
-        recognitionTask: params.recognitionTask ?? null,
-      });
-      setPracticeLoading(true);
-      const snippets = await loadPracticeSnippets(params.word, params.snippetLimit ?? 30);
-      setPracticeView({
-        word: params.word,
-        snippets,
-        nextMode: params.nextMode,
-        recognitionTask: params.recognitionTask ?? null,
-      });
-      setPracticeLoading(false);
-    },
-    [loadPracticeSnippets],
-  );
-
   const continueAfterPractice = useCallback(async () => {
     if (!practiceView) return;
     const payload = practiceView;
@@ -301,8 +246,10 @@ export function WordTrainingContainer() {
       if (data.activeSession?.id) {
         const sessionState = await wordTrainingApi.getSession(data.activeSession.id, userId);
         setState(sessionState);
+        setEnteredSessionId(null);
       } else {
         setState(null);
+        setEnteredSessionId(null);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
@@ -346,8 +293,39 @@ export function WordTrainingContainer() {
     setPracticeView(null);
     setPracticeLoading(false);
     setPostPracticeTransitioning(false);
+    setIntroSnippets([]);
+    setIntroSnippetsLoading(false);
     setIntroducedWordKeys({});
   }, [session?.id]);
+
+  useEffect(() => {
+    const word = introPendingWord?.word?.trim();
+    if (!isSessionEntered || !isNewWordIntroVisible || !word) {
+      setIntroSnippets([]);
+      setIntroSnippetsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setIntroSnippetsLoading(true);
+    void loadPracticeSnippets(word, 30)
+      .then((items) => {
+        if (cancelled) return;
+        setIntroSnippets(items.slice(0, 30));
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setIntroSnippetsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [introPendingWord?.word, isNewWordIntroVisible, isSessionEntered, loadPracticeSnippets]);
+
+  useEffect(() => {
+    if (session?.status !== 'active') {
+      setEnteredSessionId(null);
+    }
+  }, [session?.status]);
 
   useEffect(() => {
     if (session?.status !== 'completed') {
@@ -467,6 +445,7 @@ export function WordTrainingContainer() {
         userId,
       );
       setState(result);
+      setEnteredSessionId(result.session.id);
       const freshOverview = await wordTrainingApi.getOverview(userId);
       setOverview(freshOverview);
     } catch (err) {
@@ -493,33 +472,6 @@ export function WordTrainingContainer() {
     }
   };
 
-  const skipToFinalDebug = async () => {
-    if (!userId || !session) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      const [result, map] = await Promise.all([
-        wordTrainingApi.finishSession(session.id, { force: true }, userId),
-        wordTrainingApi.getMasteryMap(userId, auth.profile?.role ?? null).catch(() => null),
-      ]);
-      setState(result);
-      if (map) {
-        setMasteryMap(map);
-        const demoIds = map.items
-          .filter((item) => item.mastery !== 'known')
-          .slice(0, 16)
-          .map((item) => item.id);
-        setDebugAnimationCellIds(demoIds);
-      }
-      setCompletionStage('map');
-      const freshOverview = await wordTrainingApi.getOverview(userId);
-      setOverview(freshOverview);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось перейти к финальному экрану');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const submitRecognitionResult = async (recognition: RecognitionTask): Promise<boolean> => {
     if (!userId || !session) return false;
@@ -546,6 +498,31 @@ export function WordTrainingContainer() {
       setSubmitting(false);
     }
   };
+
+  const markKnownWord = useCallback(
+    async (wordKey: string) => {
+      if (!userId || !session?.id) return;
+      setSubmitting(true);
+      setError(null);
+      stopAudio();
+      try {
+        const next = await wordTrainingApi.markWordKnown(session.id, { wordKey }, userId);
+        setState(next);
+        const [freshOverview, freshMastery] = await Promise.all([
+          wordTrainingApi.getOverview(userId),
+          wordTrainingApi.getMasteryMap(userId, auth.profile?.role ?? null).catch(() => null),
+        ]);
+        setOverview(freshOverview);
+        if (freshMastery) setMasteryMap(freshMastery);
+        setIntroducedWordKeys((prev) => ({ ...prev, [wordKey]: true }));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Не удалось отметить слово как выученное');
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [auth.profile?.role, session?.id, stopAudio, userId],
+  );
 
   const proceedAfterRecognition = useCallback(
     async (recognition: RecognitionTask) => {
@@ -702,7 +679,18 @@ export function WordTrainingContainer() {
     cefrLevel?: string | null;
     otherTranslations?: string[];
   }) => {
-    return <NewWordIntroCard introWord={introWord} onPlayAudio={(url) => void playAudioUrl(url)} />;
+    return (
+      <NewWordIntroCard
+        introWord={introWord}
+        snippets={introSnippets}
+        snippetsLoading={introSnippetsLoading}
+        onPlayAudio={(url) => void playAudioUrl(url)}
+        onMarkKnown={(wordKey) => {
+          void markKnownWord(wordKey);
+        }}
+        disabled={submitting}
+      />
+    );
   };
 
 
@@ -772,21 +760,12 @@ export function WordTrainingContainer() {
   return (
     <PageShell scroll={!isTrainingHomeVisible}>
       <TrainingPageRoot $homeVisible={isTrainingHomeVisible}>
-        {session?.status === 'active' && (
+        {session?.status === 'active' && isSessionEntered && (
           <TrainingSessionHeader
             submitting={submitting}
             lessonProgressPercent={lessonProgressPercent}
-            lessonProgressLabel={lessonProgressLabel}
-            currentStageLabel={currentStageLabel}
-            stageProgress={stageProgress}
-            isAdmin={auth.profile?.role === 'admin'}
-            showRetryPhase={!loading && Boolean(state?.retryPhase)}
-            retryPhaseTitle={state?.retryPhaseTitle}
             onFinishEarly={() => {
               void finishEarly();
-            }}
-            onSkipDebug={() => {
-              void skipToFinalDebug();
             }}
           />
         )}
@@ -794,7 +773,7 @@ export function WordTrainingContainer() {
         {error && <div className="section" style={{ color: 'var(--tg-danger)' }}>{error}</div>}
         {loading && <div className="section">Загрузка...</div>}
 
-        {isNewWordIntroVisible && introPendingWord ? renderNewWordIntro(introPendingWord) : null}
+        {isSessionEntered && isNewWordIntroVisible && introPendingWord ? renderNewWordIntro(introPendingWord) : null}
 
         {!loading && !session && overview && (
           <TrainingHome
@@ -805,13 +784,33 @@ export function WordTrainingContainer() {
             masteryLoading={masteryLoading}
             suggestedWordsCount={suggestedWordsCount}
             masteryMap={masteryMap}
+            actionTitle="Учить слова"
+            actionSubtitle={`+ ${suggestedWordsCount} новых слов`}
             onStartOrResume={() => {
               void startOrResume();
             }}
           />
         )}
 
+        {!loading && session?.status === 'active' && !isSessionEntered && overview && (
+          <TrainingHome
+            overview={overview}
+            currentDisplayLevel={currentDisplayLevel}
+            levelRingPercent={levelRingPercent}
+            submitting={submitting}
+            masteryLoading={masteryLoading}
+            suggestedWordsCount={suggestedWordsCount}
+            masteryMap={masteryMap}
+            actionTitle="Продолжить тренировку"
+            actionSubtitle="С того места, где остановился"
+            onStartOrResume={() => {
+              setEnteredSessionId(session.id);
+            }}
+          />
+        )}
+
         {!loading &&
+          isSessionEntered &&
           !postPracticeTransitioning &&
           session &&
           task &&
@@ -820,16 +819,16 @@ export function WordTrainingContainer() {
           !isNewWordIntroVisible &&
           (!task.isNewWord || introducedWordKeys[task.wordKey]) &&
           renderRecognition(task)}
-        {!loading && !postPracticeTransitioning && session && task && task.mode === 'reinforcement' && !practiceView && renderReinforcement(task)}
-        {!loading && postPracticeTransitioning && !practiceView && (
+        {!loading && isSessionEntered && !postPracticeTransitioning && session && task && task.mode === 'reinforcement' && !practiceView && renderReinforcement(task)}
+        {!loading && isSessionEntered && postPracticeTransitioning && !practiceView && (
           <div className="section" style={{ display: 'grid', placeItems: 'center', minHeight: 180, borderRadius: 22 }}>
             <div style={{ color: 'var(--tg-subtle)', fontWeight: 600 }}>Загрузка следующего упражнения...</div>
           </div>
         )}
-        {!loading && practiceView && (
+        {!loading && isSessionEntered && practiceView && (
           <PracticeSnippetCard word={practiceView.word} snippets={practiceView.snippets} loading={practiceLoading} />
         )}
-        {!loading && session && task && task.mode === 'recognition' &&
+        {!loading && isSessionEntered && session && task && task.mode === 'recognition' &&
           renderBottomActionPanel({
             visible: recognitionChecked && !practiceView && (!task.isNewWord || introducedWordKeys[task.wordKey]),
             isCorrect: recognitionResult === 'correct',
@@ -839,24 +838,20 @@ export function WordTrainingContainer() {
               void proceedAfterRecognition(task);
             },
           })}
-        {!loading && introPendingWord &&
+        {!loading && isSessionEntered && introPendingWord &&
           renderBottomActionPanel({
             visible: isNewWordIntroVisible,
             isCorrect: true,
-            title: 'Новое слово',
-            subtitle: `${introPendingWord.word} - ${introPendingWord.translation}`,
+            title: '',
+            subtitle: null,
+            hideMessageBox: true,
             buttonLabel: 'Понятно',
             onNext: () => {
               setIntroducedWordKeys((prev) => ({ ...prev, [introPendingWord.wordKey]: true }));
-              void openPracticeBetweenSteps({
-                word: introPendingWord.word,
-                nextMode: 'intro',
-                snippetLimit: 4,
-              });
             },
           })}
 
-        {!loading && session && task && task.mode === 'reinforcement' &&
+        {!loading && isSessionEntered && session && task && task.mode === 'reinforcement' &&
           renderBottomActionPanel({
             visible:
               (task.reinforcement.type === 'match_pairs' ? isReinforcementCorrect : reinforcementChecked) && !practiceView,
@@ -871,7 +866,7 @@ export function WordTrainingContainer() {
             },
           })}
 
-        {!loading && practiceView &&
+        {!loading && isSessionEntered && practiceView &&
           renderBottomActionPanel({
             visible: !practiceLoading,
             isCorrect: true,

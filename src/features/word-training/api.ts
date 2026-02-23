@@ -237,6 +237,17 @@ export const wordTrainingApi = {
       body,
     });
   },
+  markWordKnown(
+    sessionId: string,
+    body: { wordKey: string },
+    userId?: string | null,
+  ) {
+    return apiFetch<WordTrainingState>(`word-training/sessions/${sessionId}/know-word`, {
+      method: 'POST',
+      headers: headersWithUser(userId),
+      body,
+    });
+  },
   finishSession(sessionId: string, body: { force?: boolean }, userId?: string | null) {
     return apiFetch<WordTrainingState>(`word-training/sessions/${sessionId}/finish`, {
       method: 'POST',

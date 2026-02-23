@@ -59,6 +59,7 @@ export function RecognitionCard({
               className={showWrong ? 'slot-shake' : undefined}
               $correct={showCorrect}
               $wrong={showWrong}
+              style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.1 }}
             >
               {option}
             </OptionButton>

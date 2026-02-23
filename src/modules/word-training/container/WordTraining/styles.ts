@@ -1,20 +1,15 @@
-﻿import styled from 'styled-components';
+﻿import styled from "styled-components";
 
 export const TrainingPageRoot = styled.div<{ $homeVisible: boolean }>`
-  padding: 14px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  height: ${({ $homeVisible }) =>
-    $homeVisible
-      ? 'calc(100% - 54px - var(--tg-safe-area-inset-bottom, 0px))'
-      : 'auto'};
+  gap: 10px;
+  height: ${({ $homeVisible }) => ($homeVisible ? "100%" : "auto")};
   box-sizing: border-box;
   padding-bottom: ${({ $homeVisible }) =>
-    $homeVisible
-      ? '0'
-      : 'calc(70px + var(--tg-safe-area-inset-bottom, 0px))'};
-  overflow: ${({ $homeVisible }) => ($homeVisible ? 'hidden' : 'visible')};
+    $homeVisible ? "0" : "calc(70px + var(--tg-safe-area-inset-bottom, 0px))"};
+  overflow: ${({ $homeVisible }) => ($homeVisible ? "hidden" : "visible")};
 `;
 
 export const SessionHeaderWrap = styled.div`
@@ -143,15 +138,15 @@ export const MasteryArea = styled.div`
 export const MasteryGridCard = styled.div<{ $fillHeight: boolean }>`
   border-radius: 20px;
   display: grid;
-  flex: ${({ $fillHeight }) => ($fillHeight ? '1 1 auto' : '0 0 auto')};
+  flex: ${({ $fillHeight }) => ($fillHeight ? "1 1 auto" : "0 0 auto")};
   gap: 12px;
   padding: 12px;
   border: 1px solid var(--tg-border);
   background: var(--tg-card);
-  height: ${({ $fillHeight }) => ($fillHeight ? '100%' : 'auto')};
-  min-height: ${({ $fillHeight }) => ($fillHeight ? '0' : 'auto')};
-  overflow-y: ${({ $fillHeight }) => ($fillHeight ? 'auto' : 'visible')};
-  margin: ${({ $fillHeight }) => ($fillHeight ? '0' : '0 0 14px 0')};
+  height: ${({ $fillHeight }) => ($fillHeight ? "100%" : "auto")};
+  min-height: ${({ $fillHeight }) => ($fillHeight ? "0" : "auto")};
+  overflow-y: ${({ $fillHeight }) => ($fillHeight ? "auto" : "visible")};
+  margin: ${({ $fillHeight }) => ($fillHeight ? "0" : "0 0 14px 0")};
 `;
 
 export const LevelHeaderRow = styled.div`
@@ -173,4 +168,3 @@ export const LevelHeaderCounter = styled.div`
   right: 0;
   top: 3px;
 `;
-

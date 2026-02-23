@@ -1,22 +1,52 @@
-﻿import { Volume2 } from 'lucide-react';
+﻿import { CircleHelp, Volume2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
+import { SnippetCarousel } from '../../../../modules/dictionary/components/SnippetCarousel';
 import {
   Card,
-  CefrBadge,
   Dash,
   HeaderRow,
   HeaderTitle,
-  OtherLabel,
+  InfoButton,
+  InfoPopover,
+  InfoWrap,
+  KnowButton,
+  KnowRow,
   OtherText,
   OtherWrap,
   PronButton,
+  Subtle,
   TranslationText,
   WordRow,
   WordText,
 } from './styles';
 import type { NewWordIntroCardProps } from './types';
 
-export function NewWordIntroCard({ introWord, onPlayAudio }: NewWordIntroCardProps) {
+export function NewWordIntroCard({
+  introWord,
+  snippets,
+  snippetsLoading,
+  onPlayAudio,
+  onMarkKnown,
+  disabled,
+}: NewWordIntroCardProps) {
+  const [showKnowHint, setShowKnowHint] = useState(false);
+  const infoWrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!showKnowHint) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (infoWrapRef.current?.contains(target)) return;
+      setShowKnowHint(false);
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [showKnowHint]);
+
   const otherTranslations = (introWord.otherTranslations ?? [])
     .map((item) => item.trim())
     .filter(Boolean)
@@ -26,12 +56,6 @@ export function NewWordIntroCard({ introWord, onPlayAudio }: NewWordIntroCardPro
     <Card className="section">
       <HeaderRow>
         <HeaderTitle>Новое слово</HeaderTitle>
-      </HeaderRow>
-
-      <WordRow>
-        <WordText>
-          {introWord.word} <Dash>-</Dash> <TranslationText>{introWord.translation}</TranslationText>
-        </WordText>
         <PronButton
           type="button"
           onClick={() => onPlayAudio(introWord.pronunciationAudioUrl ?? null)}
@@ -39,23 +63,62 @@ export function NewWordIntroCard({ introWord, onPlayAudio }: NewWordIntroCardPro
           aria-label="Проиграть произношение"
           $enabled={Boolean(introWord.pronunciationAudioUrl)}
         >
-          <Volume2 size={19} />
+          <Volume2 size={18} />
         </PronButton>
-      </WordRow>
+      </HeaderRow>
 
-      {introWord.cefrLevel ? <CefrBadge>CEFR: {introWord.cefrLevel}</CefrBadge> : null}
+      <WordRow>
+        <WordText>
+          {introWord.word} <Dash>-</Dash> <TranslationText>{introWord.translation}</TranslationText>
+        </WordText>
+      </WordRow>
 
       {otherTranslations.length ? (
         <OtherWrap>
-          <OtherLabel>Другие переводы:</OtherLabel>
           <OtherText>{otherTranslations.join(', ')}</OtherText>
         </OtherWrap>
       ) : null}
+
+      <KnowRow>
+        <KnowButton type="button" onClick={() => onMarkKnown(introWord.wordKey)} disabled={disabled}>
+          Уже знаю это слово
+        </KnowButton>
+        <InfoWrap ref={infoWrapRef}>
+          <InfoButton
+            type="button"
+            onClick={() => setShowKnowHint((prev) => !prev)}
+            aria-label="Подсказка"
+          >
+            <CircleHelp size={16} />
+          </InfoButton>
+          {showKnowHint ? (
+            <InfoPopover>
+              Если отметить слово как знакомое, оно больше не будет попадаться в тренировках.
+            </InfoPopover>
+          ) : null}
+        </InfoWrap>
+      </KnowRow>
+
+      {snippetsLoading ? (
+        <Subtle>Загрузка примеров...</Subtle>
+      ) : snippets.length ? (
+        <SnippetCarousel
+          items={snippets}
+          highlight={introWord.word}
+          showFullVideoButton={false}
+          total={snippets.length}
+          hasMore={false}
+          isLoadingMore={false}
+          onOpenFullVideo={(snippet) => {
+            window.location.href = `/video?contentId=${encodeURIComponent(snippet.contentId)}&focus=${Date.now()}`;
+          }}
+        />
+      ) : (
+        <Subtle>Примеры пока не найдены.</Subtle>
+      )}
+
     </Card>
   );
 }
 
-
-
 export default NewWordIntroCard;
-

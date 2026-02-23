@@ -8,6 +8,8 @@ export type TrainingHomeProps = {
   masteryLoading: boolean;
   suggestedWordsCount: number;
   masteryMap: WordTrainingMasteryMap | null;
+  actionTitle?: string;
+  actionSubtitle?: string;
   onStartOrResume: () => void;
 };
 
