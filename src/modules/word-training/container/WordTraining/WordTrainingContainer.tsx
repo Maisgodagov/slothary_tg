@@ -5,6 +5,7 @@ import { useAppSelector } from "../../../../app/hooks";
 import { useAppDispatch } from "../../../../app/hooks";
 import { selectAuth, setProfile } from "../../../../features/auth/slice";
 import { usersApi } from "../../../../features/users/api";
+import { muellerApi } from "../../../../features/mueller/api";
 import { wordTrainingApi } from "../../api";
 import type {
   WordTrainingContext,
@@ -108,6 +109,9 @@ export function WordTrainingContainer() {
   const [enteredSessionId, setEnteredSessionId] = useState<string | null>(null);
   const completionTimerRef = useRef<number | null>(null);
   const refreshedStreakSessionRef = useRef<string | null>(null);
+  const wordPronunciationCacheRef = useRef<Map<string, string | null>>(
+    new Map(),
+  );
   const { playAudioUrl, playFeedbackSound, stopAudio } = useWordTrainingAudio();
 
   const session = state?.session ?? null;
@@ -357,11 +361,11 @@ export function WordTrainingContainer() {
     setPairWrongTranslation(null);
     setReinforcementChecked(false);
     stopAudio();
-    const shouldAutoplay = task?.mode === "recognition";
+    const shouldAutoplay = isSessionEntered && task?.mode === "recognition";
     if (shouldAutoplay) {
       void playPronunciation(task);
     }
-  }, [taskId, playPronunciation, stopAudio, task]);
+  }, [isSessionEntered, taskId, playPronunciation, stopAudio, task]);
 
   useEffect(() => {
     setPracticeView(null);
@@ -788,9 +792,44 @@ export function WordTrainingContainer() {
     await submitReinforcement();
   }, [submitReinforcement]);
 
-  const speakAssembleWord = useCallback((word: string) => {
+  const resolveWordPronunciationUrl = useCallback(async (word: string) => {
+    const value = String(word ?? "").trim();
+    if (!value) return null;
+    const key = normalizeLoose(value);
+    const cached = wordPronunciationCacheRef.current.get(key);
+    if (cached !== undefined) return cached;
+    if (!isWordToken(value)) {
+      wordPronunciationCacheRef.current.set(key, null);
+      return null;
+    }
+
+    try {
+      const entries = await muellerApi.lookup({ word: value, lang: "en" });
+      const exact =
+        entries.find(
+          (entry) =>
+            normalizeLoose(String(entry.word ?? "")) ===
+              normalizeLoose(value) && Boolean(entry.audioUrl?.trim()),
+        ) ?? null;
+      const fallback = entries.find((entry) => Boolean(entry.audioUrl?.trim()));
+      const url = exact?.audioUrl?.trim() || fallback?.audioUrl?.trim() || null;
+      wordPronunciationCacheRef.current.set(key, url);
+      return url;
+    } catch {
+      wordPronunciationCacheRef.current.set(key, null);
+      return null;
+    }
+  }, []);
+
+  const speakAssembleWord = useCallback(async (word: string) => {
     const value = String(word ?? "").trim();
     if (!value || typeof window === "undefined") return;
+    const url = await resolveWordPronunciationUrl(value);
+    if (url) {
+      await playAudioUrl(url);
+      return;
+    }
+
     const synth = window.speechSynthesis;
     if (!synth) return;
     try {
@@ -803,7 +842,7 @@ export function WordTrainingContainer() {
     } catch {
       // no-op
     }
-  }, []);
+  }, [playAudioUrl, resolveWordPronunciationUrl]);
 
   const renderRecognition = (recognition: RecognitionTask) => {
     return (

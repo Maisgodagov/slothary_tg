@@ -56,6 +56,12 @@ export function NewWordIntroCard({
     <Card className="section">
       <HeaderRow>
         <HeaderTitle />
+      </HeaderRow>
+
+      <WordRow>
+        <WordText>
+          {introWord.word} <Dash>-</Dash> <TranslationText>{introWord.translation}</TranslationText>
+        </WordText>
         <PronButton
           type="button"
           onClick={() => onPlayAudio(introWord.pronunciationAudioUrl ?? null)}
@@ -65,12 +71,6 @@ export function NewWordIntroCard({
         >
           <Volume2 size={18} />
         </PronButton>
-      </HeaderRow>
-
-      <WordRow>
-        <WordText>
-          {introWord.word} <Dash>-</Dash> <TranslationText>{introWord.translation}</TranslationText>
-        </WordText>
       </WordRow>
 
       {otherTranslations.length ? (

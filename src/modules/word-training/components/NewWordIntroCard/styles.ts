@@ -9,9 +9,7 @@ export const Card = styled.div`
 `;
 
 export const HeaderRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: none;
 `;
 
 export const HeaderTitle = styled.strong`
@@ -25,6 +23,7 @@ export const WordRow = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-top: 0;
 `;
 
 export const WordText = styled.div`
