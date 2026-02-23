@@ -559,27 +559,12 @@ export function WordTrainingContainer() {
     }
   };
 
-  const finishEarly = async () => {
-    if (!userId || !session) return;
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      const result = await wordTrainingApi.finishSession(
-        session.id,
-        { force: true },
-        userId,
-      );
-      setState(result);
-      const freshOverview = await wordTrainingApi.getOverview(userId);
-      setOverview(freshOverview);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Не удалось завершить тренировку",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+  const finishEarly = () => {
+    stopAudio();
+    setPracticeView(null);
+    setPracticeLoading(false);
+    setPostPracticeTransitioning(false);
+    setEnteredSessionId(null);
   };
 
   const submitRecognitionResult = async (

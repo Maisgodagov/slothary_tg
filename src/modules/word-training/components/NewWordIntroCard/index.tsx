@@ -55,7 +55,7 @@ export function NewWordIntroCard({
   return (
     <Card className="section">
       <HeaderRow>
-        <HeaderTitle>Новое слово</HeaderTitle>
+        <HeaderTitle />
         <PronButton
           type="button"
           onClick={() => onPlayAudio(introWord.pronunciationAudioUrl ?? null)}

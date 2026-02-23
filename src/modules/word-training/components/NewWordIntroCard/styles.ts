@@ -5,6 +5,7 @@ export const Card = styled.div`
   display: grid;
   gap: 10px;
   border-radius: 22px;
+  margin-top: -8px;
 `;
 
 export const HeaderRow = styled.div`
