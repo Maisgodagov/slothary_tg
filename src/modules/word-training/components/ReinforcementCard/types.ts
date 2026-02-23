@@ -32,6 +32,7 @@ export type ReinforcementCardProps = {
   normalizeLoose: (value: string) => string;
   getTokenUsage: (tokens: string[]) => Map<string, number>;
   onPlayAudioUrl: (url: string | null) => Promise<void>;
+  onSpeakWord: (word: string) => void;
   onPlayFeedbackSound: (isCorrect: boolean) => Promise<void>;
   onSubmitReinforcement: () => void;
 };

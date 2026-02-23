@@ -1,15 +1,11 @@
-﻿import { Volume2 } from 'lucide-react';
 import { Button } from '../../../../shared/ui/Button';
 import type { ReinforcementCardProps } from './types';
 import {
   AssembleLine,
   AssembleWordChip,
-  AudioTopRow,
   BankWrap,
   Card,
-  HeaderRow,
-  IconButton,
-  MissingOptionsGrid,
+  HeaderRow,  MissingOptionsGrid,
   MissingSentence,
   OptionButton,
   PairsColumn,
@@ -44,9 +40,15 @@ export function ReinforcementCard({
   normalizeLoose,
   getTokenUsage,
   onPlayAudioUrl,
+  onSpeakWord,
   onPlayFeedbackSound,
   onSubmitReinforcement,
 }: ReinforcementCardProps) {
+  const sentenceTranslation = reinforcement.reinforcement.sentenceTranslation?.trim() || null;
+  const showSentenceTranslation =
+    Boolean(sentenceTranslation) &&
+    normalize(sentenceTranslation ?? '') !== normalize(reinforcement.translation ?? '');
+
   const renderMissingExercise = () => {
     if (!missingExerciseModel) return null;
     const options = missingExerciseModel.options;
@@ -54,6 +56,10 @@ export function ReinforcementCard({
 
     return (
       <>
+        {showSentenceTranslation ? (
+          <TranslationText>{sentenceTranslation}</TranslationText>
+        ) : null}
+
         <MissingSentence>
           {rawTokens.map((token, index) => {
             const slotIndex = blankIndexes.findIndex((blankIndex) => blankIndex === index);
@@ -99,6 +105,7 @@ export function ReinforcementCard({
                 variant="ghost"
                 onClick={() => {
                   if (reinforcementChecked) return;
+                  onSpeakWord(option);
                   setMissingSelected((prev) => {
                     if (disabledByUse) return prev;
                     const emptyIndex = prev.findIndex((value) => !value);
@@ -141,8 +148,8 @@ export function ReinforcementCard({
 
     return (
       <>
-        {reinforcement.reinforcement.sentenceTranslation ? (
-          <TranslationText>{reinforcement.reinforcement.sentenceTranslation}</TranslationText>
+        {showSentenceTranslation ? (
+          <TranslationText>{sentenceTranslation}</TranslationText>
         ) : null}
 
         <AssembleLine>
@@ -156,6 +163,7 @@ export function ReinforcementCard({
                 className={isTokenWrong ? 'slot-shake' : undefined}
                 onClick={() => {
                   if (reinforcementChecked) return;
+                  onSpeakWord(token);
                   setAssembleAnswer((prev) => prev.filter((_, itemIndex) => itemIndex !== idx));
                 }}
                 $correct={Boolean(isTokenCorrect)}
@@ -178,6 +186,7 @@ export function ReinforcementCard({
                 type="button"
                 onClick={() => {
                   if (disabled) return;
+                  onSpeakWord(token);
                   setAssembleAnswer((prev) => [...prev, token]);
                 }}
                 disabled={disabled}
@@ -328,33 +337,7 @@ export function ReinforcementCard({
             ? 'Собери фразу из слов'
             : 'Закрепление'}
         </Title>
-
-        {isMissing ? (
-          <IconButton
-            type="button"
-            onClick={() => void onPlayAudioUrl(reinforcement.reinforcement.phraseAudioUrl ?? null)}
-            disabled={!reinforcement.reinforcement.phraseAudioUrl}
-            aria-label="Проиграть аудио"
-            style={{ opacity: reinforcement.reinforcement.phraseAudioUrl ? 1 : 0.45 }}
-          >
-            <Volume2 size={18} />
-          </IconButton>
-        ) : null}
       </HeaderRow>
-
-      {reinforcement.reinforcement.type === 'audio_assemble' ? (
-        <AudioTopRow>
-          <IconButton
-            type="button"
-            onClick={() => void onPlayAudioUrl(reinforcement.pronunciationAudioUrl ?? null)}
-            disabled={!reinforcement.pronunciationAudioUrl}
-            aria-label="Проиграть аудио"
-            style={{ opacity: reinforcement.pronunciationAudioUrl ? 1 : 0.45 }}
-          >
-            <Volume2 size={18} />
-          </IconButton>
-        </AudioTopRow>
-      ) : null}
 
       {reinforcement.reinforcement.type === 'missing' ? renderMissingExercise() : null}
       {reinforcement.reinforcement.type === 'audio_assemble' ? renderAudioAssembleExercise() : null}

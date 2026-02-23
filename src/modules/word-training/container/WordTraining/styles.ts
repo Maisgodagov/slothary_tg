@@ -5,10 +5,15 @@ export const TrainingPageRoot = styled.div<{ $homeVisible: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 10px;
-  height: ${({ $homeVisible }) => ($homeVisible ? "100%" : "auto")};
+  height: calc(
+    100vh -
+      (
+        var(--tg-safe-area-inset-top) + var(--tg-content-safe-area-inset-top) +
+          var(--tg-safe-area-inset-bottom)
+      )
+  );
   box-sizing: border-box;
-  padding-bottom: ${({ $homeVisible }) =>
-    $homeVisible ? "0" : "calc(70px + var(--tg-safe-area-inset-bottom, 0px))"};
+  padding-bottom: ${({ $homeVisible }) => ($homeVisible ? "70px" : "70px")};
   overflow: ${({ $homeVisible }) => ($homeVisible ? "hidden" : "visible")};
 `;
 

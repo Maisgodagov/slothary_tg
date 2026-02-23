@@ -44,7 +44,7 @@ export const AudioTopRow = styled.div`
 
 export const TranslationText = styled.div`
   font-size: clamp(30px, 7vw, 38px);
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.14;
   letter-spacing: -0.02em;
   margin: 4px 0 10px;
