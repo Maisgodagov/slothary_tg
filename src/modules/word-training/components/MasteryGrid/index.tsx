@@ -1,4 +1,6 @@
-﻿import type { WordTrainingMasteryMap } from '../../api/types';
+﻿import { useEffect, useMemo, useRef } from 'react';
+
+import type { WordTrainingMasteryMap } from '../../api/types';
 import type { MasteryGridProps } from './types';
 import {
   Cell,
@@ -50,29 +52,77 @@ export function MasteryGrid({
   animated = false,
   fillHeight = false,
   animatedFilledCellIds = {},
+  focusLevel = null,
+  focusBlock = null,
+  autoScrollToFocus = false,
 }: MasteryGridProps) {
   if (!masteryMap) return null;
 
   const grouped = groupByLevel(masteryMap.items);
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const levelRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const focusedKeyRef = useRef<string | null>(null);
+
+  const normalizedFocusLevel = useMemo(
+    () => String(focusLevel ?? '').trim().toUpperCase(),
+    [focusLevel],
+  );
+  const normalizedFocusBlock = useMemo(
+    () => String(focusBlock ?? '').trim().toUpperCase(),
+    [focusBlock],
+  );
+
+  useEffect(() => {
+    if (!autoScrollToFocus) return;
+    const container = gridRef.current;
+    if (!container) return;
+
+    const focusKey = normalizedFocusBlock || normalizedFocusLevel;
+    if (!focusKey || focusedKeyRef.current === focusKey) return;
+
+    const target =
+      (normalizedFocusBlock && sectionRefs.current[normalizedFocusBlock]) ||
+      (normalizedFocusLevel && levelRefs.current[normalizedFocusLevel]) ||
+      null;
+    if (!target) return;
+
+    focusedKeyRef.current = focusKey;
+    requestAnimationFrame(() => {
+      const top = Math.max(0, target.offsetTop - 10);
+      container.scrollTo({ top, behavior: 'smooth' });
+    });
+  }, [autoScrollToFocus, normalizedFocusBlock, normalizedFocusLevel, masteryMap]);
 
   return (
-    <GridCard $fillHeight={fillHeight}>
+    <GridCard $fillHeight={fillHeight} ref={gridRef}>
       {CEFR_LEVELS.map((level) => {
         const levelItems = grouped[level] ?? [];
         const levelStats = masteryMap.byLevel[level];
         if (!levelItems.length || !levelStats) return null;
 
-        const sectionsMap = new Map<string, { title: string; order: number; items: typeof levelItems }>();
+        const sectionsMap = new Map<
+          string,
+          { title: string; order: number; items: typeof levelItems; sectionBlockKey: string }
+        >();
         for (const item of levelItems) {
           const sectionKey = item.cefrBlock || `${level}_1`;
           const title = masteryMap.blockTitles?.[sectionKey] ?? sectionKey;
           const normalizedTitleKey = normalizeSectionTitleKey(title);
           const order = getCefrBlockOrder(sectionKey, level);
           if (!sectionsMap.has(normalizedTitleKey)) {
-            sectionsMap.set(normalizedTitleKey, { title: title.trim(), order, items: [] });
+            sectionsMap.set(normalizedTitleKey, {
+              title: title.trim(),
+              order,
+              items: [],
+              sectionBlockKey: String(sectionKey).toUpperCase(),
+            });
           }
           const section = sectionsMap.get(normalizedTitleKey)!;
           section.order = Math.min(section.order, order);
+          if (order < getCefrBlockOrder(section.sectionBlockKey, level)) {
+            section.sectionBlockKey = String(sectionKey).toUpperCase();
+          }
           section.items.push(item);
         }
 
@@ -82,7 +132,12 @@ export function MasteryGrid({
         });
 
         return (
-          <LevelWrap key={level}>
+          <LevelWrap
+            key={level}
+            ref={(node) => {
+              levelRefs.current[level] = node;
+            }}
+          >
             <LevelHeaderRow>
               <LevelHeaderTitle>Уровень {level}</LevelHeaderTitle>
               <LevelHeaderCounter>
@@ -91,7 +146,13 @@ export function MasteryGrid({
             </LevelHeaderRow>
 
             {sections.map((section, sectionIndex) => (
-              <SectionWrap key={`${level}-${section.title}`} $isFirst={sectionIndex === 0}>
+              <SectionWrap
+                key={`${level}-${section.title}`}
+                $isFirst={sectionIndex === 0}
+                ref={(node) => {
+                  sectionRefs.current[section.sectionBlockKey] = node;
+                }}
+              >
                 <SectionTitle>{section.title}</SectionTitle>
                 <CellsGrid>
                   {section.items.map((item) => {
@@ -110,4 +171,3 @@ export function MasteryGrid({
 }
 
 export default MasteryGrid;
-

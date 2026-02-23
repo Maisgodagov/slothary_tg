@@ -20,6 +20,9 @@ export function SnippetCarousel({
   highlight,
   onOpenFullVideo,
   showFullVideoButton = true,
+  autoPlayActive = true,
+  initialPlayLabel = null,
+  onFirstManualPlay,
   total,
   hasMore,
   isLoadingMore,
@@ -117,6 +120,9 @@ export function SnippetCarousel({
                 highlight={highlight}
                 onOpenFullVideo={onOpenFullVideo}
                 showFullVideoButton={showFullVideoButton}
+                autoPlayActive={autoPlayActive}
+                initialPlayLabel={initialPlayLabel}
+                onFirstManualPlay={onFirstManualPlay}
               />
             </CarouselItem>
           );

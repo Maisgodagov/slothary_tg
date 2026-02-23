@@ -77,7 +77,7 @@ export const ContextWordButton = styled.button`
   cursor: pointer;
 `;
 
-export const PlayButton = styled.button`
+export const PlayButton = styled.button<{ $interactive?: boolean }>`
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -86,7 +86,7 @@ export const PlayButton = styled.button`
   background: transparent;
   border: none;
   color: #fff;
-  pointer-events: none;
+  pointer-events: ${({ $interactive }) => ($interactive ? "auto" : "none")};
 `;
 
 export const PlayIcon = styled.span`
@@ -97,6 +97,20 @@ export const PlayIcon = styled.span`
   display: grid;
   place-items: center;
   font-size: 26px;
+`;
+
+export const PlayCta = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.58);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
 `;
 
 export const Highlight = styled.span`

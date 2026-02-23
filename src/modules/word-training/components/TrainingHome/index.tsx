@@ -29,6 +29,8 @@ export function TrainingHome({
   actionTitle,
   actionSubtitle,
   onStartOrResume,
+  focusLevel,
+  focusBlock,
 }: TrainingHomeProps) {
   const buttonTitle = actionTitle ?? 'Учить слова';
   const buttonSubtitle = actionSubtitle ?? `+ ${suggestedWordsCount} новых слов`;
@@ -79,7 +81,13 @@ export function TrainingHome({
       </ProgressCard>
 
       <MasteryArea>
-        <MasteryGrid masteryMap={masteryMap} fillHeight />
+        <MasteryGrid
+          masteryMap={masteryMap}
+          fillHeight
+          autoScrollToFocus
+          focusLevel={focusLevel}
+          focusBlock={focusBlock}
+        />
       </MasteryArea>
     </HomeLayout>
   );

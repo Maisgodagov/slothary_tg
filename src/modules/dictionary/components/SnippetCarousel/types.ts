@@ -5,6 +5,9 @@ export type SnippetCarouselProps = {
   highlight: string;
   onOpenFullVideo: (snippet: PhraseSnippet) => void;
   showFullVideoButton?: boolean;
+  autoPlayActive?: boolean;
+  initialPlayLabel?: string | null;
+  onFirstManualPlay?: () => void;
   total?: number;
   hasMore?: boolean;
   isLoadingMore?: boolean;

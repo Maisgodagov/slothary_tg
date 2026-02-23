@@ -26,6 +26,7 @@ import {
   Highlight,
   LoadingOverlay,
   PlayButton,
+  PlayCta,
   PlayIcon,
   Video,
 } from "./styles";
@@ -138,10 +139,14 @@ export function SnippetCard({
   compact = false,
   loop = true,
   showFullVideoButton = true,
+  autoPlayActive = true,
+  initialPlayLabel = null,
+  onFirstManualPlay,
 }: SnippetCardProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [hasStartedPlayback, setHasStartedPlayback] = useState(false);
   const [subtitleLookup, setSubtitleLookup] = useState<{
     word: string;
     status: "idle" | "loading" | "ready" | "error";
@@ -172,6 +177,7 @@ export function SnippetCard({
     if (!shouldRender) {
       setIsPlaying(false);
       setIsReady(false);
+      setHasStartedPlayback(false);
       setSubtitleLookup(null);
       setSubtitlePopover(null);
       subtitleWasPlayingRef.current = false;
@@ -186,7 +192,7 @@ export function SnippetCard({
       return;
     }
 
-    if (isReady) {
+    if (isReady && autoPlayActive) {
       const safeStart = snippet.startSeconds;
       const safeEnd = snippet.endSeconds;
       if (video.currentTime < safeStart || video.currentTime > safeEnd) {
@@ -194,10 +200,14 @@ export function SnippetCard({
       }
       video
         .play()
-        .then(() => setIsPlaying(true))
+        .then(() => {
+          setIsPlaying(true);
+          setHasStartedPlayback(true);
+        })
         .catch(() => setIsPlaying(false));
     }
   }, [
+    autoPlayActive,
     isActive,
     isReady,
     shouldRender,
@@ -366,13 +376,17 @@ export function SnippetCard({
       }
       video
         .play()
-        .then(() => setIsPlaying(true))
+        .then(() => {
+          if (!hasStartedPlayback) onFirstManualPlay?.();
+          setIsPlaying(true);
+          setHasStartedPlayback(true);
+        })
         .catch(() => setIsPlaying(false));
     } else {
       video.pause();
       setIsPlaying(false);
     }
-  }, [snippet.startSeconds]);
+  }, [hasStartedPlayback, onFirstManualPlay, snippet.startSeconds]);
 
   const handleTimeUpdate = useCallback(() => {
     const video = videoRef.current;
@@ -427,8 +441,14 @@ export function SnippetCard({
           const video = event.currentTarget;
           video.currentTime = snippet.startSeconds;
           setIsReady(true);
-          if (isActive) {
-            video.play().catch(() => undefined);
+          if (isActive && autoPlayActive) {
+            video
+              .play()
+              .then(() => {
+                setIsPlaying(true);
+                setHasStartedPlayback(true);
+              })
+              .catch(() => undefined);
           }
         }}
         onTimeUpdate={handleTimeUpdate}
@@ -481,11 +501,22 @@ export function SnippetCard({
       <PlayButton
         type="button"
         aria-label={isPlaying ? "Пауза" : "Воспроизвести"}
+        onClick={(event) => {
+          event.stopPropagation();
+          handleTogglePlay();
+        }}
+        $interactive={Boolean(initialPlayLabel) && !hasStartedPlayback && !isPlaying}
       >
-        {!isPlaying && (
+        {!isPlaying && (!initialPlayLabel || hasStartedPlayback) && (
           <PlayIcon>
             <Play size={32} strokeWidth={2.5} aria-hidden />
           </PlayIcon>
+        )}
+        {!isPlaying && initialPlayLabel && !hasStartedPlayback && (
+          <PlayCta>
+            <Play size={18} strokeWidth={2.5} aria-hidden />
+            {initialPlayLabel}
+          </PlayCta>
         )}
       </PlayButton>
       {!isReady && (

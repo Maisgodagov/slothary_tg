@@ -11,5 +11,7 @@ export type TrainingHomeProps = {
   actionTitle?: string;
   actionSubtitle?: string;
   onStartOrResume: () => void;
+  focusLevel?: string | null;
+  focusBlock?: string | null;
 };
 

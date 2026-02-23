@@ -9,4 +9,7 @@ export type SnippetCardProps = {
   compact?: boolean;
   loop?: boolean;
   showFullVideoButton?: boolean;
+  autoPlayActive?: boolean;
+  initialPlayLabel?: string | null;
+  onFirstManualPlay?: () => void;
 };

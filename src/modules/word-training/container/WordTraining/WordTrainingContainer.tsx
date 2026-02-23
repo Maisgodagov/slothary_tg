@@ -112,6 +112,7 @@ export function WordTrainingContainer() {
   const wordPronunciationCacheRef = useRef<Map<string, string | null>>(
     new Map(),
   );
+  const introPronouncedWordKeyRef = useRef<string | null>(null);
   const { playAudioUrl, playFeedbackSound, stopAudio } = useWordTrainingAudio();
 
   const session = state?.session ?? null;
@@ -403,6 +404,25 @@ export function WordTrainingContainer() {
     isSessionEntered,
     loadPracticeSnippets,
   ]);
+
+  useEffect(() => {
+    if (!isSessionEntered || !isNewWordIntroVisible || !introPendingWord) return;
+    if (!introPendingWord.pronunciationAudioUrl?.trim()) return;
+    if (introPronouncedWordKeyRef.current === introPendingWord.wordKey) return;
+    introPronouncedWordKeyRef.current = introPendingWord.wordKey;
+    void playAudioUrl(introPendingWord.pronunciationAudioUrl);
+  }, [
+    introPendingWord,
+    isNewWordIntroVisible,
+    isSessionEntered,
+    playAudioUrl,
+  ]);
+
+  useEffect(() => {
+    if (!isNewWordIntroVisible) {
+      introPronouncedWordKeyRef.current = null;
+    }
+  }, [isNewWordIntroVisible]);
 
   useEffect(() => {
     if (session?.status !== "active") {
@@ -988,6 +1008,8 @@ export function WordTrainingContainer() {
             overview={overview}
             currentDisplayLevel={currentDisplayLevel}
             levelRingPercent={levelRingPercent}
+            focusLevel={overview.currentLevel}
+            focusBlock={overview.currentBlock}
             submitting={submitting}
             masteryLoading={masteryLoading}
             suggestedWordsCount={suggestedWordsCount}
@@ -1008,6 +1030,8 @@ export function WordTrainingContainer() {
               overview={overview}
               currentDisplayLevel={currentDisplayLevel}
               levelRingPercent={levelRingPercent}
+              focusLevel={overview.currentLevel}
+              focusBlock={overview.currentBlock}
               submitting={submitting}
               masteryLoading={masteryLoading}
               suggestedWordsCount={suggestedWordsCount}

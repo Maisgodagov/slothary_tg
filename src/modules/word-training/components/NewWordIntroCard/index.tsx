@@ -31,7 +31,12 @@ export function NewWordIntroCard({
   disabled,
 }: NewWordIntroCardProps) {
   const [showKnowHint, setShowKnowHint] = useState(false);
+  const [examplesStarted, setExamplesStarted] = useState(false);
   const infoWrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setExamplesStarted(false);
+  }, [introWord.wordKey]);
 
   useEffect(() => {
     if (!showKnowHint) return;
@@ -106,6 +111,9 @@ export function NewWordIntroCard({
           items={snippets}
           highlight={introWord.word}
           showFullVideoButton={false}
+          autoPlayActive={examplesStarted}
+          initialPlayLabel={examplesStarted ? null : "Примеры использования"}
+          onFirstManualPlay={() => setExamplesStarted(true)}
           total={snippets.length}
           hasMore={false}
           isLoadingMore={false}

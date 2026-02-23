@@ -5,5 +5,8 @@ export type MasteryGridProps = {
   animated?: boolean;
   fillHeight?: boolean;
   animatedFilledCellIds?: Record<number, true>;
+  focusLevel?: string | null;
+  focusBlock?: string | null;
+  autoScrollToFocus?: boolean;
 };
 
