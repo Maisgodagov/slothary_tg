@@ -66,11 +66,14 @@ export function TrainingHome({
             fontSize: 20,
             fontWeight: 700,
             borderRadius: 14,
-            boxShadow: 'none',
+            borderStyle: 'solid',
+            borderWidth: '3px',
+            borderColor: '#2ea3ff',
+            boxShadow: '0 4px 0 #1a79c7, 0 8px 14px rgba(0, 0, 0, 0.22)',
             marginTop: 4,
-            background: 'var(--tg-accent-strong)',
+            background: '#2ea3ff',
             backgroundImage: 'none',
-            color: '#0b0b0b',
+            color: 'var(--tg-text)',
           }}
         >
           <LearnButtonLabel>

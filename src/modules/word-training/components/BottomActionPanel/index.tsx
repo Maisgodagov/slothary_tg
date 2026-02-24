@@ -21,6 +21,15 @@ export function BottomActionPanel({
   if (typeof document === 'undefined') return null;
 
   const hasCustomActions = Boolean(actions?.length);
+  const baseActionStyle = {
+    minHeight: 50,
+    fontSize: 20,
+    fontWeight: 700,
+    borderRadius: 14,
+    borderStyle: 'solid' as const,
+    borderWidth: '3px',
+    color: 'var(--tg-text)',
+  };
 
   return createPortal(
     <PanelRoot>
@@ -43,11 +52,7 @@ export function BottomActionPanel({
               disabled={submitting}
               variant={action.variant ?? 'primary'}
               style={{
-                minHeight: 50,
-                fontSize: 20,
-                fontWeight: 700,
-                borderRadius: 14,
-                boxShadow: 'none',
+                ...baseActionStyle,
                 ...action.style,
               }}
             >
@@ -60,12 +65,11 @@ export function BottomActionPanel({
           onClick={onNext}
           disabled={submitting || nextDisabled}
           style={{
-            minHeight: 50,
+            ...baseActionStyle,
             fontSize: 22,
-            fontWeight: 700,
-            borderRadius: 14,
+            borderColor: '#2ea3ff',
             background: '#2ea3ff',
-            boxShadow: 'none',
+            boxShadow: '0 4px 0 #1a79c7, 0 8px 14px rgba(0, 0, 0, 0.22)',
           }}
         >
           {buttonLabel ?? 'Далее'}

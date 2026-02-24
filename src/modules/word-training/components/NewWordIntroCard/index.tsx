@@ -37,7 +37,7 @@ export function NewWordIntroCard({
   return (
     <Card className="section">
       <HeaderRow>
-        <HeaderTitle />
+        <HeaderTitle>Вы знаете это слово?</HeaderTitle>
       </HeaderRow>
 
       <WordRow>

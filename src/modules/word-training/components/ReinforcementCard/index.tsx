@@ -4,7 +4,8 @@ import {
   AssembleWordChip,
   BankWrap,
   Card,
-  HeaderRow,  MissingOptionsGrid,
+  HeaderRow,
+  MissingOptionsGrid,
   MissingSentence,
   OptionButton,
   PairsColumn,
@@ -42,9 +43,6 @@ export function ReinforcementCard({
   onPlayFeedbackSound,
 }: ReinforcementCardProps) {
   const sentenceTranslation = reinforcement.reinforcement.sentenceTranslation?.trim() || null;
-  const showSentenceTranslation =
-    Boolean(sentenceTranslation) &&
-    normalize(sentenceTranslation ?? '') !== normalize(reinforcement.translation ?? '');
 
   const renderMissingExercise = () => {
     if (!missingExerciseModel) return null;
@@ -53,9 +51,7 @@ export function ReinforcementCard({
 
     return (
       <>
-        {showSentenceTranslation ? (
-          <TranslationText>{sentenceTranslation}</TranslationText>
-        ) : null}
+        {sentenceTranslation ? <TranslationText>{sentenceTranslation}</TranslationText> : null}
 
         <MissingSentence>
           {rawTokens.map((token, index) => {
@@ -77,7 +73,7 @@ export function ReinforcementCard({
                       return next;
                     });
                   }}
-                  style={{ margin: '0 3px', cursor: !reinforcementChecked && missingSelected[slotIndex] ? 'pointer' : 'default' }}
+                  style={{ cursor: !reinforcementChecked && missingSelected[slotIndex] ? 'pointer' : 'default' }}
                   $correct={isSlotCorrect}
                   $wrong={isSlotWrong}
                   $filled={Boolean(missingSelected[slotIndex])}
@@ -99,7 +95,6 @@ export function ReinforcementCard({
             return (
               <OptionButton
                 key={`${option}-${index}`}
-                variant="ghost"
                 onClick={() => {
                   if (reinforcementChecked) return;
                   onSpeakWord(option);
@@ -145,9 +140,7 @@ export function ReinforcementCard({
 
     return (
       <>
-        {showSentenceTranslation ? (
-          <TranslationText>{sentenceTranslation}</TranslationText>
-        ) : null}
+        {sentenceTranslation ? <TranslationText>{sentenceTranslation}</TranslationText> : null}
 
         <AssembleLine>
           {assembleAnswer.map((token, idx) => {
@@ -257,16 +250,10 @@ export function ReinforcementCard({
                   minHeight: 56,
                   textAlign: 'left',
                   padding: '12px 14px',
-                  borderColor: isLockedCorrect || isCorrect
-                    ? 'rgba(67, 201, 127, 0.7)'
-                    : isTempWrong
-                    ? 'rgba(255, 95, 109, 0.8)'
-                    : isWrong
-                    ? 'rgba(255, 95, 109, 0.7)'
-                    : selected
-                    ? 'rgba(46, 163, 255, 0.75)'
-                    : 'var(--tg-border)',
                 }}
+                $correct={isLockedCorrect || Boolean(isCorrect)}
+                $wrong={isTempWrong || Boolean(isWrong)}
+                $selected={selected}
               >
                 {pair.word}
               </TokenButton>
@@ -301,14 +288,10 @@ export function ReinforcementCard({
                   textAlign: 'left',
                   padding: '12px 14px',
                   opacity: reinforcementChecked ? 0.6 : 1,
-                  borderColor: isLockedCorrect
-                    ? 'rgba(67, 201, 127, 0.7)'
-                    : isTempWrong
-                    ? 'rgba(255, 95, 109, 0.8)'
-                    : isSelected
-                    ? 'rgba(46, 163, 255, 0.75)'
-                    : 'var(--tg-border)',
                 }}
+                $correct={isLockedCorrect}
+                $wrong={isTempWrong}
+                $selected={isSelected}
               >
                 {translation}
               </TokenButton>
@@ -319,20 +302,17 @@ export function ReinforcementCard({
     );
   };
 
-  const isMatchPairs = reinforcement.reinforcement.type === 'match_pairs';
-  const isMissing = reinforcement.reinforcement.type === 'missing';
-
   return (
     <Card className="section">
       <HeaderRow>
-        <Title $isMatchPairs={isMatchPairs} $isMissing={isMissing}>
+        <Title>
           {reinforcement.reinforcement.type === 'match_pairs'
-            ? 'Соедини слова и их перевод'
+            ? 'Соедени слова с их переводом'
             : reinforcement.reinforcement.type === 'missing'
-            ? 'Вставь пропущенное слово'
-            : reinforcement.reinforcement.type === 'audio_assemble'
-            ? 'Собери фразу из слов'
-            : 'Закрепление'}
+              ? 'Вставь пропущенные слова'
+              : reinforcement.reinforcement.type === 'audio_assemble'
+                ? 'Собери фразу из слов'
+                : 'Закрепление'}
         </Title>
       </HeaderRow>
 

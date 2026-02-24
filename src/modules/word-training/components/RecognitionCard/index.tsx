@@ -29,7 +29,7 @@ export function RecognitionCard({
   return (
     <Card className="section">
       <HeaderRow>
-        <HeaderTitle>Выбери правильный перевод</HeaderTitle>
+        <HeaderTitle>Выбери перевод слова</HeaderTitle>
       </HeaderRow>
 
       <WordRow>
@@ -53,7 +53,6 @@ export function RecognitionCard({
           return (
             <OptionButton
               key={`${option}-${index}`}
-              variant="ghost"
               onClick={() => onPickOption(option, isCorrectOption)}
               disabled={submitting || recognitionChecked}
               className={showWrong ? 'slot-shake' : undefined}

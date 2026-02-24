@@ -156,15 +156,29 @@ export function WordTrainingContainer() {
     const n = Number(overview?.suggestedTargetWords ?? 5);
     return Number.isFinite(n) && n > 0 ? Math.round(n) : 5;
   }, [overview?.suggestedTargetWords]);
-  const introPendingWord = useMemo(() => {
+  const activeIntroWord = useMemo(() => {
+    if (!task || task.mode !== "recognition" || !task.isNewWord) return null;
     const queue = state?.introQueue ?? [];
-    return queue.find((item) => !introducedWordKeys[item.wordKey]) ?? null;
-  }, [introducedWordKeys, state?.introQueue]);
+    const byQueue = queue.find((item) => item.wordKey === task.wordKey) ?? null;
+    if (byQueue) return byQueue;
+    return {
+      wordKey: task.wordKey,
+      word: task.word,
+      translation: task.translation,
+      pronunciationAudioUrl: task.pronunciationAudioUrl ?? null,
+      cefrLevel: task.cefrLevel ?? null,
+      otherTranslations: task.otherTranslations ?? [],
+    };
+  }, [state?.introQueue, task]);
   const isTrainingHomeVisible =
     !loading && Boolean(overview) && (!session || isPausedActiveSession);
 
   const isNewWordIntroVisible = Boolean(
-    session && introPendingWord && !practiceView && !postPracticeTransitioning,
+    session &&
+      activeIntroWord &&
+      !introducedWordKeys[activeIntroWord.wordKey] &&
+      !practiceView &&
+      !postPracticeTransitioning,
   );
 
   const missingExerciseModel = useMemo(() => {
@@ -379,7 +393,7 @@ export function WordTrainingContainer() {
   }, [session?.id]);
 
   useEffect(() => {
-    const word = introPendingWord?.word?.trim();
+    const word = activeIntroWord?.word?.trim();
     if (!isSessionEntered || !isNewWordIntroVisible || !word) {
       setIntroSnippets([]);
       setIntroSnippetsLoading(false);
@@ -400,20 +414,20 @@ export function WordTrainingContainer() {
       cancelled = true;
     };
   }, [
-    introPendingWord?.word,
+    activeIntroWord?.word,
     isNewWordIntroVisible,
     isSessionEntered,
     loadPracticeSnippets,
   ]);
 
   useEffect(() => {
-    if (!isSessionEntered || !isNewWordIntroVisible || !introPendingWord) return;
-    if (!introPendingWord.pronunciationAudioUrl?.trim()) return;
-    if (introPronouncedWordKeyRef.current === introPendingWord.wordKey) return;
-    introPronouncedWordKeyRef.current = introPendingWord.wordKey;
-    void playAudioUrl(introPendingWord.pronunciationAudioUrl);
+    if (!isSessionEntered || !isNewWordIntroVisible || !activeIntroWord) return;
+    if (!activeIntroWord.pronunciationAudioUrl?.trim()) return;
+    if (introPronouncedWordKeyRef.current === activeIntroWord.wordKey) return;
+    introPronouncedWordKeyRef.current = activeIntroWord.wordKey;
+    void playAudioUrl(activeIntroWord.pronunciationAudioUrl);
   }, [
-    introPendingWord,
+    activeIntroWord,
     isNewWordIntroVisible,
     isSessionEntered,
     playAudioUrl,
@@ -996,8 +1010,8 @@ export function WordTrainingContainer() {
         )}
         {loading && <div className="section">Загрузка...</div>}
 
-        {isSessionEntered && isNewWordIntroVisible && introPendingWord
-          ? renderNewWordIntro(introPendingWord)
+        {isSessionEntered && isNewWordIntroVisible && activeIntroWord
+          ? renderNewWordIntro(activeIntroWord)
           : null}
 
         {!loading && !session && overview && (
@@ -1103,7 +1117,7 @@ export function WordTrainingContainer() {
           })}
         {!loading &&
           isSessionEntered &&
-          introPendingWord &&
+          activeIntroWord &&
           renderBottomActionPanel({
             visible: isNewWordIntroVisible,
             isCorrect: true,
@@ -1116,26 +1130,29 @@ export function WordTrainingContainer() {
                 label: "Знаю",
                 variant: "ghost",
                 style: {
-                  background: "rgba(255,255,255,0.04)",
-                  borderColor: "var(--tg-border)",
+                  background: "#4dcf75",
+                  borderColor: "rgba(67, 201, 127, 0.9)",
                   color: "var(--tg-text)",
+                  boxShadow: "0 4px 0 #2e9d52, 0 8px 14px rgba(0, 0, 0, 0.22)",
                 },
                 onClick: () => {
-                  void markKnownWord(introPendingWord.wordKey);
+                  void markKnownWord(activeIntroWord.wordKey);
                 },
               },
               {
                 key: "dont-know",
                 label: "Не знаю",
-                variant: "primary",
+                variant: "ghost",
                 style: {
-                  background: "#2ea3ff",
-                  color: "#0b0b0b",
+                  background: "#ffb356",
+                  borderColor: "rgba(255, 165, 0, 0.9)",
+                  color: "var(--tg-text)",
+                  boxShadow: "0 4px 0 #d4872e, 0 8px 14px rgba(0, 0, 0, 0.22)",
                 },
                 onClick: () => {
                   setIntroducedWordKeys((prev) => ({
                     ...prev,
-                    [introPendingWord.wordKey]: true,
+                    [activeIntroWord.wordKey]: true,
                   }));
                 },
               },
