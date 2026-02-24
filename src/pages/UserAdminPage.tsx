@@ -1,25 +1,45 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppSelector } from "../app/hooks";
 import { selectAuth } from "../features/auth/slice";
-import { usersAdminApi, type AdminUser } from "../features/admin/usersApi";
+import {
+  usersAdminApi,
+  type AdminUser,
+  type AdminUserActivityItem,
+  type AdminUsersSummary,
+} from "../features/admin/usersApi";
 import { Button } from "../shared/ui/Button";
 import { PageShell } from "../shared/ui/PageShell";
 
 const PAGE_SIZE = 50;
+const ACTIVITY_DAYS = 90;
 
 export default function UserAdminPage() {
   const auth = useAppSelector(selectAuth);
   const isAdmin = auth.profile?.role === "admin";
 
   const [items, setItems] = useState<AdminUser[]>([]);
+  const [summary, setSummary] = useState<AdminUsersSummary>({
+    totalUsers: 0,
+    activeToday: 0,
+    activeWeek: 0,
+    activeMonth: 0,
+  });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [activityByUser, setActivityByUser] = useState<
+    Record<string, AdminUserActivityItem[]>
+  >({});
+  const [activityLoadingByUser, setActivityLoadingByUser] = useState<
+    Record<string, boolean>
+  >({});
 
   const canLoadMore = page < totalPages;
+  const normalizedQuery = query.trim();
 
   const loadPage = async (nextPage: number, replace = false) => {
     if (!isAdmin) return;
@@ -27,22 +47,41 @@ export default function UserAdminPage() {
     setError(null);
     try {
       const response = await usersAdminApi.getUsers(
-        { page: nextPage, limit: PAGE_SIZE },
+        { page: nextPage, limit: PAGE_SIZE, search: normalizedQuery || undefined },
         auth.profile?.role ?? null
+      );
+      setSummary(
+        response.summary ?? {
+          totalUsers: response.total ?? 0,
+          activeToday: 0,
+          activeWeek: 0,
+          activeMonth: 0,
+        }
       );
       setTotalPages(response.totalPages);
       setPage(response.page);
-      setItems((prev) =>
-        replace ? response.items : [...prev, ...response.items]
-      );
+      setItems((prev) => (replace ? response.items : [...prev, ...response.items]));
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Не удалось загрузить пользователей"
-      );
+      setError(err instanceof Error ? err.message : "Не удалось загрузить пользователей");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadActivity = async (userId: string) => {
+    if (activityByUser[userId] || activityLoadingByUser[userId]) return;
+    setActivityLoadingByUser((prev) => ({ ...prev, [userId]: true }));
+    try {
+      const response = await usersAdminApi.getUserActivity(
+        userId,
+        ACTIVITY_DAYS,
+        auth.profile?.role ?? null
+      );
+      setActivityByUser((prev) => ({ ...prev, [userId]: response.items }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось загрузить активность");
+    } finally {
+      setActivityLoadingByUser((prev) => ({ ...prev, [userId]: false }));
     }
   };
 
@@ -52,38 +91,34 @@ export default function UserAdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
-  const filteredItems = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    const base = normalized
-      ? items.filter((user) => {
-          const name = (user.fullName || user.email || "").toLowerCase();
-          return name.includes(normalized);
-        })
-      : items;
-    return [...base].sort((a, b) => {
+  useEffect(() => {
+    if (!isAdmin) return;
+    const timer = window.setTimeout(() => {
+      setExpandedUserId(null);
+      loadPage(1, true);
+    }, 250);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [normalizedQuery, isAdmin]);
+
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
       const aTime = a.lastSeenAt ? new Date(a.lastSeenAt).getTime() : 0;
       const bTime = b.lastSeenAt ? new Date(b.lastSeenAt).getTime() : 0;
       return bTime - aTime;
     });
-  }, [items, query]);
-
-  const title = useMemo(() => {
-    if (!isAdmin) return "Доступ ограничен";
-    return "Пользователи";
-  }, [isAdmin]);
+  }, [items]);
 
   if (!isAdmin) {
     return (
       <PageShell>
         <div style={wrapperStyle}>
-        <div className="page-header" style={headerRow}>
-        </div>
-        <div style={cardStyle}>
-          <div style={{ fontWeight: 700 }}>{title}</div>
-          <div style={{ color: "var(--tg-subtle)" }}>
-            Только администратор может просматривать список пользователей.
+          <div style={cardStyle}>
+            <div style={{ fontWeight: 700 }}>Доступ ограничен</div>
+            <div style={{ color: "var(--tg-subtle)" }}>
+              Только администратор может просматривать список пользователей.
+            </div>
           </div>
-        </div>
         </div>
       </PageShell>
     );
@@ -92,115 +127,197 @@ export default function UserAdminPage() {
   return (
     <PageShell>
       <div style={wrapperStyle}>
-      <div className="page-header" style={headerRow}>
-        <div style={{ fontWeight: 700 }}>{title}</div>
-      </div>
+        <div className="page-header" style={headerRow}>
+          <div style={{ fontWeight: 700 }}>Пользователи</div>
+        </div>
 
-      <div style={listWrapper}>
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Поиск по имени"
-          style={searchInput}
-        />
-        {filteredItems.map((user) => (
-          <div key={user.id} style={userCard}>
-            <div style={userHeader}>
-              <div style={avatarStyle}>
-                {user.avatarUrl ? (
-                  <img
-                    src={user.avatarUrl}
-                    alt={user.fullName}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
+        <div style={summaryGrid}>
+          <SummaryCard label="Всего" value={summary?.totalUsers ?? 0} />
+          <SummaryCard label="Активны сегодня" value={summary?.activeToday ?? 0} />
+          <SummaryCard label="Активны 7 дней" value={summary?.activeWeek ?? 0} />
+          <SummaryCard label="Активны 30 дней" value={summary?.activeMonth ?? 0} />
+        </div>
+
+        <div style={listWrapper}>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Поиск по имени или email"
+            style={searchInput}
+          />
+
+          {sortedItems.map((user) => {
+            const expanded = expandedUserId === user.id;
+            const activity = activityByUser[user.id] ?? [];
+            const activityLoading = activityLoadingByUser[user.id];
+            return (
+              <div key={user.id} style={userCard}>
+                <button
+                  type="button"
+                  style={userTopButton}
+                  onClick={() => {
+                    if (expanded) {
+                      setExpandedUserId(null);
+                      return;
+                    }
+                    setExpandedUserId(user.id);
+                    loadActivity(user.id);
+                  }}
+                >
+                  <div style={userHeader}>
+                    <div style={avatarStyle}>
+                      {user.avatarUrl ? (
+                        <img
+                          src={user.avatarUrl}
+                          alt={user.fullName}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        getInitials(user.fullName || user.email)
+                      )}
+                    </div>
+                    <div style={{ flex: 1, textAlign: "left" }}>
+                      <div style={{ fontWeight: 700 }}>{user.fullName}</div>
+                      <div style={{ color: "var(--tg-subtle)", fontSize: 13 }}>
+                        {user.email}
+                      </div>
+                    </div>
+                    <div style={{ color: "var(--tg-subtle)", fontSize: 12 }}>
+                      {expanded ? "Скрыть" : "Подробнее"}
+                    </div>
+                  </div>
+
+                  <div style={statsGrid}>
+                    <StatCell label="Просмотрено видео" value={user.watchedCount} />
+                    <StatCell label="Лайков" value={user.likedCount} />
+                    <StatCell label="Слов в словаре" value={user.dictionaryWordsCount} />
+                    <StatCell label="Упражнений" value={user.exercisesCompletedCount} />
+                    <StatCell label="Слов выучено" value={user.learnedWordsCount} />
+                    <StatCell label="Серия" value={user.currentStreakDays} />
+                    <StatCell label="Последний визит" value={formatLastSeen(user.lastSeenAt)} />
+                  </div>
+                </button>
+
+                <div style={roleRow}>
+                  <span style={{ color: "var(--tg-subtle)" }}>Роль</span>
+                  <select
+                    value={user.role}
+                    disabled={saving[user.id]}
+                    onChange={async (event) => {
+                      const nextRole = event.target.value as AdminUser["role"];
+                      if (nextRole === user.role) return;
+                      setSaving((prev) => ({ ...prev, [user.id]: true }));
+                      try {
+                        await usersAdminApi.updateUserRole(
+                          user.id,
+                          nextRole,
+                          auth.profile?.role ?? null
+                        );
+                        setItems((prev) =>
+                          prev.map((item) =>
+                            item.id === user.id ? { ...item, role: nextRole } : item
+                          )
+                        );
+                      } catch (err) {
+                        setError(
+                          err instanceof Error ? err.message : "Не удалось обновить роль"
+                        );
+                      } finally {
+                        setSaving((prev) => ({ ...prev, [user.id]: false }));
+                      }
                     }}
-                  />
-                ) : (
-                  getInitials(user.fullName || user.email)
+                    style={roleSelect}
+                  >
+                    <option value="student">student</option>
+                    <option value="teacher">teacher</option>
+                    <option value="admin">admin</option>
+                  </select>
+                </div>
+
+                {expanded && (
+                  <div style={activityBox}>
+                    <div style={{ fontWeight: 700 }}>Активность по дням (последние {ACTIVITY_DAYS})</div>
+                    {activityLoading && <div style={loadingText}>Загрузка активности...</div>}
+                    {!activityLoading && activity.length === 0 && (
+                      <div style={emptyText}>Нет данных за выбранный период.</div>
+                    )}
+                    {!activityLoading && activity.length > 0 && (
+                      <div style={tableWrap}>
+                        <table style={tableStyle}>
+                          <thead>
+                            <tr>
+                              <th style={thStyle}>Дата</th>
+                              <th style={thStyle}>Заходил</th>
+                              <th style={thStyle}>Видео</th>
+                              <th style={thStyle}>Лайки</th>
+                              <th style={thStyle}>Упражнения</th>
+                              <th style={thStyle}>Слов добавил</th>
+                              <th style={thStyle}>Фраз добавил</th>
+                              <th style={thStyle}>Слов искал</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {activity.map((row) => (
+                              <tr key={`${user.id}-${row.date}`}>
+                                <td style={tdStyle}>{formatDate(row.date)}</td>
+                                <td style={tdStyle}>{row.didLogin ? "Да" : "Нет"}</td>
+                                <td style={tdStyle}>{row.videosWatched}</td>
+                                <td style={tdStyle}>{row.likesGiven}</td>
+                                <td style={tdStyle}>{row.exercisesCompleted}</td>
+                                <td style={tdStyle}>{row.wordsAdded}</td>
+                                <td style={tdStyle}>{row.phrasesAdded}</td>
+                                <td style={tdStyle}>{row.wordsSearched}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700 }}>{user.fullName}</div>
-                <div style={{ color: "var(--tg-subtle)", fontSize: 13 }}>
-                  {user.email}
-                </div>
-              </div>
-            </div>
+            );
+          })}
 
-            <div style={statsRow}>
-              <div>
-                <div style={statLabel}>Просмотрено</div>
-                <div style={statValue}>{user.watchedCount}</div>
-              </div>
-              <div>
-                <div style={statLabel}>Лайков</div>
-                <div style={statValue}>{user.likedCount}</div>
-              </div>
-              <div>
-                <div style={statLabel}>Заходил</div>
-                <div style={statValue}>{formatLastSeen(user.lastSeenAt)}</div>
-              </div>
-            </div>
+          {error && <div style={errorText}>{error}</div>}
 
-            <div style={roleRow}>
-              <span style={{ color: "var(--tg-subtle)" }}>Роль</span>
-              <select
-                value={user.role}
-                disabled={saving[user.id]}
-                onChange={async (event) => {
-                  const nextRole = event.target.value as AdminUser["role"];
-                  if (nextRole === user.role) return;
-                  setSaving((prev) => ({ ...prev, [user.id]: true }));
-                  try {
-                    await usersAdminApi.updateUserRole(
-                      user.id,
-                      nextRole,
-                      auth.profile?.role ?? null
-                    );
-                    setItems((prev) =>
-                      prev.map((item) =>
-                        item.id === user.id ? { ...item, role: nextRole } : item
-                      )
-                    );
-                  } catch (err) {
-                    setError(
-                      err instanceof Error
-                        ? err.message
-                        : "Не удалось обновить роль"
-                    );
-                  } finally {
-                    setSaving((prev) => ({ ...prev, [user.id]: false }));
-                  }
-                }}
-                style={roleSelect}
-              >
-                <option value="student">student</option>
-                <option value="teacher">teacher</option>
-                <option value="admin">admin</option>
-              </select>
-            </div>
-          </div>
-        ))}
+          {canLoadMore && !normalizedQuery && (
+            <Button
+              variant="ghost"
+              onClick={() => loadPage(page + 1)}
+              disabled={loading}
+              style={{ justifySelf: "center" }}
+            >
+              Показать еще
+            </Button>
+          )}
 
-        {error && <div style={errorText}>{error}</div>}
-
-        {canLoadMore && (
-          <Button
-            variant="ghost"
-            onClick={() => loadPage(page + 1)}
-            disabled={loading}
-            style={{ justifySelf: "center" }}
-          >
-            Показать еще
-          </Button>
-        )}
-
-        {loading && <div style={loadingText}>Загрузка...</div>}
-      </div>
+          {loading && <div style={loadingText}>Загрузка...</div>}
+        </div>
       </div>
     </PageShell>
+  );
+}
+
+function SummaryCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div style={summaryCard}>
+      <div style={statLabel}>{label}</div>
+      <div style={{ fontWeight: 800, fontSize: 20 }}>{value}</div>
+    </div>
+  );
+}
+
+function StatCell({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div style={statCell}>
+      <div style={statLabel}>{label}</div>
+      <div style={statValue}>{value}</div>
+    </div>
   );
 }
 
@@ -210,64 +327,23 @@ const getInitials = (value: string) => {
   return value.slice(0, 2).toUpperCase();
 };
 
+const formatDate = (value: string) => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString("ru-RU");
+};
+
 const formatLastSeen = (value?: string | null) => {
   if (!value) return "N/A";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "N/A";
-
-  const now = new Date();
-  const diffMs = now.getTime() - parsed.getTime();
-  const diffMinutes = Math.floor(diffMs / 60000);
-
-  if (diffMinutes < 180) {
-    if (diffMinutes < 1) return "Только что";
-    if (diffMinutes < 60) return `${diffMinutes} минут назад`;
-    const hours = Math.floor(diffMinutes / 60);
-    return `${hours} часов назад`;
-  }
-
-  const pad2 = (num: number) => String(num).padStart(2, "0");
-  const time = `${pad2(parsed.getHours())}:${pad2(parsed.getMinutes())}`;
-
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const thatDay = new Date(
-    parsed.getFullYear(),
-    parsed.getMonth(),
-    parsed.getDate()
-  );
-  const dayDiff = Math.round((today.getTime() - thatDay.getTime()) / 86400000);
-
-  if (dayDiff === 0) {
-    return `Сегодня в ${time}`;
-  }
-  if (dayDiff === 1) {
-    return `Вчера в ${time}`;
-  }
-
-  const months = [
-    "Января",
-    "Февраля",
-    "Марта",
-    "Апреля",
-    "Мая",
-    "Июня",
-    "Июля",
-    "Августа",
-    "Сентября",
-    "Октября",
-    "Ноября",
-    "Декабря",
-  ];
-
-  const day = parsed.getDate();
-  const month = months[parsed.getMonth()] || "";
-  const year = parsed.getFullYear();
-
-  if (year === now.getFullYear()) {
-    return `${day} ${month} в ${time}`;
-  }
-
-  return `${day} ${month} ${year} в ${time}`;
+  return parsed.toLocaleString("ru-RU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const wrapperStyle: React.CSSProperties = {
@@ -284,6 +360,19 @@ const headerRow: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "space-between",
   gap: 12,
+};
+
+const summaryGrid: React.CSSProperties = {
+  display: "grid",
+  gap: 10,
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+};
+
+const summaryCard: React.CSSProperties = {
+  padding: 14,
+  borderRadius: 14,
+  border: "1px solid var(--tg-border)",
+  background: "var(--tg-card)",
 };
 
 const listWrapper: React.CSSProperties = {
@@ -315,6 +404,16 @@ const userCard: React.CSSProperties = {
   gap: 12,
 };
 
+const userTopButton: React.CSSProperties = {
+  display: "grid",
+  gap: 12,
+  width: "100%",
+  border: "none",
+  background: "transparent",
+  padding: 0,
+  cursor: "pointer",
+};
+
 const userHeader: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -333,9 +432,18 @@ const avatarStyle: React.CSSProperties = {
   color: "#0c1021",
 };
 
-const statsRow: React.CSSProperties = {
-  display: "flex",
-  gap: 16,
+const statsGrid: React.CSSProperties = {
+  display: "grid",
+  gap: 8,
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  textAlign: "left",
+};
+
+const statCell: React.CSSProperties = {
+  borderRadius: 10,
+  border: "1px solid var(--tg-border)",
+  background: "var(--tg-surface)",
+  padding: "8px 10px",
 };
 
 const statLabel: React.CSSProperties = {
@@ -344,7 +452,7 @@ const statLabel: React.CSSProperties = {
 };
 
 const statValue: React.CSSProperties = {
-  fontSize: 16,
+  fontSize: 15,
   fontWeight: 700,
 };
 
@@ -362,6 +470,44 @@ const roleSelect: React.CSSProperties = {
   background: "var(--tg-surface)",
   color: "var(--tg-text)",
   fontWeight: 600,
+};
+
+const activityBox: React.CSSProperties = {
+  display: "grid",
+  gap: 8,
+  borderTop: "1px solid var(--tg-border)",
+  paddingTop: 10,
+};
+
+const tableWrap: React.CSSProperties = {
+  overflowX: "auto",
+  borderRadius: 10,
+  border: "1px solid var(--tg-border)",
+};
+
+const tableStyle: React.CSSProperties = {
+  width: "100%",
+  borderCollapse: "collapse",
+  minWidth: 760,
+  fontSize: 13,
+};
+
+const thStyle: React.CSSProperties = {
+  textAlign: "left",
+  padding: "8px 10px",
+  borderBottom: "1px solid var(--tg-border)",
+  background: "var(--tg-surface)",
+  color: "var(--tg-subtle)",
+  fontWeight: 600,
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: "8px 10px",
+  borderBottom: "1px solid var(--tg-border)",
+};
+
+const emptyText: React.CSSProperties = {
+  color: "var(--tg-subtle)",
 };
 
 const errorText: React.CSSProperties = {
