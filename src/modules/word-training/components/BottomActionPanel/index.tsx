@@ -1,8 +1,8 @@
-﻿import { createPortal } from 'react-dom';
+import { createPortal } from 'react-dom';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
 import { Button } from '../../../../shared/ui/Button';
-import { MessageBox, MessageSubtitle, MessageTitle, PanelRoot } from './styles';
+import { ActionsRow, MessageBox, MessageSubtitle, MessageTitle, PanelRoot } from './styles';
 import type { BottomActionPanelProps } from './types';
 
 export function BottomActionPanel({
@@ -12,11 +12,15 @@ export function BottomActionPanel({
   subtitle,
   onNext,
   buttonLabel,
+  nextDisabled,
   hideMessageBox,
   submitting,
+  actions,
 }: BottomActionPanelProps) {
   if (!visible) return null;
   if (typeof document === 'undefined') return null;
+
+  const hasCustomActions = Boolean(actions?.length);
 
   return createPortal(
     <PanelRoot>
@@ -30,25 +34,46 @@ export function BottomActionPanel({
         </MessageBox>
       ) : null}
 
-      <Button
-        onClick={onNext}
-        disabled={submitting}
-        style={{
-          minHeight: 50,
-          fontSize: 22,
-          fontWeight: 700,
-          borderRadius: 14,
-          background: '#2ea3ff',
-          boxShadow: 'none',
-        }}
-      >
-        {buttonLabel ?? 'Далее'}
-      </Button>
+      {hasCustomActions ? (
+        <ActionsRow $count={actions?.length ?? 1}>
+          {actions?.map((action) => (
+            <Button
+              key={action.key}
+              onClick={action.onClick}
+              disabled={submitting}
+              variant={action.variant ?? 'primary'}
+              style={{
+                minHeight: 50,
+                fontSize: 20,
+                fontWeight: 700,
+                borderRadius: 14,
+                boxShadow: 'none',
+                ...action.style,
+              }}
+            >
+              {action.label}
+            </Button>
+          ))}
+        </ActionsRow>
+      ) : (
+        <Button
+          onClick={onNext}
+          disabled={submitting || nextDisabled}
+          style={{
+            minHeight: 50,
+            fontSize: 22,
+            fontWeight: 700,
+            borderRadius: 14,
+            background: '#2ea3ff',
+            boxShadow: 'none',
+          }}
+        >
+          {buttonLabel ?? 'Далее'}
+        </Button>
+      )}
     </PanelRoot>,
     document.body,
   );
 }
 
-
 export default BottomActionPanel;
-

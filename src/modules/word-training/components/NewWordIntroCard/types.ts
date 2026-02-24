@@ -14,6 +14,4 @@ export type NewWordIntroCardProps = {
   snippets: PhraseSnippet[];
   snippetsLoading: boolean;
   onPlayAudio: (url: string | null) => void;
-  onMarkKnown: (wordKey: string) => void;
-  disabled?: boolean;
 };

@@ -12,7 +12,6 @@ export type ReinforcementCardProps = {
   reinforcement: ReinforcementTask;
   submitting: boolean;
   reinforcementChecked: boolean;
-  canCheckReinforcement: boolean;
   missingExerciseModel: MissingExerciseModel | null;
   missingSelected: [string | null, string | null];
   setMissingSelected: Dispatch<SetStateAction<[string | null, string | null]>>;
@@ -34,5 +33,4 @@ export type ReinforcementCardProps = {
   onPlayAudioUrl: (url: string | null) => Promise<void>;
   onSpeakWord: (word: string) => void;
   onPlayFeedbackSound: (isCorrect: boolean) => Promise<void>;
-  onSubmitReinforcement: () => void;
 };

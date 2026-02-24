@@ -38,3 +38,9 @@ export const MessageSubtitle = styled.div`
   color: var(--tg-subtle);
   font-weight: 600;
 `;
+
+export const ActionsRow = styled.div<{ $count: number }>`
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(${({ $count }) => Math.max(1, $count)}, minmax(0, 1fr));
+`;

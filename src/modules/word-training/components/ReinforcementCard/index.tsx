@@ -1,4 +1,3 @@
-import { Button } from '../../../../shared/ui/Button';
 import type { ReinforcementCardProps } from './types';
 import {
   AssembleLine,
@@ -20,7 +19,6 @@ export function ReinforcementCard({
   reinforcement,
   submitting,
   reinforcementChecked,
-  canCheckReinforcement,
   missingExerciseModel,
   missingSelected,
   setMissingSelected,
@@ -42,7 +40,6 @@ export function ReinforcementCard({
   onPlayAudioUrl,
   onSpeakWord,
   onPlayFeedbackSound,
-  onSubmitReinforcement,
 }: ReinforcementCardProps) {
   const sentenceTranslation = reinforcement.reinforcement.sentenceTranslation?.trim() || null;
   const showSentenceTranslation =
@@ -342,23 +339,6 @@ export function ReinforcementCard({
       {reinforcement.reinforcement.type === 'missing' ? renderMissingExercise() : null}
       {reinforcement.reinforcement.type === 'audio_assemble' ? renderAudioAssembleExercise() : null}
       {reinforcement.reinforcement.type === 'match_pairs' ? renderMatchPairsExercise() : null}
-
-      {reinforcement.reinforcement.type !== 'match_pairs' && !reinforcementChecked ? (
-        <Button
-          onClick={onSubmitReinforcement}
-          disabled={submitting || (!reinforcementChecked && !canCheckReinforcement)}
-          style={{
-            minHeight: 50,
-            fontSize: 20,
-            fontWeight: 700,
-            borderRadius: 14,
-            background: 'var(--tg-accent)',
-            boxShadow: 'none',
-          }}
-        >
-          {reinforcementChecked ? 'Далее' : 'Проверить'}
-        </Button>
-      ) : null}
     </Card>
   );
 }

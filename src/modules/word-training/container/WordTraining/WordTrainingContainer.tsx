@@ -19,6 +19,7 @@ import { useWordTrainingAudio } from "../../../../features/word-training/useWord
 import type { PhraseSnippet } from "../../../../features/video-dictionary/api";
 import { PageShell } from "../../../../shared/ui/PageShell";
 import BottomActionPanel from "../../components/BottomActionPanel/index";
+import type { BottomActionPanelAction } from "../../components/BottomActionPanel/types";
 import NewWordIntroCard from "../../components/NewWordIntroCard/entry";
 import PracticeSnippetCard from "../../components/PracticeSnippetCard";
 import { RecognitionCard } from "../../components/RecognitionCard";
@@ -907,10 +908,6 @@ export function WordTrainingContainer() {
         snippets={introSnippets}
         snippetsLoading={introSnippetsLoading}
         onPlayAudio={(url) => void playAudioUrl(url)}
-        onMarkKnown={(wordKey) => {
-          void markKnownWord(wordKey);
-        }}
-        disabled={submitting}
       />
     );
   };
@@ -922,7 +919,9 @@ export function WordTrainingContainer() {
     subtitle?: string | null;
     onNext: () => void;
     buttonLabel?: string;
+    nextDisabled?: boolean;
     hideMessageBox?: boolean;
+    actions?: BottomActionPanelAction[];
   }) => {
     return (
       <BottomActionPanel
@@ -932,7 +931,9 @@ export function WordTrainingContainer() {
         subtitle={params.subtitle}
         onNext={params.onNext}
         buttonLabel={params.buttonLabel}
+        nextDisabled={params.nextDisabled}
         hideMessageBox={params.hideMessageBox}
+        actions={params.actions}
         submitting={submitting}
       />
     );
@@ -943,7 +944,6 @@ export function WordTrainingContainer() {
       reinforcement={reinforcement}
       submitting={submitting}
       reinforcementChecked={reinforcementChecked}
-      canCheckReinforcement={canCheckReinforcement}
       missingExerciseModel={missingExerciseModel}
       missingSelected={missingSelected}
       setMissingSelected={setMissingSelected}
@@ -965,9 +965,6 @@ export function WordTrainingContainer() {
       onPlayAudioUrl={playAudioUrl}
       onSpeakWord={speakAssembleWord}
       onPlayFeedbackSound={playFeedbackSound}
-      onSubmitReinforcement={() => {
-        void submitReinforcement();
-      }}
     />
   );
 
@@ -1113,13 +1110,37 @@ export function WordTrainingContainer() {
             title: "",
             subtitle: null,
             hideMessageBox: true,
-            buttonLabel: "Понятно",
-            onNext: () => {
-              setIntroducedWordKeys((prev) => ({
-                ...prev,
-                [introPendingWord.wordKey]: true,
-              }));
-            },
+            actions: [
+              {
+                key: "know",
+                label: "Знаю",
+                variant: "ghost",
+                style: {
+                  background: "rgba(255,255,255,0.04)",
+                  borderColor: "var(--tg-border)",
+                  color: "var(--tg-text)",
+                },
+                onClick: () => {
+                  void markKnownWord(introPendingWord.wordKey);
+                },
+              },
+              {
+                key: "dont-know",
+                label: "Не знаю",
+                variant: "primary",
+                style: {
+                  background: "#2ea3ff",
+                  color: "#0b0b0b",
+                },
+                onClick: () => {
+                  setIntroducedWordKeys((prev) => ({
+                    ...prev,
+                    [introPendingWord.wordKey]: true,
+                  }));
+                },
+              },
+            ],
+            onNext: () => {},
           })}
 
         {!loading &&
@@ -1128,25 +1149,46 @@ export function WordTrainingContainer() {
           task &&
           task.mode === "reinforcement" &&
           renderBottomActionPanel({
-            visible:
-              (task.reinforcement.type === "match_pairs"
-                ? isReinforcementCorrect
-                : reinforcementChecked) && !practiceView,
+            visible: !practiceView,
             isCorrect: isReinforcementCorrect,
-            title: isReinforcementCorrect ? "Отлично!" : "Неправильно",
+            title:
+              task.reinforcement.type === "match_pairs"
+                ? "Отлично!"
+                : reinforcementChecked
+                  ? isReinforcementCorrect
+                    ? "Отлично!"
+                    : "Неправильно"
+                  : "",
             subtitle:
-              task.reinforcement.type === "audio_assemble" &&
-              !isReinforcementCorrect &&
-              task.reinforcement.sentence
-                ? `Правильно: ${task.reinforcement.sentence}${
-                    task.reinforcement.sentenceTranslation
-                      ? ` • Перевод: ${task.reinforcement.sentenceTranslation}`
-                      : ""
-                  }`
-                : task.reinforcement.sentenceTranslation &&
-                    task.reinforcement.type !== "match_pairs"
-                  ? `Перевод: ${task.reinforcement.sentenceTranslation}`
+              task.reinforcement.type === "match_pairs"
+                ? null
+                : reinforcementChecked
+                  ? task.reinforcement.type === "audio_assemble" &&
+                    !isReinforcementCorrect &&
+                    task.reinforcement.sentence
+                    ? `Правильно: ${task.reinforcement.sentence}${
+                        task.reinforcement.sentenceTranslation
+                          ? ` • Перевод: ${task.reinforcement.sentenceTranslation}`
+                          : ""
+                      }`
+                    : task.reinforcement.sentenceTranslation
+                      ? `Перевод: ${task.reinforcement.sentenceTranslation}`
+                      : null
                   : null,
+            hideMessageBox:
+              task.reinforcement.type === "match_pairs"
+                ? !isReinforcementCorrect
+                : !reinforcementChecked,
+            buttonLabel:
+              task.reinforcement.type === "match_pairs"
+                ? "Далее"
+                : reinforcementChecked
+                  ? "Далее"
+                  : "Проверить",
+            nextDisabled:
+              task.reinforcement.type === "match_pairs"
+                ? !isReinforcementCorrect
+                : !reinforcementChecked && !canCheckReinforcement,
             onNext: () => {
               void proceedAfterReinforcement();
             },
