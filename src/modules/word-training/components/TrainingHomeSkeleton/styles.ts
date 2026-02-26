@@ -56,6 +56,8 @@ export const SkeletonGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(23, minmax(0, 1fr));
   gap: 4px;
+  align-self: start;
+  align-content: start;
 `;
 
 export const SkeletonCell = styled.div`

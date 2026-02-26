@@ -77,6 +77,11 @@ const answerShadowColor = ($correct?: boolean, $wrong?: boolean, $selected?: boo
   return 'var(--tg-button-neutral-shadow)';
 };
 
+const answerTextColor = ($correct?: boolean, $wrong?: boolean, $selected?: boolean) => {
+  if ($correct || $wrong || $selected) return 'var(--tg-text-on-accent)';
+  return 'var(--tg-text)';
+};
+
 type AnswerStateProps = { $correct?: boolean; $wrong?: boolean; $selected?: boolean };
 
 export const TrainingAnswerButton = styled.button<AnswerStateProps>`
@@ -92,7 +97,7 @@ export const TrainingAnswerButton = styled.button<AnswerStateProps>`
     answerBorderColor($correct, $wrong, $selected)};
   background: ${({ $correct, $wrong, $selected }) =>
     answerBackgroundColor($correct, $wrong, $selected)};
-  color: var(--tg-text);
+  color: ${({ $correct, $wrong, $selected }) => answerTextColor($correct, $wrong, $selected)};
   transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, transform 120ms ease;
   box-shadow:
     0 4px 0 ${({ $correct, $wrong, $selected }) =>
@@ -126,7 +131,7 @@ export const TrainingTokenButton = styled.button<AnswerStateProps>`
     answerBorderColor($correct, $wrong, $selected)};
   background: ${({ $correct, $wrong, $selected }) =>
     answerBackgroundColor($correct, $wrong, $selected)};
-  color: var(--tg-text);
+  color: ${({ $correct, $wrong, $selected }) => answerTextColor($correct, $wrong, $selected)};
   box-shadow:
     0 4px 0 ${({ $correct, $wrong, $selected }) =>
       answerShadowColor($correct, $wrong, $selected)},

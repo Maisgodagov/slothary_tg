@@ -73,7 +73,7 @@ export function BottomActionPanel({
             boxShadow: '0 4px 0 var(--tg-button-primary-shadow), 0 8px 14px var(--tg-shadow-strong)',
           }}
         >
-          {buttonLabel ?? 'Р”Р°Р»РµРµ'}
+          {buttonLabel ?? "Далее"}
         </Button>
       )}
     </PanelRoot>,

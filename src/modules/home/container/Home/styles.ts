@@ -200,6 +200,35 @@ export const HomeSkeletonHeaderText = styled.div`
   gap: 6px;
 `;
 
+export const HomeSkeletonTopRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+export const HomeSkeletonTopLeft = styled.div`
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+`;
+
+export const HomeSkeletonCircle = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    var(--tg-card) 0%,
+    var(--tg-border) 50%,
+    var(--tg-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: homeSkeletonShimmer 1.2s linear infinite;
+  flex-shrink: 0;
+`;
+
 export const HomeSkeletonStreak = styled.div`
   width: 96px;
   height: 42px;

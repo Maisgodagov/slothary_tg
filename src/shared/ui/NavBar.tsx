@@ -76,7 +76,7 @@ export function NavBar() {
             <>
               <Icon
                 name={item.icon as any}
-                size={22}
+                size={24}
                 color={isActive ? "#FFFFFF" : "var(--tg-subtle)"}
               />
             </>

@@ -16,12 +16,15 @@ import { setLastStatsUpdatedAt } from "../../store/slice";
 import {
   HomeSkeletonAvatar,
   HomeSkeletonCard,
+  HomeSkeletonCircle,
   HomeSkeletonHeader,
   HomeSkeletonHeaderLeft,
   HomeSkeletonHeaderText,
   HomeSkeletonLayout,
   HomeSkeletonLine,
   HomeSkeletonStreak,
+  HomeSkeletonTopLeft,
+  HomeSkeletonTopRow,
   HomeWrapper,
   NextTrainingButton,
   NextTrainingButtonLabel,
@@ -257,11 +260,18 @@ export function HomeContainer() {
             <HomeSkeletonLine $w="64%" $h="18px" />
             <HomeSkeletonLine $w="44%" $h="32px" />
           </HomeSkeletonCard>
-          <HomeSkeletonCard>
-            <HomeSkeletonLine $w="52%" $h="16px" />
-            <HomeSkeletonLine $w="88%" $h="14px" />
-            <HomeSkeletonLine $w="72%" $h="14px" />
-          </HomeSkeletonCard>
+          {isAdmin && (
+            <HomeSkeletonCard>
+              <HomeSkeletonTopRow>
+                <HomeSkeletonTopLeft>
+                  <HomeSkeletonLine $w="48%" $h="16px" />
+                  <HomeSkeletonLine $w="86%" $h="5px" />
+                </HomeSkeletonTopLeft>
+                <HomeSkeletonCircle />
+              </HomeSkeletonTopRow>
+              <HomeSkeletonLine $w="100%" $h="56px" />
+            </HomeSkeletonCard>
+          )}
           <HomeSkeletonCard>
             <HomeSkeletonLine $w="48%" $h="16px" />
             <HomeSkeletonLine $w="90%" $h="40px" />

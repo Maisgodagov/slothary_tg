@@ -65,7 +65,7 @@ export function TrainingHome({
             minHeight: 52,
             fontSize: 20,
             fontWeight: 700,
-            borderRadius: 14,
+            borderRadius: 24,
             borderStyle: 'solid',
             borderWidth: '3px',
             borderColor: 'var(--tg-button-primary-border)',

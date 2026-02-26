@@ -34,7 +34,7 @@ export const ProgressTrack = styled.div`
 export const ProgressFill = styled.div<{ $percent: number }>`
   width: ${({ $percent }) => `${$percent}%`};
   height: 100%;
-  background: var(--tg-success);
+  background: var(--tg-button-primary-bg);
   transition: width 220ms ease;
 `;
 

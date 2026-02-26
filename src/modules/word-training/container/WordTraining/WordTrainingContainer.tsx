@@ -1148,7 +1148,7 @@ export function WordTrainingContainer() {
                 style: {
                   background: "var(--tg-warning)",
                   borderColor: "var(--tg-warning)",
-                  color: "var(--tg-button-primary-text)",
+                  color: "var(--tg-text-on-accent)",
                   boxShadow:
                     "0 4px 0 color-mix(in srgb, var(--tg-warning) 70%, var(--tg-bg) 30%), 0 8px 14px var(--tg-shadow-strong)",
                 },
