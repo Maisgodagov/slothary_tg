@@ -505,7 +505,7 @@ function FeedLoadingSkeleton() {
             width: "82%",
             height: 18,
             borderRadius: 10,
-            background: "rgba(0,0,0,0.45)",
+            background: "var(--tg-overlay)",
           }}
         />
         <div
@@ -513,7 +513,7 @@ function FeedLoadingSkeleton() {
             width: "68%",
             height: 18,
             borderRadius: 10,
-            background: "rgba(0,0,0,0.45)",
+            background: "var(--tg-overlay)",
           }}
         />
       </div>
@@ -548,7 +548,7 @@ function Section({
           fontWeight: 700,
           letterSpacing: 0.5,
           marginBottom: 12,
-          color: "var(--tg-subtle, #cfd5e4)",
+          color: "var(--tg-subtle)",
         }}
       >
         {title.toUpperCase()}
@@ -569,8 +569,8 @@ function Section({
                 padding: "10px 14px",
                 borderRadius: 14,
                 border: "none",
-                background: isActive ? "#3c4f70" : "var(--tg-card, #1f273b)",
-                color: "var(--tg-text, #e9edf7)",
+                background: isActive ? "color-mix(in srgb, var(--tg-accent) 45%, var(--tg-card) 55%)" : "var(--tg-card)",
+                color: "var(--tg-text)",
                 fontWeight: 700,
                 cursor: "pointer",
               }}
@@ -623,7 +623,7 @@ function ToggleRow({
           style={{
             position: "absolute",
             inset: 0,
-            background: checked ? "#0f7aa7" : "#d0d5dc",
+            background: checked ? "var(--tg-accent)" : "var(--tg-border)",
             borderRadius: 26,
             transition: "0.2s",
           }}
@@ -636,8 +636,8 @@ function ToggleRow({
             width: 20,
             height: 20,
             borderRadius: "50%",
-            background: "#fff",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+            background: "var(--tg-text-on-accent)",
+            boxShadow: "0 2px 6px var(--tg-shadow-strong)",
             transition: "0.2s",
           }}
         />
@@ -664,7 +664,7 @@ function SettingsModal({
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.55)",
+        background: "var(--tg-overlay-strong)",
         zIndex: 9998,
         display: "flex",
         justifyContent: "center",
@@ -678,12 +678,12 @@ function SettingsModal({
         style={{
           width: "100%",
           maxWidth: 720,
-          background: "var(--tg-surface, #0f1428)",
+          background: "var(--tg-surface)",
           borderRadius: 20,
-          border: "1px solid var(--tg-border, #2b3245)",
+          border: "1px solid var(--tg-border)",
           padding: "22px 20px 26px",
-          color: "var(--tg-text, #e9edf7)",
-          boxShadow: "0 -8px 30px rgba(0,0,0,0.45)",
+          color: "var(--tg-text)",
+          boxShadow: "0 -8px 30px var(--tg-overlay)",
           position: "relative",
         }}
       >
@@ -696,9 +696,9 @@ function SettingsModal({
             width: 32,
             height: 32,
             borderRadius: 12,
-            border: "1px solid var(--tg-border, #2b3245)",
-            background: "var(--tg-card, #1f273b)",
-            color: "var(--tg-text, #e9edf7)",
+            border: "1px solid var(--tg-border)",
+            background: "var(--tg-card)",
+            color: "var(--tg-text)",
             cursor: "pointer",
           }}
           aria-label="Закрыть"
@@ -709,7 +709,7 @@ function SettingsModal({
           style={{
             width: 44,
             height: 4,
-            background: "var(--tg-border, #2b3245)",
+            background: "var(--tg-border)",
             borderRadius: 4,
             margin: "0 auto 20px",
           }}
@@ -717,7 +717,7 @@ function SettingsModal({
 
         <div
           style={{
-            borderTop: "1px solid var(--tg-border, #2b3245)",
+            borderTop: "1px solid var(--tg-border)",
             margin: "18px 0",
             opacity: 1,
           }}
@@ -773,8 +773,8 @@ function SettingsModal({
             padding: "14px 12px",
             borderRadius: 12,
             border: "none",
-            background: "#0f7aa7",
-            color: "#fff",
+            background: "var(--tg-accent)",
+            color: "var(--tg-text-on-accent)",
             fontWeight: 700,
             fontSize: 16,
             cursor: "pointer",
@@ -845,8 +845,8 @@ function LevelFilterModal({
                   padding: "10px 14px",
                   borderRadius: 14,
                   border: "none",
-                  background: isActive ? "#6f86af" : "var(--tg-card, #1f273b)",
-                  color: isActive ? "#ffffff" : "var(--tg-text, #e9edf7)",
+                  background: isActive ? "color-mix(in srgb, var(--tg-accent) 45%, var(--tg-card) 55%)" : "var(--tg-card)",
+                  color: isActive ? "var(--tg-text-on-accent)" : "var(--tg-text)",
                   fontWeight: 700,
                   cursor: "pointer",
                 }}
@@ -862,8 +862,8 @@ function LevelFilterModal({
               borderRadius: 14,
               border: "none",
               background:
-                selected === null ? "#6f86af" : "var(--tg-card, #1f273b)",
-              color: selected === null ? "#ffffff" : "var(--tg-text, #e9edf7)",
+                selected === null ? "color-mix(in srgb, var(--tg-accent) 45%, var(--tg-card) 55%)" : "var(--tg-card)",
+              color: selected === null ? "var(--tg-text-on-accent)" : "var(--tg-text)",
               fontWeight: 700,
               cursor: "pointer",
             }}
@@ -889,4 +889,6 @@ function LevelFilterModal({
     </S.ModalBackdrop>
   );
 }
+
+
 

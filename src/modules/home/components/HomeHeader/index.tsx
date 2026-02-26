@@ -48,8 +48,12 @@ export function HomeHeader({
         <Icon
           name="flame-filled"
           size={24}
-          color="#F97316"
-          fillColor={isLightTheme ? "rgb(240, 210, 89)" : "#442D22"}
+          color="var(--tg-warning)"
+          fillColor={
+            isLightTheme
+              ? "color-mix(in srgb, var(--tg-warning) 48%, var(--tg-card-strong) 52%)"
+              : "color-mix(in srgb, var(--tg-warning) 24%, var(--tg-bg) 76%)"
+          }
         />
         <StreakCount>{streakDays}</StreakCount>
       </StreakButton>

@@ -60,7 +60,7 @@ export const RetryPhaseCard = styled.div`
   border-radius: 16px;
   padding: 10px;
   font-weight: 700;
-  background: rgba(255, 196, 64, 0.08);
-  border: 1px solid rgba(255, 196, 64, 0.45);
+  background: color-mix(in srgb, var(--tg-warning) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tg-warning) 50%, transparent);
 `;
 

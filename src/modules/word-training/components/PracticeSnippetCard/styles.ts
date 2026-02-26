@@ -13,7 +13,7 @@ export const Title = styled.strong`
 `;
 
 export const Highlight = styled.span`
-  color: #ffd54a;
+  color: var(--tg-highlight);
   font-weight: 700;
 `;
 

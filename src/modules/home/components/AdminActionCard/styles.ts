@@ -10,7 +10,7 @@ export const CardButton = styled.button`
   text-align: left;
   color: var(--tg-text);
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 4px var(--tg-shadow-soft);
 `;
 
 export const CardTitle = styled.div`

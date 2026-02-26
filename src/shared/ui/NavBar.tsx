@@ -7,15 +7,15 @@ import { Icon } from "./Icon";
 
 const linkStyle: CSSProperties = {
   display: "flex",
-  flexDirection: "column",
+  flexDirection: "row",
   alignItems: "center",
   justifyContent: "center",
-  gap: 4,
+  gap: 0,
   textDecoration: "none",
   color: "var(--tg-subtle)",
-  fontSize: 12,
+  fontSize: 0,
   fontWeight: 600,
-  padding: "6px 8px 2px",
+  padding: "6px 8px",
   width: "calc(100% - 24px)",
   justifySelf: "center",
   borderRadius: 22,
@@ -48,6 +48,8 @@ export function NavBar() {
         left: 0,
         right: 0,
         margin: "0 auto",
+        height: "54px",
+        minHeight: "54px",
         maxHeight: "54px",
         maxWidth: 960,
         width: "100%",
@@ -66,18 +68,17 @@ export function NavBar() {
           to={item.to}
           style={({ isActive }) => ({
             ...linkStyle,
-            color: "var(--tg-subtle)",
-            background: isActive ? "var(--tg-card)" : "transparent",
+            color: isActive ? "#FFFFFF" : "var(--tg-subtle)",
+            background: isActive ? "var(--tg-button-primary-bg)" : "transparent",
           })}
         >
-          {() => (
+          {({ isActive }) => (
             <>
               <Icon
                 name={item.icon as any}
                 size={22}
-                color={"var(--tg-subtle)"}
+                color={isActive ? "#FFFFFF" : "var(--tg-subtle)"}
               />
-              {item.label}
             </>
           )}
         </NavLink>

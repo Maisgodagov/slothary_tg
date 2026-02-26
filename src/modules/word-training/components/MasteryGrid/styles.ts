@@ -7,7 +7,7 @@ export const GridCard = styled.div<{ $fillHeight: boolean }>`
   gap: 12px;
   padding: 12px;
   border: 1px solid var(--tg-border);
-  background: var(--tg-card);
+  background: var(--tg-training-container-bg);
   height: ${({ $fillHeight }) => ($fillHeight ? '100%' : 'auto')};
   min-height: ${({ $fillHeight }) => ($fillHeight ? '0' : 'auto')};
   overflow-y: ${({ $fillHeight }) => ($fillHeight ? 'auto' : 'visible')};
@@ -44,7 +44,10 @@ export const SectionWrap = styled.div<{ $isFirst: boolean }>`
   gap: 6px;
   padding-top: ${({ $isFirst }) => ($isFirst ? '0' : '8px')};
   margin-top: ${({ $isFirst }) => ($isFirst ? '0' : '2px')};
-  border-top: ${({ $isFirst }) => ($isFirst ? 'none' : '1px dashed rgba(255,255,255,0.14)')};
+  border-top: ${({ $isFirst }) =>
+    $isFirst
+      ? 'none'
+      : '1px dashed color-mix(in srgb, var(--tg-text) 14%, transparent)'};
 `;
 
 export const SectionTitle = styled.div`
@@ -64,7 +67,7 @@ export const Cell = styled.div<{ $bg: string }>`
   width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid color-mix(in srgb, var(--tg-text) 8%, transparent);
   background: ${({ $bg }) => $bg};
   transition: background-color 220ms ease;
 `;

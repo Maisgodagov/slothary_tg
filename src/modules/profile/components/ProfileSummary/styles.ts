@@ -35,7 +35,11 @@ export const Avatar = styled.div`
   height: 100%;
   border-radius: 50%;
   overflow: hidden;
-  background: linear-gradient(135deg, #2ea3ff55, #6dd3ff33);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--tg-accent-strong) 34%, transparent),
+    color-mix(in srgb, var(--tg-accent) 20%, transparent)
+  );
   display: grid;
   place-items: center;
   font-weight: 700;
@@ -91,7 +95,7 @@ export const StatCard = styled.button<{ $clickable?: boolean }>`
   border: none;
   color: var(--tg-text);
   outline: none;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 4px var(--tg-shadow-soft);
 
   [data-theme="light"] & {
     background: var(--tg-card-strong);
@@ -148,7 +152,7 @@ export const SettingsItem = styled.button`
   color: var(--tg-text);
   cursor: pointer;
   border: none;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 4px var(--tg-shadow-soft);
 
   [data-theme="light"] & {
     background: var(--tg-card-strong);
@@ -202,7 +206,7 @@ export const IconButton = styled.button`
   place-items: center;
   cursor: pointer;
   border: none;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 3px var(--tg-shadow-soft);
 
   [data-theme="light"] & {
     background: var(--tg-card-strong);

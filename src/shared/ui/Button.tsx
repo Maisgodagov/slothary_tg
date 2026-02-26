@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
+﻿import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
 
 type Variant = "primary" | "ghost" | "danger";
 
@@ -23,21 +23,24 @@ const getStyles = (variant: Variant) => {
   const variants: Record<Variant, CSSProperties> = {
     primary: {
       ...common,
-      background: "linear-gradient(135deg, #2ea3ff, #6dd3ff)",
-      color: "#0c1021",
-      boxShadow: "0 10px 30px rgba(46, 163, 255, 0.3)",
+      background: "var(--tg-button-primary-bg)",
+      color: "var(--tg-button-primary-text)",
+      borderColor: "var(--tg-button-primary-border)",
+      boxShadow: "0 4px 0 var(--tg-button-primary-shadow), 0 8px 14px var(--tg-shadow-strong)",
     },
     ghost: {
       ...common,
-      background: "rgba(255,255,255,0.04)",
-      color: "var(--tg-text)",
-      borderColor: "var(--tg-border)",
+      background: "var(--tg-button-neutral-bg)",
+      color: "var(--tg-button-neutral-text)",
+      borderColor: "var(--tg-button-neutral-border)",
+      boxShadow: "0 4px 0 var(--tg-button-neutral-shadow), 0 8px 14px var(--tg-shadow-soft)",
     },
     danger: {
       ...common,
-      background: "linear-gradient(135deg, #ff5f6d, #ff9966)",
-      color: "#0c1021",
-      boxShadow: "0 10px 30px rgba(255, 95, 109, 0.3)",
+      background: "var(--tg-button-negative-bg)",
+      color: "var(--tg-button-negative-text)",
+      borderColor: "var(--tg-button-negative-border)",
+      boxShadow: "0 4px 0 var(--tg-button-negative-shadow), 0 8px 14px var(--tg-shadow-strong)",
     },
   };
 
@@ -62,7 +65,8 @@ export function Button({
       disabled={disabled || loading}
       {...rest}
     >
-      {loading ? "Загрузка..." : children}
+      {loading ? "Р—Р°РіСЂСѓР·РєР°..." : children}
     </button>
   );
 }
+

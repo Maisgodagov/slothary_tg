@@ -16,9 +16,9 @@ import {
 
 const CEFR_LEVELS: Array<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'> = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const MASTERY_BG = {
-  known: '#2ac46f',
-  learning: '#f2c94c',
-  new: 'rgba(255,255,255,0.16)',
+  known: 'var(--tg-success)',
+  learning: 'var(--tg-warning)',
+  new: 'color-mix(in srgb, var(--tg-text) 16%, transparent)',
 } as const;
 
 const normalizeSectionTitleKey = (title: string) =>

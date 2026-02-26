@@ -1,4 +1,4 @@
-import styled from "styled-components";
+﻿import styled from "styled-components";
 
 export const FeedContainer = styled.div<{ $navOffset: number }>`
   height: calc(100% - 54px);
@@ -63,7 +63,7 @@ export const EmptyButton = styled.button`
 export const ModalBackdrop = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--tg-overlay-strong);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -74,12 +74,12 @@ export const ModalBackdrop = styled.div`
 export const ModalCard = styled.div`
   width: 100%;
   max-width: 520px;
-  background: var(--tg-surface, #0f1428);
-  color: var(--tg-text, #e9edf7);
+  background: var(--tg-surface);
+  color: var(--tg-text);
   border-radius: 18px;
   padding: 20px 18px 18px;
-  border: 1px solid var(--tg-border, #2b3245);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--tg-border);
+  box-shadow: 0 20px 60px var(--tg-overlay);
   display: grid;
   gap: 12px;
   position: relative;
@@ -92,7 +92,7 @@ export const ModalTitle = styled.div`
 
 export const ModalText = styled.div`
   font-size: 14px;
-  color: var(--tg-subtle, #cfd5e4);
+  color: var(--tg-subtle);
   line-height: 1.5;
 `;
 
@@ -107,10 +107,10 @@ export const ModalButton = styled.button<{ $primary?: boolean }>`
   padding: 10px 14px;
   border-radius: 12px;
   border: ${({ $primary }) =>
-    $primary ? "none" : "1px solid var(--tg-border, #30384a)"};
+    $primary ? "none" : "1px solid var(--tg-border)"};
   background: ${({ $primary }) =>
-    $primary ? "#0f7aa7" : "var(--tg-card, #1f273b)"};
-  color: ${({ $primary }) => ($primary ? "#fff" : "var(--tg-text, #e9edf7)")};
+    $primary ? "var(--tg-accent)" : "var(--tg-card)"};
+  color: ${({ $primary }) => ($primary ? "var(--tg-video-overlay-text)" : "var(--tg-text)")};
   font-weight: 700;
   cursor: pointer;
 `;
@@ -124,7 +124,7 @@ export const ModalClose = styled.button`
   border-radius: 12px;
   border: none;
   background: transparent;
-  color: var(--tg-text, #e9edf7);
+  color: var(--tg-text);
   font-size: 18px;
   cursor: pointer;
 `;
@@ -136,7 +136,7 @@ export const Sentinel = styled.div`
 
 export const Card = styled.div<{ $cardHeight: string; $maxHeight: string }>`
   position: relative;
-  background: #000;
+  background: var(--tg-media-bg);
   border-radius: 0;
   overflow: hidden;
   height: 100%;
@@ -195,8 +195,8 @@ export const SettingsButton = styled.button`
   height: 34px;
   border-radius: 14px;
   border: none;
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
+  background: var(--tg-video-overlay-bg);
+  color: var(--tg-video-overlay-text);
   backdrop-filter: blur(6px);
   cursor: pointer;
   outline: none;
@@ -241,8 +241,8 @@ export const Badge = styled.span`
   padding: 8px 12px;
   border-radius: 14px;
   font-size: 14px;
-  background: rgba(0, 0, 0, 0.75);
-  color: #ffffff;
+  background: var(--tg-video-overlay-bg);
+  color: var(--tg-video-overlay-text);
   font-weight: 700;
   svg {
     display: block;
@@ -255,7 +255,7 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
   right: 0;
   bottom: ${({ $withSheet }) => ($withSheet ? "300px" : "0")};
   padding: 12px 16px 18px;
-  color: #fff;
+  color: var(--tg-video-overlay-text);
   display: grid;
   gap: 10px;
   align-items: center;
@@ -267,10 +267,11 @@ export const Subtitles = styled.div<{ $withSheet?: boolean }>`
 export const SubtitleLine = styled.div<{ $secondary?: boolean }>`
   font-weight: ${({ $secondary }) => ($secondary ? 400 : 500)};
   font-size: ${({ $secondary }) => ($secondary ? "18px" : "18px")};
-  color: ${({ $secondary }) => ($secondary ? "#d8e4ff" : "#fff")};
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
+  color: ${({ $secondary }) =>
+    $secondary ? "var(--tg-video-subtitle-secondary)" : "var(--tg-video-overlay-text)"};
+  text-shadow: 0 2px 10px var(--tg-overlay-strong);
   background: ${({ $secondary }) =>
-    $secondary ? "rgba(0, 0, 0, 0.95)" : "rgba(0, 0, 0, 0.95)"};
+    $secondary ? "var(--tg-overlay-strong)" : "var(--tg-overlay-strong)"};
   padding: 8px 12px;
   border-radius: 12px;
   display: inline-block;
@@ -279,7 +280,7 @@ export const SubtitleLine = styled.div<{ $secondary?: boolean }>`
 `;
 
 export const SubtitleLoading = styled.div`
-  color: #cfd3e0;
+  color: var(--tg-subtle);
   font-size: 12px;
 `;
 
@@ -288,15 +289,15 @@ export const EditSubtitleButton = styled.button`
   top: -10px;
   left: 18px;
   border: none;
-  background: rgba(0, 0, 0, 0.65);
-  color: #fff;
+  background: var(--tg-video-overlay-bg);
+  color: var(--tg-video-overlay-text);
   border-radius: 12px;
   padding: 6px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 18px var(--tg-shadow-strong);
   z-index: 200;
   pointer-events: auto;
 `;
@@ -331,8 +332,8 @@ export const SeekTimes = styled.div`
   justify-content: space-between;
   font-size: 12px;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+  color: var(--tg-video-overlay-text);
+  text-shadow: 0 1px 8px var(--tg-overlay-strong);
   pointer-events: none;
   padding: 0 4px;
 `;
@@ -341,7 +342,7 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
   width: 100%;
   height: ${({ $thin }) => ($thin ? "4px" : "10px")};
   appearance: none;
-  background: #b1b1b1;
+  background: var(--tg-border);
   /* border-radius: 999px; */
   border: none;
   padding: 0;
@@ -372,11 +373,11 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
     height: ${({ $showThumb }) => ($showThumb ? "24px" : "0px")};
     border-radius: 50%;
     z-index: 99000 !important;
-    background: ${({ $showThumb }) => ($showThumb ? "#ffffff" : "transparent")};
+    background: ${({ $showThumb }) => ($showThumb ? "var(--tg-video-overlay-text)" : "transparent")};
     border: ${({ $showThumb }) =>
       $showThumb ? "3px solid var(--tg-subtle)" : "none"};
     box-shadow: ${({ $showThumb }) =>
-      $showThumb ? "0 2px 10px rgba(0, 0, 0, 0.35)" : "none"};
+      $showThumb ? "0 2px 10px var(--tg-shadow-strong)" : "none"};
     margin-top: ${({ $thin }) => ($thin ? "-11px" : "-6px")};
     transition: width 0.1s ease, height 0.1s ease, margin-top 0.1s ease;
   }
@@ -387,18 +388,18 @@ export const Progress = styled.input<{ $thin?: boolean; $showThumb?: boolean }>`
     border-radius: 50%;
     z-index: 999000 !important;
 
-    background: ${({ $showThumb }) => ($showThumb ? "#ffffff" : "transparent")};
+    background: ${({ $showThumb }) => ($showThumb ? "var(--tg-video-overlay-text)" : "transparent")};
     border: ${({ $showThumb }) =>
       $showThumb ? "3px solid var(--tg-subtle)" : "none"};
     box-shadow: ${({ $showThumb }) =>
-      $showThumb ? "0 2px 10px rgba(0, 0, 0, 0.35)" : "none"};
+      $showThumb ? "0 2px 10px var(--tg-shadow-strong)" : "none"};
     transition: width 0.1s ease, height 0.1s ease;
   }
 `;
 
 export const TapIndicator = styled.div`
   font-size: 72px;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 2px 16px var(--tg-overlay-strong);
 `;
 
 export const TapOverlay = styled.div<{ $shrink?: boolean }>`
@@ -418,7 +419,7 @@ export const SpinnerOverlay = styled.div`
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--tg-overlay);
   z-index: 200;
 `;
 
@@ -426,13 +427,13 @@ export const IconButton = styled.button`
   backdrop-filter: none;
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--tg-video-overlay-text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   svg {
-    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
+    filter: drop-shadow(0 1px 6px var(--tg-video-overlay-bg));
   }
 `;
 
@@ -441,24 +442,24 @@ export const LikeButton = styled.button`
   font-size: 18px;
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--tg-video-overlay-text);
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   svg {
-    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
+    filter: drop-shadow(0 1px 6px var(--tg-video-overlay-bg));
   }
   span {
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
+    text-shadow: 0 1px 6px var(--tg-video-overlay-bg);
   }
 `;
 
 export const ExerciseButton = styled.button`
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--tg-video-overlay-text);
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -468,19 +469,19 @@ export const ExerciseButton = styled.button`
   backdrop-filter: none;
   box-shadow: none;
   svg {
-    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
+    filter: drop-shadow(0 1px 6px var(--tg-video-overlay-bg));
   }
   span {
     font-weight: 700;
     font-size: 12px;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
+    text-shadow: 0 1px 6px var(--tg-video-overlay-bg);
   }
 `;
 
 export const ModerationButton = styled.button<{ $approved?: boolean }>`
   background: transparent;
   border: none;
-  color: ${({ $approved }) => ($approved ? "#3ec985" : "#fff")};
+  color: ${({ $approved }) => ($approved ? "var(--tg-success)" : "var(--tg-video-overlay-text)")};
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -489,7 +490,7 @@ export const ModerationButton = styled.button<{ $approved?: boolean }>`
   cursor: pointer;
   padding: 0;
   svg {
-    filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.65));
+    filter: drop-shadow(0 1px 6px var(--tg-video-overlay-bg));
   }
 `;
 
@@ -501,9 +502,9 @@ export const ExerciseSheet = styled.div<{ $open: boolean }>`
   margin: 0 auto;
   max-width: 960px;
   height: 300px;
-  background: var(--tg-card, #0f1428);
+  background: var(--tg-card);
   border-radius: 18px 18px 0 0;
-  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 -12px 30px var(--tg-shadow-strong);
   z-index: 130;
   padding: 4px 16px 8px;
   display: flex;
@@ -529,23 +530,23 @@ export const ExerciseHandle = styled.div`
   width: 52px;
   height: 4px;
   border-radius: 999px;
-  background: var(--tg-border, rgba(255, 255, 255, 0.14));
+  background: var(--tg-border);
   margin: 4px auto 0;
 `;
 
 export const ExerciseTitle = styled.div`
   font-size: 22px;
   font-weight: 700;
-  color: var(--tg-text, #e9edf7);
+  color: var(--tg-text);
   text-align: center;
 `;
 
 export const ExercisePlaceholder = styled.div`
   flex: 1;
   border-radius: 14px;
-  background: var(--tg-surface, #121a2a);
-  border: 1px dashed var(--tg-border, #2b3245);
-  color: var(--tg-text, #e9edf7);
+  background: var(--tg-surface);
+  border: 1px dashed var(--tg-border);
+  color: var(--tg-text);
   display: grid;
   place-items: center;
   text-align: center;
@@ -563,8 +564,8 @@ export const ExerciseList = styled.div`
 `;
 
 export const ExerciseCard = styled.div`
-  background: var(--tg-surface, #121a2a);
-  border: 1px solid var(--tg-border, #2b3245);
+  background: var(--tg-surface);
+  border: 1px solid var(--tg-border);
   border-radius: 14px;
   padding: 14px 12px;
   display: grid;
@@ -573,7 +574,7 @@ export const ExerciseCard = styled.div`
 
 export const ExercisePrompt = styled.div`
     font-weight: 600;
-    color: var(--tg-text, #e9edf7);
+    color: var(--tg-text);
     font-size: 26px;
     justify-content: flex-start;
     text-align: left;
@@ -584,7 +585,7 @@ export const ExercisePrompt = styled.div`
 
 export const ExerciseMeta = styled.div`
   font-size: 12px;
-  color: var(--tg-subtle, #cfd5e4);
+  color: var(--tg-subtle);
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -604,17 +605,17 @@ export const ExerciseOption = styled.button<{
   border: 1px solid
     ${({ $state }) =>
       $state === "correct"
-        ? "rgba(91, 214, 145, 0.7)"
+        ? "color-mix(in srgb, var(--tg-success) 70%, transparent)"
         : $state === "wrong"
-        ? "rgba(255, 95, 109, 0.7)"
+        ? "color-mix(in srgb, var(--tg-danger) 70%, transparent)"
         : "var(--tg-border)"};
   background: ${({ $state }) =>
     $state === "correct"
-      ? "rgba(91, 214, 145, 0.12)"
+      ? "color-mix(in srgb, var(--tg-success) 12%, transparent)"
       : $state === "wrong"
-      ? "rgba(255, 95, 109, 0.12)"
-      : "var(--tg-surface, #121a2a)"};
-  color: var(--tg-text, #e9edf7);
+      ? "color-mix(in srgb, var(--tg-danger) 12%, transparent)"
+      : "var(--tg-surface)"};
+  color: var(--tg-text);
   font-weight: 700;
   font-size: 20px;
   text-align: left;
@@ -632,10 +633,12 @@ export const ListenButton = styled.button`
     border-radius: 999px;
     border: 1px solid var(--tg-border);
     background: var(--tg-card);
-    color: var(--tg-text, #e9edf7);
+    color: var(--tg-text);
     cursor: pointer;
   svg {
     filter: none;
   }
   box-shadow: none;
 `;
+
+

@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components';
+﻿import styled, { css } from 'styled-components';
 
 export const trainingCardSurface = css`
   display: grid;
@@ -35,8 +35,8 @@ export const TrainingIconButton = styled.button<{ $enabled?: boolean }>`
   width: 42px;
   height: 42px;
   border-radius: 16px;
-  border: 3px solid var(--tg-border);
-  background: #20273a;
+  border: 3px solid var(--tg-button-neutral-border);
+  background: var(--tg-button-neutral-bg);
   color: var(--tg-text);
   display: inline-flex;
   align-items: center;
@@ -44,37 +44,37 @@ export const TrainingIconButton = styled.button<{ $enabled?: boolean }>`
   opacity: ${({ $enabled = true }) => ($enabled ? 1 : 0.45)};
   flex-shrink: 0;
   box-shadow:
-    0 4px 0 #151b2a,
-    0 8px 14px rgba(0, 0, 0, 0.22);
+    0 4px 0 var(--tg-button-neutral-shadow),
+    0 8px 14px var(--tg-shadow-strong);
   transform: translateY(0);
   transition: transform 120ms ease, box-shadow 140ms ease, opacity 140ms ease;
   &:active:not(:disabled) {
     transform: translateY(2px);
     box-shadow:
-      0 2px 0 #151b2a,
-      0 4px 8px rgba(0, 0, 0, 0.18);
+      0 2px 0 var(--tg-button-neutral-shadow),
+      0 4px 8px var(--tg-shadow-soft);
   }
 `;
 
 const answerBorderColor = ($correct?: boolean, $wrong?: boolean, $selected?: boolean) => {
-  if ($correct) return '#4dcf75';
-  if ($wrong) return '#ff6b76';
-  if ($selected) return '#2ea3ff';
+  if ($correct) return 'var(--tg-button-positive-border)';
+  if ($wrong) return 'var(--tg-button-negative-border)';
+  if ($selected) return 'var(--tg-button-primary-border)';
   return 'var(--tg-border)';
 };
 
 const answerBackgroundColor = ($correct?: boolean, $wrong?: boolean, $selected?: boolean) => {
-  if ($correct) return '#4dcf75';
-  if ($wrong) return '#ff6b76';
-  if ($selected) return '#2ea3ff';
-  return 'rgba(255,255,255,0.03)';
+  if ($correct) return 'var(--tg-button-positive-bg)';
+  if ($wrong) return 'var(--tg-button-negative-bg)';
+  if ($selected) return 'var(--tg-button-primary-bg)';
+  return 'var(--tg-button-neutral-bg)';
 };
 
 const answerShadowColor = ($correct?: boolean, $wrong?: boolean, $selected?: boolean) => {
-  if ($correct) return '#2e9d52';
-  if ($wrong) return '#d94a57';
-  if ($selected) return '#1a79c7';
-  return '#1a1f2f';
+  if ($correct) return 'var(--tg-button-positive-shadow)';
+  if ($wrong) return 'var(--tg-button-negative-shadow)';
+  if ($selected) return 'var(--tg-button-primary-shadow)';
+  return 'var(--tg-button-neutral-shadow)';
 };
 
 type AnswerStateProps = { $correct?: boolean; $wrong?: boolean; $selected?: boolean };
@@ -97,7 +97,7 @@ export const TrainingAnswerButton = styled.button<AnswerStateProps>`
   box-shadow:
     0 4px 0 ${({ $correct, $wrong, $selected }) =>
       answerShadowColor($correct, $wrong, $selected)},
-    0 8px 14px rgba(0, 0, 0, 0.22);
+    0 8px 14px var(--tg-shadow-strong);
   cursor: pointer;
   transform: translateY(0);
   &:active:not(:disabled) {
@@ -105,7 +105,7 @@ export const TrainingAnswerButton = styled.button<AnswerStateProps>`
     box-shadow:
       0 2px 0 ${({ $correct, $wrong, $selected }) =>
         answerShadowColor($correct, $wrong, $selected)},
-      0 4px 8px rgba(0, 0, 0, 0.18);
+      0 4px 8px var(--tg-shadow-soft);
   }
   &:disabled {
     opacity: 0.6;
@@ -130,7 +130,7 @@ export const TrainingTokenButton = styled.button<AnswerStateProps>`
   box-shadow:
     0 4px 0 ${({ $correct, $wrong, $selected }) =>
       answerShadowColor($correct, $wrong, $selected)},
-    0 8px 14px rgba(0, 0, 0, 0.22);
+    0 8px 14px var(--tg-shadow-strong);
   transform: translateY(0);
   transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, transform 120ms ease;
   &:active:not(:disabled) {
@@ -138,7 +138,7 @@ export const TrainingTokenButton = styled.button<AnswerStateProps>`
     box-shadow:
       0 2px 0 ${({ $correct, $wrong, $selected }) =>
         answerShadowColor($correct, $wrong, $selected)},
-      0 4px 8px rgba(0, 0, 0, 0.18);
+      0 4px 8px var(--tg-shadow-soft);
   }
   &:disabled {
     opacity: 0.6;
@@ -154,9 +154,9 @@ export const TrainingSlot = styled.span<{ $correct?: boolean; $wrong?: boolean; 
   border-radius: 16px;
   border: ${({ $correct, $wrong }) =>
     $correct
-      ? '3px solid rgba(67, 201, 127, 0.98)'
+      ? '3px solid var(--tg-button-positive-border)'
       : $wrong
-      ? '3px solid rgba(255, 95, 109, 0.98)'
+      ? '3px solid var(--tg-button-negative-border)'
       : '3px dashed var(--tg-border)'};
   margin: 0 4px;
   vertical-align: middle;
@@ -166,3 +166,4 @@ export const TrainingSlot = styled.span<{ $correct?: boolean; $wrong?: boolean; 
   padding: 4px 12px;
   background: ${({ $correct, $wrong }) => answerBackgroundColor($correct, $wrong)};
 `;
+

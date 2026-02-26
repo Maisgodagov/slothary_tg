@@ -16,83 +16,106 @@ export const HomeWrapper = styled.div`
 `;
 
 export const NextTrainingCard = styled.section`
-  border-radius: 20px;
-  border: 1px solid var(--tg-border);
+  border-radius: 28px;
+  border: none;
   background: var(--tg-card-strong);
-  padding: 14px;
+  padding: 12px;
   display: grid;
   gap: 10px;
-`;
-
-export const NextTrainingHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+  align-content: start;
+  box-shadow: 0 1px 4px var(--tg-shadow-soft);
 `;
 
 export const NextTrainingTitle = styled.strong`
-  font-size: 18px;
-  line-height: 1.2;
-  font-weight: 800;
-`;
-
-export const NextTrainingMeta = styled.span`
-  font-size: 12px;
-  line-height: 1;
-  padding: 5px 9px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, #6adf95 52%, var(--tg-border) 48%);
-  color: #8ef3b8;
-  background: color-mix(in srgb, #6adf95 14%, transparent 86%);
-  white-space: nowrap;
-`;
-
-export const NextTrainingText = styled.div`
+  color: var(--tg-text);
   font-size: 14px;
-  line-height: 1.4;
-  color: var(--tg-subtitle-text-color);
+  line-height: 1.1;
+  font-weight: 600;
+  min-width: 0;
 `;
 
-export const NextTrainingStats = styled.div`
+export const NextTrainingTopRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+export const NextTrainingHeaderWrap = styled.div`
+  flex: 0 1 75%;
+  min-width: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+`;
+
+export const NextTrainingTitleRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 8px;
 `;
 
-export const NextTrainingStat = styled.div`
-  border-radius: 12px;
-  border: 1px solid var(--tg-border);
-  background: var(--tg-card);
-  padding: 8px 6px;
-  text-align: center;
-  display: grid;
-  gap: 4px;
-`;
-
-export const NextTrainingStatValue = styled.span`
+export const NextTrainingCounter = styled.div`
+  color: var(--tg-success);
   font-size: 16px;
+  font-weight: 900;
   line-height: 1;
-  font-weight: 800;
+  flex-shrink: 0;
 `;
 
-export const NextTrainingStatLabel = styled.span`
-  font-size: 11px;
-  line-height: 1.1;
-  color: var(--tg-subtitle-text-color);
+export const NextTrainingProgressTrack = styled.div`
+  height: 5px;
+  border-radius: 999px;
+  background: var(--tg-border);
+  overflow: hidden;
+`;
+
+export const NextTrainingProgressFill = styled.div<{ $width: number }>`
+  width: ${({ $width }) => `${$width}%`};
+  height: 100%;
+  border-radius: 999px;
+  background: var(--tg-button-primary-bg);
+  transition: width 240ms ease;
+`;
+
+export const NextTrainingLevelBadge = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--tg-border);
+  flex-shrink: 0;
+`;
+
+export const NextTrainingLevelText = styled.div`
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--tg-card);
+  border: 1px solid var(--tg-border);
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--tg-text);
 `;
 
 export const NextTrainingButton = styled.button`
   width: 100%;
-  border: 0;
-  border-radius: 14px;
-  height: 44px;
-  font-size: 16px;
-  font-weight: 800;
-  color: #0a1830;
-  background: #39a3ec;
+  border-style: solid;
+  border-width: 3px;
+  border-color: var(--tg-button-primary-border);
+  border-radius: 24px;
+  min-height: 52px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--tg-button-primary-text);
+  background: var(--tg-button-primary-bg);
+  background-image: none;
+  box-shadow: 0 4px 0 var(--tg-button-primary-shadow), 0 8px 14px var(--tg-shadow-strong);
   cursor: pointer;
-  transition: transform 0.12s ease, filter 0.12s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 
   &:disabled {
     opacity: 0.6;
@@ -100,25 +123,22 @@ export const NextTrainingButton = styled.button`
   }
 
   &:not(:disabled):active {
-    transform: translateY(1px);
-    filter: brightness(0.96);
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 var(--tg-button-primary-shadow), 0 4px 8px var(--tg-shadow-soft);
   }
 `;
 
-export const HomeSecondaryButton = styled.button`
-  width: 100%;
-  border: 1px solid var(--tg-border);
-  border-radius: 14px;
-  height: 42px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--tg-text);
-  background: var(--tg-card);
-  cursor: pointer;
+export const NextTrainingButtonLabel = styled.span`
+  display: grid;
+  gap: 2px;
+  line-height: 1.05;
+  text-align: center;
+`;
 
-  &:active {
-    opacity: 0.9;
-  }
+export const NextTrainingButtonSub = styled.span`
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.9;
 `;
 
 export const HomeSkeletonLayout = styled.div`

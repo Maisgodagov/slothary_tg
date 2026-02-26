@@ -40,7 +40,7 @@ export const ProgressCard = styled.div`
   gap: 10px;
   border-radius: 22px;
   padding: 12px;
-  background: var(--tg-card);
+  background: var(--tg-training-container-bg);
   border: 1px solid var(--tg-border);
   align-content: start;
   height: 148px;
@@ -76,7 +76,7 @@ export const CurrentBlockTitle = styled.div`
 `;
 
 export const CurrentBlockCounter = styled.div`
-  color: #43c97f;
+  color: var(--tg-success);
   font-size: 16px;
   font-weight: 900;
   flex-shrink: 0;
@@ -147,7 +147,7 @@ export const MasteryGridCard = styled.div<{ $fillHeight: boolean }>`
   gap: 12px;
   padding: 12px;
   border: 1px solid var(--tg-border);
-  background: var(--tg-card);
+  background: var(--tg-training-container-bg);
   height: ${({ $fillHeight }) => ($fillHeight ? "100%" : "auto")};
   min-height: ${({ $fillHeight }) => ($fillHeight ? "0" : "auto")};
   overflow-y: ${({ $fillHeight }) => ($fillHeight ? "auto" : "visible")};

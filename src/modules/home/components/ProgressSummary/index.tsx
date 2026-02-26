@@ -36,24 +36,21 @@ export function ProgressSummary({
             <ProgressItem>
               <ProgressValue>{stats.learningCount}</ProgressValue>
               <ProgressLabelWrapper>
-                <ProgressLabel>Слов</ProgressLabel>
-                <ProgressLabel>изучаю</ProgressLabel>
+                <ProgressLabel>Изучаю</ProgressLabel>
               </ProgressLabelWrapper>
             </ProgressItem>
             <ProgressDivider />
             <ProgressItem>
               <ProgressValue>{stats.knownCount}</ProgressValue>
               <ProgressLabelWrapper>
-                <ProgressLabel>Слов</ProgressLabel>
-                <ProgressLabel>выучено</ProgressLabel>
+                <ProgressLabel>Выучено</ProgressLabel>
               </ProgressLabelWrapper>
             </ProgressItem>
             <ProgressDivider />
             <ProgressItem>
               <ProgressValue>{stats.viewedCount}</ProgressValue>
               <ProgressLabelWrapper>
-                <ProgressLabel>Слов</ProgressLabel>
-                <ProgressLabel>переведено</ProgressLabel>
+                <ProgressLabel>Переведено</ProgressLabel>
               </ProgressLabelWrapper>
             </ProgressItem>
           </ProgressGrid>

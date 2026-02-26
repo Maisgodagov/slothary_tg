@@ -21,8 +21,10 @@ export const PanelRoot = styled.div`
 export const MessageBox = styled.div<{ $correct: boolean }>`
   border-radius: 12px;
   padding: 10px 12px;
-  border: 1px solid ${({ $correct }) => ($correct ? 'rgba(67, 201, 127, 0.65)' : 'rgba(255, 95, 109, 0.65)')};
-  background: ${({ $correct }) => ($correct ? 'rgba(67, 201, 127, 0.12)' : 'rgba(255, 95, 109, 0.12)')};
+  border: 1px solid ${({ $correct }) =>
+    $correct ? 'color-mix(in srgb, var(--tg-success) 72%, transparent)' : 'color-mix(in srgb, var(--tg-danger) 72%, transparent)'};
+  background: ${({ $correct }) =>
+    $correct ? 'color-mix(in srgb, var(--tg-success) 16%, transparent)' : 'color-mix(in srgb, var(--tg-danger) 16%, transparent)'};
   display: grid;
   gap: 4px;
 `;

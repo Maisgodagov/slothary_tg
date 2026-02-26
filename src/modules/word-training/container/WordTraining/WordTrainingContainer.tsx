@@ -27,6 +27,7 @@ import ReinforcementCard from "../../components/ReinforcementCard";
 import TrainingCompletionView from "../../components/TrainingCompletionView";
 import TrainingSessionHeader from "../../components/TrainingSessionHeader";
 import TrainingHome from "../../components/TrainingHome";
+import TrainingHomeSkeleton from "../../components/TrainingHomeSkeleton";
 import { TrainingPageRoot } from "./styles";
 
 const normalize = (value: string): string =>
@@ -1008,7 +1009,7 @@ export function WordTrainingContainer() {
             {error}
           </div>
         )}
-        {loading && <div className="section">Загрузка...</div>}
+        {loading && <TrainingHomeSkeleton />}
 
         {isSessionEntered && isNewWordIntroVisible && activeIntroWord
           ? renderNewWordIntro(activeIntroWord)
@@ -1130,10 +1131,11 @@ export function WordTrainingContainer() {
                 label: "Знаю",
                 variant: "ghost",
                 style: {
-                  background: "#4dcf75",
-                  borderColor: "rgba(67, 201, 127, 0.9)",
-                  color: "var(--tg-text)",
-                  boxShadow: "0 4px 0 #2e9d52, 0 8px 14px rgba(0, 0, 0, 0.22)",
+                  background: "var(--tg-button-positive-bg)",
+                  borderColor: "var(--tg-button-positive-border)",
+                  color: "var(--tg-button-positive-text)",
+                  boxShadow:
+                    "0 4px 0 var(--tg-button-positive-shadow), 0 8px 14px var(--tg-shadow-strong)",
                 },
                 onClick: () => {
                   void markKnownWord(activeIntroWord.wordKey);
@@ -1144,10 +1146,11 @@ export function WordTrainingContainer() {
                 label: "Не знаю",
                 variant: "ghost",
                 style: {
-                  background: "#ffb356",
-                  borderColor: "rgba(255, 165, 0, 0.9)",
-                  color: "var(--tg-text)",
-                  boxShadow: "0 4px 0 #d4872e, 0 8px 14px rgba(0, 0, 0, 0.22)",
+                  background: "var(--tg-warning)",
+                  borderColor: "var(--tg-warning)",
+                  color: "var(--tg-button-primary-text)",
+                  boxShadow:
+                    "0 4px 0 color-mix(in srgb, var(--tg-warning) 70%, var(--tg-bg) 30%), 0 8px 14px var(--tg-shadow-strong)",
                 },
                 onClick: () => {
                   setIntroducedWordKeys((prev) => ({
@@ -1263,3 +1266,4 @@ export function WordTrainingContainer() {
     </PageShell>
   );
 }
+

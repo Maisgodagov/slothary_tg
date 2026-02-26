@@ -68,12 +68,12 @@ export function TrainingHome({
             borderRadius: 14,
             borderStyle: 'solid',
             borderWidth: '3px',
-            borderColor: '#2ea3ff',
-            boxShadow: '0 4px 0 #1a79c7, 0 8px 14px rgba(0, 0, 0, 0.22)',
+            borderColor: 'var(--tg-button-primary-border)',
+            boxShadow: '0 4px 0 var(--tg-button-primary-shadow), 0 8px 14px var(--tg-shadow-strong)',
             marginTop: 4,
-            background: '#2ea3ff',
+            background: 'var(--tg-button-primary-bg)',
             backgroundImage: 'none',
-            color: 'var(--tg-text)',
+            color: 'var(--tg-button-primary-text)',
           }}
         >
           <LearnButtonLabel>
@@ -97,4 +97,5 @@ export function TrainingHome({
 }
 
 export default TrainingHome;
+
 

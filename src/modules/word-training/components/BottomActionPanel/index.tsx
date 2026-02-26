@@ -1,4 +1,4 @@
-import { createPortal } from 'react-dom';
+﻿import { createPortal } from 'react-dom';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
 import { Button } from '../../../../shared/ui/Button';
@@ -67,12 +67,13 @@ export function BottomActionPanel({
           style={{
             ...baseActionStyle,
             fontSize: 22,
-            borderColor: '#2ea3ff',
-            background: '#2ea3ff',
-            boxShadow: '0 4px 0 #1a79c7, 0 8px 14px rgba(0, 0, 0, 0.22)',
+            borderColor: 'var(--tg-button-primary-border)',
+            background: 'var(--tg-button-primary-bg)',
+            color: 'var(--tg-button-primary-text)',
+            boxShadow: '0 4px 0 var(--tg-button-primary-shadow), 0 8px 14px var(--tg-shadow-strong)',
           }}
         >
-          {buttonLabel ?? 'Далее'}
+          {buttonLabel ?? 'Р”Р°Р»РµРµ'}
         </Button>
       )}
     </PanelRoot>,
@@ -81,3 +82,4 @@ export function BottomActionPanel({
 }
 
 export default BottomActionPanel;
+

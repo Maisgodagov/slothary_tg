@@ -46,10 +46,13 @@ export function TrainingCompletionView({
           minHeight: 52,
           fontSize: 20,
           fontWeight: 800,
-          boxShadow: 'none',
-          background: 'var(--tg-accent-strong)',
+          boxShadow: '0 4px 0 var(--tg-button-primary-shadow), 0 8px 14px var(--tg-shadow-strong)',
+          borderStyle: 'solid',
+          borderWidth: '3px',
+          borderColor: 'var(--tg-button-primary-border)',
+          background: 'var(--tg-button-primary-bg)',
           backgroundImage: 'none',
-          color: '#0b0b0b',
+          color: 'var(--tg-button-primary-text)',
         }}
       >
         Учить слова
@@ -59,3 +62,4 @@ export function TrainingCompletionView({
 }
 
 export default TrainingCompletionView;
+

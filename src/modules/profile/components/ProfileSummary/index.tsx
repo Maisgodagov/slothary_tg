@@ -90,7 +90,7 @@ export function ProfileSummary({
       <StatsGrid>
         <StatCard as="div">
           <StatIcon>
-            <Icon name="flame" size={22} color="#ff9f45" />
+            <Icon name="flame" size={22} color="var(--tg-warning)" />
           </StatIcon>
           <StatValue>{streakDays}</StatValue>
           <StatLabel>дни подряд</StatLabel>
@@ -101,21 +101,21 @@ export function ProfileSummary({
           $clickable={Boolean(onOpenWordProgress)}
         >
           <StatIcon>
-            <Icon name="dictionary" size={22} color="#5ab0ff" />
+            <Icon name="dictionary" size={22} color="var(--tg-accent-strong)" />
           </StatIcon>
           <StatValue>{wordsLearned}</StatValue>
           <StatLabel>слов выучено</StatLabel>
         </StatCard>
         <StatCard as="div">
           <StatIcon>
-            <Icon name="video" size={22} color="#9b87ff" />
+            <Icon name="video" size={22} color="var(--tg-accent)" />
           </StatIcon>
           <StatValue>{savedVideos}</StatValue>
           <StatLabel>сохраненные видео</StatLabel>
         </StatCard>
         <StatCard as="div">
           <StatIcon>
-            <Icon name="trophy" size={22} color="#f3c44a" />
+            <Icon name="trophy" size={22} color="var(--tg-highlight)" />
           </StatIcon>
           <StatValue>{achievements}</StatValue>
           <StatLabel>достижений</StatLabel>

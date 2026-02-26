@@ -58,7 +58,7 @@ export const HistoryDropdown = styled.div`
   border-radius: 12px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px var(--tg-shadow-strong);
   z-index: 20;
   display: grid;
   gap: 4px;

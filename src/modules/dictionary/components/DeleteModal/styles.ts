@@ -3,7 +3,7 @@ import styled from 'styled-components';
 export const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--tg-overlay);
   display: grid;
   place-items: center;
   z-index: 50;
@@ -50,7 +50,7 @@ export const CancelButton = styled.button`
 export const ConfirmButton = styled.button`
   border: none;
   background: var(--tg-danger);
-  color: #fff;
+  color: var(--tg-text-on-accent);
   font-weight: 700;
   border-radius: 10px;
   padding: 8px 12px;

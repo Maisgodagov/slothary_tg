@@ -87,7 +87,7 @@ export const StreakButton = styled.button`
   cursor: pointer;
   min-width: 88px;
   justify-content: center;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 3px var(--tg-shadow-soft);
 `;
 
 export const StreakCount = styled.span`

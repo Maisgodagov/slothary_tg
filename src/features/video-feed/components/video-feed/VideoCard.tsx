@@ -878,7 +878,7 @@ export function VideoCard({
               position: "absolute",
               inset: 0,
               background:
-                "linear-gradient(110deg, #070a16 0%, #111a35 45%, #070a16 100%)",
+                "linear-gradient(110deg, var(--tg-bg) 0%, var(--tg-surface) 45%, var(--tg-bg) 100%)",
               backgroundSize: "220% 100%",
               animation: "videoCardSkeletonShimmer 1.35s linear infinite",
               opacity: 0.45,
@@ -899,7 +899,7 @@ export function VideoCard({
                 width: 54,
                 height: 26,
                 borderRadius: 14,
-                background: "rgba(255,255,255,0.08)",
+                background: "color-mix(in srgb, var(--tg-text) 8%, transparent)",
               }}
             />
             <div
@@ -907,7 +907,7 @@ export function VideoCard({
                 width: 116,
                 height: 26,
                 borderRadius: 14,
-                background: "rgba(255,255,255,0.08)",
+                background: "color-mix(in srgb, var(--tg-text) 8%, transparent)",
               }}
             />
           </div>
@@ -927,7 +927,7 @@ export function VideoCard({
                 width: "82%",
                 height: 16,
                 borderRadius: 10,
-                background: "rgba(255,255,255,0.1)",
+                background: "color-mix(in srgb, var(--tg-text) 10%, transparent)",
               }}
             />
             <div
@@ -935,7 +935,7 @@ export function VideoCard({
                 width: "66%",
                 height: 16,
                 borderRadius: 10,
-                background: "rgba(255,255,255,0.1)",
+                background: "color-mix(in srgb, var(--tg-text) 10%, transparent)",
               }}
             />
           </div>
@@ -948,7 +948,7 @@ export function VideoCard({
       {isPaused && !showSpinner && (
         <S.TapOverlay $shrink={showExercises}>
           <S.TapIndicator>
-            <Icon name="play" size={showExercises ? 48 : 64} color="#fff" />
+            <Icon name="play" size={showExercises ? 48 : 64} color="var(--tg-text-on-accent)" />
           </S.TapIndicator>
         </S.TapOverlay>
       )}
@@ -956,7 +956,7 @@ export function VideoCard({
       {heartIndicator && (
         <S.TapOverlay $shrink={showExercises}>
           <S.TapIndicator>
-            <Icon name="like" size={72} color="#ff5f6d" fillColor="#ff5f6d" />
+            <Icon name="like" size={72} color="var(--tg-danger)" fillColor="var(--tg-danger)" />
           </S.TapIndicator>
         </S.TapOverlay>
       )}
@@ -967,16 +967,16 @@ export function VideoCard({
             <Icon
               name={item.isLiked ? "like" : "like-outline"}
               size={34}
-              color={item.isLiked ? "#ff5f6d" : "#fff"}
-              fillColor={item.isLiked ? "#ff5f6d" : "none"}
+              color={item.isLiked ? "var(--tg-danger)" : "var(--tg-text-on-accent)"}
+              fillColor={item.isLiked ? "var(--tg-danger)" : "none"}
             />
-            <span style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--tg-text-on-accent)" }}>
               {likesCount}
             </span>
           </S.LikeButton>
           {showExerciseButton && (
             <S.ExerciseButton onClick={() => setShowExercises((v) => !v)}>
-              <Icon name="exercise" size={34} color="#fff" />
+              <Icon name="exercise" size={34} color="var(--tg-text-on-accent)" />
               <span>{exercisesCount}</span>
             </S.ExerciseButton>
           )}
@@ -992,7 +992,7 @@ export function VideoCard({
               <Icon
                 name="admin"
                 size={30}
-                color={isModerated ? "#3ec985" : "#fff"}
+                color={isModerated ? "var(--tg-success)" : "var(--tg-text-on-accent)"}
               />
             </S.ModerationButton>
           )}
@@ -1002,7 +1002,7 @@ export function VideoCard({
               aria-label="Настройки ленты"
               title="Настройки ленты"
             >
-              <Icon name="filter" size={28} color="#ffffff" />
+              <Icon name="filter" size={28} color="var(--tg-text-on-accent)" />
             </S.IconButton>
           )}
           {isAdmin && (
@@ -1013,7 +1013,7 @@ export function VideoCard({
               title="Удалить видео"
               style={{ opacity: savingModeration ? 0.6 : 1 }}
             >
-              <Icon name="trash" size={30} color="#ff6b6b" />
+              <Icon name="trash" size={30} color="var(--tg-danger)" />
             </S.IconButton>
           )}
           {isAdmin && (
@@ -1027,7 +1027,7 @@ export function VideoCard({
               <Icon
                 name="check"
                 size={30}
-                color={isModerated ? "#3ec985" : "#ffffff"}
+                color={isModerated ? "var(--tg-success)" : "var(--tg-text-on-accent)"}
               />
             </S.IconButton>
           )}
@@ -1077,7 +1077,7 @@ export function VideoCard({
                   <Icon
                     name="chevron-down"
                     size={18}
-                    color="#fff"
+                    color="var(--tg-text-on-accent)"
                     style={{ flexShrink: 0 }}
                   />
                 </S.Badge>
@@ -1126,7 +1126,7 @@ export function VideoCard({
                           margin: 0,
                           color:
                             token.state === "active" || token.state === "passed"
-                              ? "#ffd54a"
+                              ? "var(--tg-highlight)"
                               : "inherit",
                           font: "inherit",
                           cursor: "pointer",
@@ -1154,7 +1154,7 @@ export function VideoCard({
                                 (prev.state === "active" || prev.state === "passed")) ||
                               (next?.isWord &&
                                 (next.state === "active" || next.state === "passed"));
-                            return nearHighlighted ? "#ffd54a" : "inherit";
+                            return nearHighlighted ? "var(--tg-highlight)" : "inherit";
                           })(),
                           transition: "color 120ms linear",
                         }}
@@ -1180,7 +1180,7 @@ export function VideoCard({
                 setSubtitleModal(true);
               }}
             >
-              <Icon name="edit" size={18} color="#fff" />
+              <Icon name="edit" size={18} color="var(--tg-text-on-accent)" />
             </S.EditSubtitleButton>
           )}
         </S.Subtitles>
@@ -1571,7 +1571,7 @@ export function VideoCard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.55)",
+            background: "var(--tg-overlay-strong)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
@@ -1588,7 +1588,7 @@ export function VideoCard({
               borderRadius: 20,
               padding: "22px 20px 26px",
               color: "var(--tg-text)",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.28)",
+              boxShadow: "0 20px 60px var(--tg-shadow-strong)",
               position: "relative",
             }}
           >
@@ -1888,7 +1888,7 @@ export function VideoCard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.6)",
+            background: "var(--tg-overlay-strong)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
@@ -1900,12 +1900,12 @@ export function VideoCard({
             style={{
               width: "100%",
               maxWidth: 520,
-              background: "#0f1428",
+              background: "var(--tg-surface)",
               border: "1px solid var(--tg-border)",
               borderRadius: 16,
               padding: 16,
               color: "var(--tg-text)",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+              boxShadow: "0 20px 60px var(--tg-shadow-strong)",
             }}
           >
             <div
@@ -1979,9 +1979,9 @@ export function VideoCard({
                 onClick={() => setSubtitleModal(false)}
                 style={{
                   ...buttonStyle,
-                  background: "rgba(255,255,255,0.06)",
+                  background: "color-mix(in srgb, var(--tg-text) 6%, transparent)",
                   border: "1px solid var(--tg-border)",
-                  color: "#fff",
+                  color: "var(--tg-text-on-accent)",
                 }}
               >
                 Отмена
@@ -2026,8 +2026,8 @@ export function VideoCard({
                 }}
                 style={{
                   ...buttonStyle,
-                  background: "linear-gradient(135deg, #2ea3ff, #6dd3ff)",
-                  color: "#0c1021",
+                  background: "linear-gradient(135deg, var(--tg-button-primary-bg), color-mix(in srgb, var(--tg-button-primary-bg) 70%, var(--tg-accent) 30%))",
+                  color: "var(--tg-text-on-accent)",
                   minWidth: 120,
                 }}
                 disabled={savingModeration}
@@ -2158,7 +2158,7 @@ function ToggleRow({
           style={{
             position: "absolute",
             inset: 0,
-            background: checked ? "#0f7aa7" : "#d0d5dc",
+            background: checked ? "var(--tg-accent)" : "var(--tg-border)",
             borderRadius: 26,
             transition: "0.2s",
           }}
@@ -2171,8 +2171,8 @@ function ToggleRow({
             width: 20,
             height: 20,
             borderRadius: "50%",
-            background: "#fff",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+            background: "var(--tg-text-on-accent)",
+            boxShadow: "0 2px 6px var(--tg-shadow-strong)",
             transition: "0.2s",
           }}
         />
@@ -2180,3 +2180,5 @@ function ToggleRow({
     </label>
   );
 }
+
+

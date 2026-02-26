@@ -6,7 +6,7 @@ export const BannerWrapper = styled.div`
   padding: 18px;
   border-radius: 28px;
   background: var(--tg-card-strong);
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 4px var(--tg-shadow-soft);
   color: var(--tg-text);
 `;
 
@@ -26,24 +26,27 @@ export const BannerTitle = styled.div`
 export const BannerAction = styled.button`
   width: auto;
   justify-self: end;
-  border: 1px solid var(--tg-border);
-  border-radius: 14px;
+  border-style: solid;
+  border-width: 3px;
+  border-color: var(--tg-button-primary-border);
+  border-radius: 24px;
   padding: 8px 14px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
-  color: var(--tg-text);
-  background: var(--tg-card);
-  box-shadow: none;
+  color: var(--tg-button-primary-text);
+  background: var(--tg-button-primary-bg);
+  box-shadow: 0 4px 0 var(--tg-button-primary-shadow), 0 8px 14px var(--tg-shadow-strong);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 
   &:active {
-    transform: translateY(1px);
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 var(--tg-button-primary-shadow), 0 4px 8px var(--tg-shadow-soft);
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.6;
     cursor: default;
-    box-shadow: none;
+    box-shadow: 0 4px 0 var(--tg-button-primary-shadow), 0 8px 14px var(--tg-shadow-strong);
   }
 `;

@@ -5,7 +5,7 @@ import { ToggleButton, ToggleThumb, ToggleTrack } from "./styles";
 export function ThemeToggle({ themeMode, systemTheme, onToggle }: ThemeToggleProps) {
   const isDark =
     themeMode === "dark" || (themeMode === "system" && systemTheme === "dark");
-  const activeColor = isDark ? "#3a4db7" : "#f19a0e";
+  const activeColor = isDark ? "var(--tg-accent-strong)" : "var(--tg-warning)";
 
   return (
     <ToggleButton
@@ -16,10 +16,10 @@ export function ThemeToggle({ themeMode, systemTheme, onToggle }: ThemeTogglePro
     >
       <ToggleTrack>
         <ToggleThumb $active={!isDark} $activeColor={activeColor}>
-          <Icon name="sun" size={18} color={isDark ? "var(--tg-subtle)" : "#fff"} />
+          <Icon name="sun" size={18} color={isDark ? "var(--tg-subtle)" : "var(--tg-text-on-accent)"} />
         </ToggleThumb>
         <ToggleThumb $active={isDark} $activeColor={activeColor}>
-          <Icon name="moon" size={18} color={isDark ? "#fff" : "var(--tg-subtle)"} />
+          <Icon name="moon" size={18} color={isDark ? "var(--tg-text-on-accent)" : "var(--tg-subtle)"} />
         </ToggleThumb>
       </ToggleTrack>
     </ToggleButton>

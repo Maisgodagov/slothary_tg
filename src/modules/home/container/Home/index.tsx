@@ -23,16 +23,18 @@ import {
   HomeSkeletonLine,
   HomeSkeletonStreak,
   HomeWrapper,
-  HomeSecondaryButton,
   NextTrainingButton,
+  NextTrainingButtonLabel,
+  NextTrainingButtonSub,
   NextTrainingCard,
-  NextTrainingHeader,
-  NextTrainingMeta,
-  NextTrainingStat,
-  NextTrainingStatLabel,
-  NextTrainingStats,
-  NextTrainingStatValue,
-  NextTrainingText,
+  NextTrainingCounter,
+  NextTrainingHeaderWrap,
+  NextTrainingLevelBadge,
+  NextTrainingLevelText,
+  NextTrainingProgressFill,
+  NextTrainingProgressTrack,
+  NextTrainingTitleRow,
+  NextTrainingTopRow,
   NextTrainingTitle,
 } from "./styles";
 
@@ -222,6 +224,16 @@ export function HomeContainer() {
   };
 
   const showSkeleton = statsLoading && !wordStats;
+  const currentBlockTitle = (trainingOverview?.currentBlockTitle || "Стартовый набор I").trim();
+  const currentBlockKnown = trainingOverview?.currentBlockProgress?.knownWords ?? 0;
+  const currentBlockTotal = trainingOverview?.currentBlockProgress?.totalWords ?? 0;
+  const currentBlockPercent = Math.max(
+    0,
+    Math.min(100, Number(trainingOverview?.currentBlockProgress?.percent ?? 0)),
+  );
+  const currentLevel = String(trainingOverview?.currentLevel || auth.profile?.level || "A1")
+    .trim()
+    .toUpperCase();
 
   return (
     <PageShell>
@@ -278,54 +290,33 @@ export function HomeContainer() {
           {isAdmin && (
             <>
               <NextTrainingCard>
-                <NextTrainingHeader>
-                  <NextTrainingTitle>Следующая тренировка</NextTrainingTitle>
-                  <NextTrainingMeta>
-                    {trainingOverview?.activeSession ? "Продолжить" : "Новая"}
-                  </NextTrainingMeta>
-                </NextTrainingHeader>
-
-                <NextTrainingText>
-                  {trainingOverview?.activeSession
-                    ? `Осталось слов: ${Math.max(
-                        0,
-                        (trainingOverview.activeSession.targetWords ?? 0) -
-                          (trainingOverview.activeSession.wordsCompleted ?? 0),
-                      )}`
-                    : `Подборка на ${Math.min(5, Math.max(1, trainingOverview?.suggestedTargetWords ?? 5))} слов с фразами и закреплением.`}
-                </NextTrainingText>
-
-                <NextTrainingStats>
-                  <NextTrainingStat>
-                    <NextTrainingStatValue>{trainingOverview?.dueCount ?? 0}</NextTrainingStatValue>
-                    <NextTrainingStatLabel>Повторить</NextTrainingStatLabel>
-                  </NextTrainingStat>
-                  <NextTrainingStat>
-                    <NextTrainingStatValue>{trainingOverview?.mistakeCount ?? 0}</NextTrainingStatValue>
-                    <NextTrainingStatLabel>Ошибки</NextTrainingStatLabel>
-                  </NextTrainingStat>
-                  <NextTrainingStat>
-                    <NextTrainingStatValue>{trainingOverview?.newCount ?? 0}</NextTrainingStatValue>
-                    <NextTrainingStatLabel>Новые</NextTrainingStatLabel>
-                  </NextTrainingStat>
-                </NextTrainingStats>
+                <NextTrainingTopRow>
+                  <NextTrainingHeaderWrap>
+                    <NextTrainingTitleRow>
+                      <NextTrainingTitle>{currentBlockTitle}</NextTrainingTitle>
+                      <NextTrainingCounter>{`${currentBlockKnown}/${currentBlockTotal}`}</NextTrainingCounter>
+                    </NextTrainingTitleRow>
+                    <NextTrainingProgressTrack>
+                      <NextTrainingProgressFill $width={currentBlockPercent} />
+                    </NextTrainingProgressTrack>
+                  </NextTrainingHeaderWrap>
+                  <NextTrainingLevelBadge>
+                    <NextTrainingLevelText>{currentLevel || "A1"}</NextTrainingLevelText>
+                  </NextTrainingLevelBadge>
+                </NextTrainingTopRow>
 
                 <NextTrainingButton
                   type="button"
                   onClick={handleStartNextTraining}
                   disabled={startingTraining || trainingLoading}
                 >
-                  {startingTraining
-                    ? "Запуск..."
-                    : trainingOverview?.activeSession
-                      ? "Продолжить тренировку"
-                      : "Начать тренировку"}
+                  <NextTrainingButtonLabel>
+                    <span>{startingTraining ? "Запуск..." : "Продолжить тренировку"}</span>
+                    <NextTrainingButtonSub>С того места, где остановился</NextTrainingButtonSub>
+                  </NextTrainingButtonLabel>
                 </NextTrainingButton>
               </NextTrainingCard>
 
-              <HomeSecondaryButton type="button" onClick={() => navigate("/admin/word-mastery-map")}>
-                Открыть карту слов
-              </HomeSecondaryButton>
             </>
           )}
 

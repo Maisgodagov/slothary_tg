@@ -18,7 +18,7 @@ export const CardShell = styled.div<{ $compact?: boolean }>`
     $compact ? "clamp(210px, 36vh, 290px)" : "clamp(250px, 50vh, 400px)"};
   border-radius: 25px;
   overflow: hidden;
-  background: #000;
+  background: var(--tg-media-bg);
   position: relative;
   scroll-snap-align: center;
   border: 3px solid var(--tg-surface);
@@ -33,8 +33,8 @@ export const FullVideoButton = styled.button`
   border-radius: 999px;
   border: none;
   padding: 6px 10px;
-  background: rgba(0, 0, 0, 0.65);
-  color: #fff;
+  background: var(--tg-video-overlay-bg);
+  color: var(--tg-video-overlay-text);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -55,12 +55,12 @@ export const ContextWrapper = styled.div`
   display: grid;
   justify-items: center;
   text-align: center;
-  color: #fff;
+  color: var(--tg-video-overlay-text);
   pointer-events: auto;
 `;
 
 export const ContextText = styled.div`
-  background: rgba(0, 0, 0, 0.78);
+  background: var(--tg-video-overlay-bg);
   padding: 8px 12px;
   border-radius: 12px;
   font-size: 15px;
@@ -85,7 +85,7 @@ export const PlayButton = styled.button<{ $interactive?: boolean }>`
   place-items: center;
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--tg-video-overlay-text);
   pointer-events: ${({ $interactive }) => ($interactive ? "auto" : "none")};
 `;
 
@@ -93,7 +93,7 @@ export const PlayIcon = styled.span`
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--tg-overlay);
   display: grid;
   place-items: center;
   font-size: 26px;
@@ -105,16 +105,16 @@ export const PlayCta = styled.span`
   gap: 10px;
   padding: 10px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(0, 0, 0, 0.58);
+  border: 1px solid color-mix(in srgb, var(--tg-video-overlay-text) 30%, transparent);
+  background: var(--tg-video-overlay-bg);
   font-size: 14px;
   font-weight: 700;
   line-height: 1;
-  color: #fff;
+  color: var(--tg-video-overlay-text);
 `;
 
 export const Highlight = styled.span`
-  color: #ffd54a;
+  color: var(--tg-highlight);
   font-weight: 700;
 `;
 
@@ -123,5 +123,5 @@ export const LoadingOverlay = styled.div`
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--tg-overlay);
 `;

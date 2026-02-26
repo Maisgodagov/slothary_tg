@@ -3,7 +3,7 @@ import styled from 'styled-components';
 export const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--tg-overlay);
   display: grid;
   place-items: center;
   z-index: 50;
