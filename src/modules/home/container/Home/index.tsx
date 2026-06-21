@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 import { useTelegram } from "../../../../app/providers/TelegramProvider";
 import { selectAuth } from "../../../../features/auth/slice";
-import { wordTrainingApi, type WordTrainingOverview } from "../../../../features/word-training/api";
 import { getLevelInfo } from "../../../../shared/lib/xp";
 import { PageShell } from "../../../../shared/ui/PageShell";
 import { homeApi } from "../../api";
@@ -16,42 +15,22 @@ import { setLastStatsUpdatedAt } from "../../store/slice";
 import {
   HomeSkeletonAvatar,
   HomeSkeletonCard,
-  HomeSkeletonCircle,
   HomeSkeletonHeader,
   HomeSkeletonHeaderLeft,
   HomeSkeletonHeaderText,
   HomeSkeletonLayout,
   HomeSkeletonLine,
   HomeSkeletonStreak,
-  HomeSkeletonTopLeft,
-  HomeSkeletonTopRow,
   HomeWrapper,
-  NextTrainingButton,
-  NextTrainingButtonLabel,
-  NextTrainingButtonSub,
-  NextTrainingCard,
-  NextTrainingCounter,
-  NextTrainingHeaderWrap,
-  NextTrainingLevelBadge,
-  NextTrainingLevelText,
-  NextTrainingProgressFill,
-  NextTrainingProgressTrack,
-  NextTrainingTitleRow,
-  NextTrainingTopRow,
-  NextTrainingTitle,
 } from "./styles";
 
 export function HomeContainer() {
   const auth = useAppSelector(selectAuth);
-  const isAdmin = auth.profile?.role === "admin";
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { themeMode, theme, webApp } = useTelegram();
   const [wordStats, setWordStats] = useState<DictionaryStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
-  const [trainingOverview, setTrainingOverview] = useState<WordTrainingOverview | null>(null);
-  const [trainingLoading, setTrainingLoading] = useState(false);
-  const [startingTraining, setStartingTraining] = useState(false);
   const [homeScreenStatus, setHomeScreenStatus] = useState<
     "added" | "missed" | "unknown" | "unsupported" | null
   >(null);
@@ -93,19 +72,6 @@ export function HomeContainer() {
       .catch(() => setWordStats(null))
       .finally(() => setStatsLoading(false));
   }, [auth.profile?.id, dispatch]);
-
-  useEffect(() => {
-    if (!auth.profile?.id || !isAdmin) {
-      setTrainingOverview(null);
-      return;
-    }
-    setTrainingLoading(true);
-    wordTrainingApi
-      .getOverview(auth.profile.id)
-      .then((overview) => setTrainingOverview(overview))
-      .catch(() => setTrainingOverview(null))
-      .finally(() => setTrainingLoading(false));
-  }, [auth.profile?.id, isAdmin]);
 
   useEffect(() => {
     if (!webApp) return;
@@ -173,70 +139,7 @@ export function HomeContainer() {
     }
   };
 
-  const handleStartNextTraining = async () => {
-    if (!auth.profile?.id || startingTraining) return;
-    setStartingTraining(true);
-    try {
-      type CefrLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
-      const userLevelRaw = auth.profile.level;
-      const userLevel: CefrLevel =
-        userLevelRaw === "A1" ||
-        userLevelRaw === "A2" ||
-        userLevelRaw === "B1" ||
-        userLevelRaw === "B2" ||
-        userLevelRaw === "C1" ||
-        userLevelRaw === "C2"
-          ? userLevelRaw
-          : "A1";
-
-      const targetWords = Math.min(5, Math.max(1, trainingOverview?.suggestedTargetWords ?? 5));
-      const preferences = {
-        cefrLevel: userLevel,
-        maxUniqueWords: 5,
-        maxMatchPairsPerSession: 1,
-        prioritizeUserInteractions: true,
-        levelMix: {
-          currentLevelWeight: 0.7,
-          lowerLevelWeight: 0.15,
-          higherLevelWeight: 0.15,
-        },
-        reinforcementMode: {
-          phraseExercisesPerWord: 3,
-          retryMistakesAtEnd: true,
-        },
-      };
-
-      if (trainingOverview?.activeSession?.id) {
-        navigate("/learn");
-        return;
-      }
-
-      await wordTrainingApi.startSession(
-        {
-          targetWords,
-          preferences,
-        },
-        auth.profile.id,
-      );
-      navigate("/learn");
-    } catch {
-      navigate("/learn");
-    } finally {
-      setStartingTraining(false);
-    }
-  };
-
   const showSkeleton = statsLoading && !wordStats;
-  const currentBlockTitle = (trainingOverview?.currentBlockTitle || "Стартовый набор I").trim();
-  const currentBlockKnown = trainingOverview?.currentBlockProgress?.knownWords ?? 0;
-  const currentBlockTotal = trainingOverview?.currentBlockProgress?.totalWords ?? 0;
-  const currentBlockPercent = Math.max(
-    0,
-    Math.min(100, Number(trainingOverview?.currentBlockProgress?.percent ?? 0)),
-  );
-  const currentLevel = String(trainingOverview?.currentLevel || auth.profile?.level || "A1")
-    .trim()
-    .toUpperCase();
 
   return (
     <PageShell>
@@ -260,18 +163,6 @@ export function HomeContainer() {
             <HomeSkeletonLine $w="64%" $h="18px" />
             <HomeSkeletonLine $w="44%" $h="32px" />
           </HomeSkeletonCard>
-          {isAdmin && (
-            <HomeSkeletonCard>
-              <HomeSkeletonTopRow>
-                <HomeSkeletonTopLeft>
-                  <HomeSkeletonLine $w="48%" $h="16px" />
-                  <HomeSkeletonLine $w="86%" $h="5px" />
-                </HomeSkeletonTopLeft>
-                <HomeSkeletonCircle />
-              </HomeSkeletonTopRow>
-              <HomeSkeletonLine $w="100%" $h="56px" />
-            </HomeSkeletonCard>
-          )}
           <HomeSkeletonCard>
             <HomeSkeletonLine $w="48%" $h="16px" />
             <HomeSkeletonLine $w="90%" $h="40px" />
@@ -296,39 +187,6 @@ export function HomeContainer() {
             loading={statsLoading}
             onDetails={() => navigate("/admin/word-progress")}
           />
-
-          {isAdmin && (
-            <>
-              <NextTrainingCard>
-                <NextTrainingTopRow>
-                  <NextTrainingHeaderWrap>
-                    <NextTrainingTitleRow>
-                      <NextTrainingTitle>{currentBlockTitle}</NextTrainingTitle>
-                      <NextTrainingCounter>{`${currentBlockKnown}/${currentBlockTotal}`}</NextTrainingCounter>
-                    </NextTrainingTitleRow>
-                    <NextTrainingProgressTrack>
-                      <NextTrainingProgressFill $width={currentBlockPercent} />
-                    </NextTrainingProgressTrack>
-                  </NextTrainingHeaderWrap>
-                  <NextTrainingLevelBadge>
-                    <NextTrainingLevelText>{currentLevel || "A1"}</NextTrainingLevelText>
-                  </NextTrainingLevelBadge>
-                </NextTrainingTopRow>
-
-                <NextTrainingButton
-                  type="button"
-                  onClick={handleStartNextTraining}
-                  disabled={startingTraining || trainingLoading}
-                >
-                  <NextTrainingButtonLabel>
-                    <span>{startingTraining ? "Запуск..." : "Продолжить тренировку"}</span>
-                    <NextTrainingButtonSub>С того места, где остановился</NextTrainingButtonSub>
-                  </NextTrainingButtonLabel>
-                </NextTrainingButton>
-              </NextTrainingCard>
-
-            </>
-          )}
 
           {showAddToHome && (
             <AddToHomeBanner onInstall={handleAddToHome} installing={installing} />

@@ -52,16 +52,6 @@ export function AdminContainer() {
           description="Теги и сводка по модерации видео."
           onClick={() => navigate('/admin/video-tags')}
         />
-        <AdminNavCard
-          title="Сниппеты слов"
-          description="Выбор предпочтительных сниппетов для тренировки слов."
-          onClick={() => navigate('/admin/word-training-snippets')}
-        />
-        <AdminNavCard
-          title="Фразы слов"
-          description="Список сгенерированных фраз для тренировки слов."
-          onClick={() => navigate('/admin/word-training-phrases')}
-        />
       </AdminWrapper>
     </PageShell>
   );

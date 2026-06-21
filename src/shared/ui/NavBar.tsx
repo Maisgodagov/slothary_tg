@@ -1,8 +1,6 @@
 import type { CSSProperties } from "react";
 import { NavLink } from "react-router-dom";
 
-import { useAppSelector } from "../../app/hooks";
-import { selectAuth } from "../../features/auth/slice";
 import { Icon } from "./Icon";
 
 const linkStyle: CSSProperties = {
@@ -21,24 +19,18 @@ const linkStyle: CSSProperties = {
   borderRadius: 22,
 };
 
+const items = [
+  { to: "/", label: "Главная", icon: "home", iconActive: "home-filled" },
+  { to: "/video", label: "Видео", icon: "video", iconActive: "video-filled" },
+  {
+    to: "/dictionary",
+    label: "Словарь",
+    icon: "dictionary",
+    iconActive: "dictionary-filled",
+  },
+] as const;
+
 export function NavBar() {
-  const auth = useAppSelector(selectAuth);
-  const isAdmin = auth.profile?.role === "admin";
-
-  const items = [
-    { to: "/", label: "Главная", icon: "home", iconActive: "home-filled" },
-    ...(isAdmin
-      ? [{ to: "/training", label: "Учить", icon: "exercise", iconActive: "exercise-filled" as const }]
-      : []),
-    { to: "/video", label: "Видео", icon: "video", iconActive: "video-filled" },
-    {
-      to: "/dictionary",
-      label: "Словарь",
-      icon: "dictionary",
-      iconActive: "dictionary-filled",
-    },
-  ] as const;
-
   return (
     <nav
       className="app-navbar"
@@ -73,13 +65,11 @@ export function NavBar() {
           })}
         >
           {({ isActive }) => (
-            <>
-              <Icon
-                name={item.icon as any}
-                size={24}
-                color={isActive ? "#FFFFFF" : "var(--tg-subtle)"}
-              />
-            </>
+            <Icon
+              name={item.icon as any}
+              size={24}
+              color={isActive ? "#FFFFFF" : "var(--tg-subtle)"}
+            />
           )}
         </NavLink>
       ))}

@@ -20,7 +20,6 @@ import dictionaryModuleReducer from '../modules/dictionary/store/slice';
 import profileReducer from '../modules/profile/store/slice';
 import adminReducer from '../modules/admin/store/slice';
 import audioPhraseGameReducer from '../modules/audio-phrase-game/store/slice';
-import wordTrainingModuleReducer from '../modules/word-training/store/slice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -32,7 +31,6 @@ const rootReducer = combineReducers({
   profile: profileReducer,
   admin: adminReducer,
   audioPhraseGame: audioPhraseGameReducer,
-  wordTrainingModule: wordTrainingModuleReducer,
 });
 
 const persistConfig = {

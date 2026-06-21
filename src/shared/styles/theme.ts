@@ -45,7 +45,6 @@ type ThemeTokens = {
   brandGreen: string;
   shadowSoft: string;
   shadowStrong: string;
-  trainingContainerBg: string;
 };
 
 export const themes: Record<ThemeName, ThemeTokens> = {
@@ -94,7 +93,6 @@ export const themes: Record<ThemeName, ThemeTokens> = {
     brandGreen: "#58AC65",
     shadowSoft: "rgba(15, 23, 42, 0.08)",
     shadowStrong: "rgba(15, 23, 42, 0.24)",
-    trainingContainerBg: "#F9FBFD",
   },
   dark: {
     bg: "#0f111a",
@@ -141,7 +139,6 @@ export const themes: Record<ThemeName, ThemeTokens> = {
     brandGreen: "#58AC65",
     shadowSoft: "rgba(0, 0, 0, 0.2)",
     shadowStrong: "rgba(0, 0, 0, 0.45)",
-    trainingContainerBg: "#1f2435",
   },
 };
 
@@ -192,5 +189,4 @@ export function applyThemeTokens(name: ThemeName) {
   root.style.setProperty("--tg-brand-green", t.brandGreen);
   root.style.setProperty("--tg-shadow-soft", t.shadowSoft);
   root.style.setProperty("--tg-shadow-strong", t.shadowStrong);
-  root.style.setProperty("--tg-training-container-bg", t.trainingContainerBg);
 }

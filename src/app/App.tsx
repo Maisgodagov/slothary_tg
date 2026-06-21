@@ -18,14 +18,6 @@ import VideoTagsAdminPage from "../pages/VideoTagsAdminPage";
 import UserDictionaryPage from "../pages/UserDictionaryPage";
 import WordProgressPage from "../pages/WordProgressPage";
 import StreakPage from "../pages/StreakPage";
-import LessonStepCardDemoPage from "../pages/LessonStepCardDemoPage";
-import LessonStepCardQuizDemoPage from "../pages/LessonStepCardQuizDemoPage";
-import LessonStepCardFillGapDemoPage from "../pages/LessonStepCardFillGapDemoPage";
-import LessonStepCardAssembleDemoPage from "../pages/LessonStepCardAssembleDemoPage";
-import WordTrainingPage from "../pages/WordTrainingPage";
-import WordTrainingSnippetsAdminPage from "../pages/WordTrainingSnippetsAdminPage";
-import WordTrainingGeneratedPhrasesAdminPage from "../pages/WordTrainingGeneratedPhrasesAdminPage";
-import WordMasteryMapPage from "../pages/WordMasteryMapPage";
 import { HomeContainer } from "../modules/home";
 import { VideoContainer } from "../modules/video";
 import { DictionaryContainer } from "../modules/dictionary";
@@ -131,8 +123,6 @@ function BackHandler() {
 }
 
 function AppRoutes() {
-  const auth = useAppSelector(selectAuth);
-  const isAdmin = auth.profile?.role === "admin";
   const location = useLocation();
 
   useEffect(() => {
@@ -184,10 +174,6 @@ function AppRoutes() {
           <Route path="/profile" element={<ProfileContainer />} />
           <Route path="/video" element={<VideoContainer />} />
           <Route path="/dictionary" element={<DictionaryContainer />} />
-          <Route
-            path="/training"
-            element={isAdmin ? <WordTrainingPage /> : <Navigate to="/" replace />}
-          />
           <Route path="/user-dictionary" element={<UserDictionaryPage />} />
           <Route
             path="/video-dictionary"
@@ -195,36 +181,11 @@ function AppRoutes() {
           />
           <Route path="/admin/users" element={<UserAdminPage />} />
           <Route path="/admin/video-tags" element={<VideoTagsAdminPage />} />
-          <Route
-            path="/admin/word-training-snippets"
-            element={<WordTrainingSnippetsAdminPage />}
-          />
-          <Route
-            path="/admin/word-training-phrases"
-            element={<WordTrainingGeneratedPhrasesAdminPage />}
-          />
           <Route path="/admin/word-progress" element={<WordProgressPage />} />
-          <Route
-            path="/admin/word-mastery-map"
-            element={isAdmin ? <WordMasteryMapPage /> : <Navigate to="/" replace />}
-          />
           <Route path="/streak" element={<StreakPage />} />
           <Route
             path="/admin/game-snippets"
             element={<GameSnippetsAdminPage />}
-          />
-          <Route path="/demo/lesson-card" element={<LessonStepCardDemoPage />} />
-          <Route
-            path="/demo/lesson-card-quiz"
-            element={<LessonStepCardQuizDemoPage />}
-          />
-          <Route
-            path="/demo/lesson-card-fill-gap"
-            element={<LessonStepCardFillGapDemoPage />}
-          />
-          <Route
-            path="/demo/lesson-card-assemble"
-            element={<LessonStepCardAssembleDemoPage />}
           />
           <Route path="/admin" element={<AdminContainer />} />
           <Route path="*" element={<Navigate to="/" replace />} />

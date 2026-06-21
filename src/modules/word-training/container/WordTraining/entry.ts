@@ -1,1 +1,0 @@
-export { WordTrainingContainer } from './index';
